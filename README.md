@@ -20,12 +20,12 @@ We welcome contributions from developers and enthusiasts like you to make Wragle
 2. **Clone the Repository:** Clone the forked repository to your local machine using Git.
 
    ```bash
-   git clone https://github.com/your-username/Wraglet.git
+   git clone https://github.com/Wraglet/wraglet.git
    ```
 
 3. **Set Up Your Development Environment:** Follow the setup instructions provided in the `DEVELOPMENT.md` file to get your development environment ready.
 
-4. **Pick an Issue:** Check out the [Issues](https://github.com/your-username/Wraglet/issues) section for tasks that interest you. Feel free to create new issues if you identify areas of improvement.
+4. **Pick an Issue:** Check out the [Issues](https://github.com/Wraglet/wraglet/issues) section for tasks that interest you. Feel free to create new issues if you identify areas of improvement.
 
 5. **Make Changes:** Work on the issue, add your improvements, and commit your changes. Be sure to follow the coding guidelines outlined in `CONTRIBUTING.md`.
 
@@ -43,6 +43,6 @@ We welcome contributions from developers and enthusiasts like you to make Wragle
 
 ## Get in Touch 📬
 
-Join our community and help shape the future of Wraglet! If you have questions, ideas, or just want to chat, you can reach us on [Discord](https://discord.gg/wraglet) or [Twitter](https://twitter.com/wragletapp).
+Join our community and help shape the future of Wraglet! If you have questions, ideas, or just want to chat, you can reach us on [Discord](https://discord.gg/x9W97NmT) or [Facebook](https://www.facebook.com/wraglet).
 
 Let's build a thriving community together! 🚀
