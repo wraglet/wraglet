@@ -1,7 +1,3 @@
-Certainly! Here's a basic template for your `DEVELOPMENT.md` file specific to your Next.js 13.4 app using App Router, TypeScript, and a `/src` directory structure:
-
----
-
 # Development Guide for Wraglet
 
 Welcome to the development guide for Wraglet, a Next.js 13.4 application built with TypeScript and App Router. This guide will help you set up your development environment and provide an overview of the project structure and workflow.
@@ -68,7 +64,3 @@ Make sure you have the following tools installed on your system:
 - Refer to the `CONTRIBUTING.md` file for guidelines on contributing to this project.
 
 Happy coding! 🚀
-
----
-
-Feel free to customize this `DEVELOPMENT.md` file further based on your project's specific requirements and development processes.
