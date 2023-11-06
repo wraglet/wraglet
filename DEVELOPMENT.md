@@ -6,23 +6,33 @@ Welcome to the development guide for Wraglet, a Next.js 13.4 application built w
 
 Make sure you have the following tools installed on your system:
 
-- [Node.js](https://nodejs.org/) (v20.x or higher)
-- [npm](https://www.npmjs.com/) or [Yarn](https://yarnpkg.com/)
+- [Node.js](https://nodejs.org/) (v14.x or higher)
+- [npm](https://www.npmjs.com/)
 
 ## Setting Up the Development Environment
 
 1. **Clone the Repository:**
 
    ```bash
-   git clone https://github.com/Wraglet/wwraglet.git
+   git clone https://github.com/Wraglet/wraglet.git
    cd Wraglet
    ```
 
 2. **Install Dependencies:**
+
    ```bash
-   npm install   # If you use npm
-   # OR
-   yarn install  # If you use Yarn
+   npm i
+   ```
+
+3. **Setup .env file**
+
+   ```js
+    DATABASE_URL=
+   ```
+
+4. **Setup Prisma**
+   ```shell
+   npx prisma db push
    ```
 
 ## Project Structure
