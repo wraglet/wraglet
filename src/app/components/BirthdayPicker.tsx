@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, ChangeEvent } from 'react';
-import ComboBox from './ComboBox';
+import ListBox, { ListProps } from './ListBox';
 
 const BirthdayPicker = () => {
   const days = Array.from({ length: 31 }, (_, index) => (index + 1).toString());
@@ -54,36 +54,36 @@ const BirthdayPicker = () => {
     setSelectedYear(selectedYear.toString());
   }, [months, minimumBirthYear, maximumBirthYear]);
 
-  const handleDayChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setSelectedDay(event.target.value);
+  const handleDayChange = (val: string | ListProps) => {
+    setSelectedDay(val as string);
   };
 
-  const handleMonthChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setSelectedMonth(event.target.value);
+  const handleMonthChange = (val: string | ListProps) => {
+    setSelectedMonth(val as string);
   };
 
-  const handleYearChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setSelectedYear(event.target.value);
+  const handleYearChange = (val: string | ListProps) => {
+    setSelectedYear(val as string);
   };
 
   return (
     <div className='flex flex-col'>
       <h3 className='mb-0.5 pl-1 text-sm text-slate-600'>Birthday</h3>
       <div className='flex space-x-2'>
-        <ComboBox
+        <ListBox
           options={months}
-          onChange={handleMonthChange}
-          value={selectedMonth}
+          setSelected={handleMonthChange}
+          selected={selectedMonth}
         />
-        <ComboBox
+        <ListBox
           options={days}
-          onChange={handleDayChange}
-          value={selectedDay}
+          setSelected={handleDayChange}
+          selected={selectedDay}
         />
-        <ComboBox
+        <ListBox
           options={years}
-          onChange={handleYearChange}
-          value={selectedYear}
+          setSelected={handleYearChange}
+          selected={selectedYear}
         />
       </div>
     </div>

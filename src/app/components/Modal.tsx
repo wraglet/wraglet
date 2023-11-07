@@ -37,7 +37,7 @@ const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
               leaveTo='opacity-0 scale-95'
             >
               <Dialog.Panel className='w-full max-w-md transform overflow-visible rounded-md bg-white align-middle shadow-md transition-all'>
-                <div className='flex items-center justify-between border-b border-solid border-[DFE4EA] w-full p-4'>
+                <div className='flex items-center justify-between border-b border-solid border-[#DFE4EA] w-full p-5'>
                   <Dialog.Title
                     as='h3'
                     className='text-lg font-medium leading-6 text-gray-900'
@@ -50,7 +50,7 @@ const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
                     onClick={onClose}
                   />
                 </div>
-                <div className='flex flex-col p-4 w-full'>{children}</div>
+                <div className='flex flex-col w-full'>{children}</div>
               </Dialog.Panel>
             </Transition.Child>
           </div>
