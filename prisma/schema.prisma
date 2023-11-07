@@ -18,6 +18,7 @@ model User {
   password String
   dob DateTime?
   bio String?
+  pronouns String
   profilePicture String?
   coverPhoto String?
   hashedPassword String?
