@@ -1,10 +1,6 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import './globals.css';
-import AuthContext from './context/AuthContext';
-import ToasterContext from './context/ToasterContext';
-
-const inter = Inter({ subsets: ['latin'] });
+import { Suspense } from 'react';
+import Loading from '../loading';
 
 export const metadata: Metadata = {
   title: 'Wraglet',
@@ -12,19 +8,10 @@ export const metadata: Metadata = {
     "Wraglet combines the brevity of Twitter, the engagement of Reddit, and the social connections of Facebook. With a focus on concise posts (up to 800 characters) and a robust upvoting system, we're redefining the way we share content online. Additionally, our innovative Blog section allows for long-form expression, fostering deeper discussions within our community."
 };
 
-export default function RootLayout({
+export default function FeedLayout({
   children
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <html lang='en'>
-      <body className={inter.className}>
-        <AuthContext>
-          <ToasterContext />
-          {children}
-        </AuthContext>
-      </body>
-    </html>
-  );
+  return <Suspense fallback={<Loading />}>{children}</Suspense>;
 }

@@ -10,12 +10,11 @@ import { HiOutlineEye, HiOutlineEyeSlash } from 'react-icons/hi2';
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   icon?: ReactNode;
-  type?: string;
 }
 
 const Input = forwardRef(
   (
-    { label, icon, type = 'text', ...props }: InputProps,
+    { label, icon, ...props }: InputProps,
     ref: ForwardedRef<HTMLInputElement>
   ) => {
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -32,11 +31,15 @@ const Input = forwardRef(
         <div className='relative flex items-center'>
           <input
             {...props}
-            type={type === 'password' && isPasswordVisible ? 'text' : type}
+            type={
+              props.type === 'password' && isPasswordVisible
+                ? 'text'
+                : props.type
+            }
             className='hover:border-slate-300 focus:border-indigo-300 h-8 w-full border border-solid border-slate-200 rounded py-1.5 px-4 text-xs pr-10 active:border-indigo-300 focus:outline-none'
             ref={ref}
           />
-          {type === 'password' && (
+          {props.type === 'password' && (
             <div
               className='absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer'
               onClick={togglePasswordVisibility}

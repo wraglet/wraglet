@@ -1,10 +1,13 @@
 'use client';
-import React, { useState, MouseEvent, FC } from 'react';
+import React, { FC, useReducer, FormEvent } from 'react';
 import BirthdayPicker from './BirthdayPicker';
 import ListBox, { ListProps } from './ListBox';
 import Input from './Input';
 import Checkbox from './Checkbox';
 import Button from './Button';
+import { signIn } from 'next-auth/react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const friendRequestsOptions: ListProps[] = [
   { val: 'everyone', name: 'Everyone' },
@@ -15,52 +18,121 @@ const friendRequestsOptions: ListProps[] = [
 const genderOptions: string[] = ['Female', 'Male', 'Others'];
 const pronounOptions: string[] = ['She/Her', 'He/Him', 'They/Them'];
 
+const initialState = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  password: '',
+  dob: '',
+  gender: genderOptions[0],
+  pronoun: pronounOptions[0],
+  friendRequestsVal: friendRequestsOptions[0],
+  publicProfileVisible: true,
+  agreeToTerms: false,
+  isLoading: false
+};
+
 const SignUp: FC = () => {
-  const [publicProfile, setPublicProfile] = useState(true);
-  const [friendRequests, setFriendRequests] = useState(
-    friendRequestsOptions[0]
-  );
+  const reducer = (state: any, action: any) => ({ ...state, ...action });
+  const [
+    {
+      firstName,
+      lastName,
+      email,
+      password,
+      dob,
+      gender,
+      pronoun,
+      friendRequestsVal,
+      publicProfileVisible,
+      agreeToTerms,
+      isLoading
+    },
+    dispatchState
+  ] = useReducer(reducer, initialState);
 
-  const [gender, setGender] = useState(genderOptions[0]);
-  const [pronoun, setPronoun] = useState(pronounOptions[0]);
+  console.table({
+    firstName,
+    lastName,
+    email,
+    password,
+    dob,
+    gender,
+    pronoun,
+    friendRequestsVal,
+    publicProfileVisible,
+    agreeToTerms
+  });
 
-  const handleFriendRequestsChange = (val: string | ListProps) => {
-    setFriendRequests(val as ListProps);
+  const handleSignUp = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    dispatchState({ isLoading: true });
+    const friendRequests = friendRequestsVal.val;
+
+    const formData = {
+      firstName,
+      lastName,
+      email,
+      password,
+      dob,
+      gender,
+      pronoun,
+      friendRequests,
+      publicProfileVisible,
+      agreeToTerms
+    };
+
+    axios
+      .post('/api/register', formData)
+      .then(() => signIn('credentials', { email, password }))
+      .catch(() => toast.error('Something went wrong!'))
+      .finally(() => dispatchState({ isLoading: false }));
   };
-
-  const handleGenderChange = (val: string | ListProps) => {
-    setGender(val as string);
-  };
-
-  const handlePronounChange = (val: string | ListProps) => {
-    setPronoun(val as string);
-  };
-
-  const [agreeToTerms, setAgreeToTerms] = useState(false);
-
-  const handleSignUp = (e: MouseEvent<HTMLSpanElement>) => {};
   return (
-    <>
+    <form onSubmit={handleSignUp}>
       <div className='flex flex-col gap-y-4 p-5'>
         <div className='flex space-x-2'>
-          <Input placeholder='First name' type='text' />
-          <Input placeholder='Last name' type='text' />
+          <Input
+            value={firstName}
+            onChange={(e) => dispatchState({ firstName: e.target.value })}
+            placeholder='First name'
+            type='text'
+          />
+          <Input
+            value={lastName}
+            onChange={(e) => dispatchState({ lastName: e.target.value })}
+            placeholder='Last name'
+            type='text'
+          />
         </div>
-        <Input placeholder='Email' type='email' />
-        <Input placeholder='Password' type='password' />
-        <BirthdayPicker />
+        <Input
+          value={email}
+          onChange={(e) => dispatchState({ email: e.target.value })}
+          placeholder='Email'
+          type='email'
+        />
+        <Input
+          value={password}
+          onChange={(e) => dispatchState({ password: e.target.value })}
+          placeholder='Password'
+          type='password'
+        />
+        <BirthdayPicker
+          date={dob}
+          dateSetter={(val) => dispatchState({ dob: val })}
+        />
         <div className='flex flex-1 space-x-2'>
           <ListBox
             label='Gender'
             options={genderOptions}
             selected={gender}
-            setSelected={handleGenderChange}
+            setSelected={(val) => dispatchState({ gender: val })}
           />
           <ListBox
             label='Pronoun'
             options={pronounOptions}
             selected={pronoun}
-            setSelected={handlePronounChange}
+            setSelected={(val) => dispatchState({ pronoun: val })}
           />
         </div>
         <div className='flex items-center'>
@@ -72,8 +144,10 @@ const SignUp: FC = () => {
               <Checkbox
                 label='Public Profile'
                 id='publicProfile'
-                onChange={() => setPublicProfile(!publicProfile)}
-                checked={publicProfile}
+                onChange={(e) =>
+                  dispatchState({ publicProfileVisible: e.target.checked })
+                }
+                checked={publicProfileVisible}
               />
             </div>
           </div>
@@ -81,8 +155,8 @@ const SignUp: FC = () => {
             <ListBox
               label='Friend Requests'
               options={friendRequestsOptions}
-              setSelected={handleFriendRequestsChange}
-              selected={friendRequests}
+              setSelected={(val) => dispatchState({ friendRequests: val })}
+              selected={friendRequestsVal}
             />
           </div>
         </div>
@@ -93,7 +167,10 @@ const SignUp: FC = () => {
           </h3>
           <div className='pl-1'>
             <Checkbox
-              onChange={() => setAgreeToTerms(!agreeToTerms)}
+              onChange={(e) =>
+                dispatchState({ agreeToTerms: e.target.checked })
+              }
+              checked={agreeToTerms}
               label='I agree to the Terms of Service and Privacy Policy'
               id='termsOfServiceAndPrivacyPolicy'
             />
@@ -105,10 +182,10 @@ const SignUp: FC = () => {
           className='w-full bg-[#42BBFF] text-base font-medium py-2 rounded text-white'
           type='submit'
         >
-          Sign Up
+          {isLoading ? 'Signing up...' : 'Sign Up'}
         </Button>
       </div>
-    </>
+    </form>
   );
 };
 

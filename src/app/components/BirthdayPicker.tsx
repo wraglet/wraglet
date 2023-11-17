@@ -1,7 +1,12 @@
-import { useState, useEffect, useMemo, ChangeEvent } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import ListBox, { ListProps } from './ListBox';
 
-const BirthdayPicker = () => {
+interface BirthdayPickerProps {
+  dateSetter: (val: Date) => void;
+  date: Date;
+}
+
+const BirthdayPicker = ({ dateSetter, date }: BirthdayPickerProps) => {
   const days = Array.from({ length: 31 }, (_, index) => (index + 1).toString());
   // Calculate the minimum and maximum birth years
   const currentYear = new Date().getFullYear();
@@ -52,18 +57,34 @@ const BirthdayPicker = () => {
       Math.min(maximumBirthYear, currentDate.getFullYear() - 13)
     );
     setSelectedYear(selectedYear.toString());
-  }, [months, minimumBirthYear, maximumBirthYear]);
+
+    // Set initial values from the date prop if dateSetter has a value
+    if (date) {
+      const initialDate = new Date(date);
+      setSelectedDay(initialDate.getDate().toString());
+      setSelectedMonth(months[initialDate.getMonth()]);
+      setSelectedYear(initialDate.getFullYear().toString());
+    }
+  }, [months, minimumBirthYear, maximumBirthYear, dateSetter, date]);
 
   const handleDayChange = (val: string | ListProps) => {
     setSelectedDay(val as string);
+    updateDate(val as string, selectedMonth, selectedYear);
   };
 
   const handleMonthChange = (val: string | ListProps) => {
     setSelectedMonth(val as string);
+    updateDate(selectedDay, val as string, selectedYear);
   };
 
   const handleYearChange = (val: string | ListProps) => {
     setSelectedYear(val as string);
+    updateDate(selectedDay, selectedMonth, val as string);
+  };
+
+  const updateDate = (day: string, month: string, year: string) => {
+    const selectedDate = new Date(`${month} ${day}, ${year}`);
+    dateSetter(selectedDate);
   };
 
   return (
