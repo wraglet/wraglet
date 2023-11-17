@@ -1,16 +1,15 @@
 'use client';
 
-import { signIn, useSession } from 'next-auth/react';
-import { FormEvent, useEffect, useReducer } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { FormEvent, useReducer } from 'react';
 import { HiOutlineChatBubbleLeftRight, HiOutlineUsers } from 'react-icons/hi2';
-import Button from './components/Button';
-import Footer from './components/Footer';
-import Modal from './components/Modal';
-import SignUp from './components/SignUp';
+import Button from './Button';
+import Footer from './Footer';
+import Modal from './Modal';
+import SignUp from './SignUp';
+import Input from './Input';
 import Image from 'next/image';
+import { signIn, useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
-import Input from './components/Input';
 
 const initialState = {
   email: '',
@@ -19,25 +18,11 @@ const initialState = {
   isLoading: false
 };
 
-export default function Page() {
+const Login = () => {
   const { status } = useSession();
-  const { push } = useRouter();
-
-  useEffect(() => {
-    if (status === 'authenticated') {
-      push('/feed');
-    }
-  }, [push, status]);
-
   const reducer = (state: any, action: any) => ({ ...state, ...action });
   const [{ email, password, isOpenSignUpModal, isLoading }, dispatchState] =
     useReducer(reducer, initialState);
-
-  useEffect(() => {
-    if (status === 'authenticated') {
-      push('/feed');
-    }
-  }, [push, status]);
 
   const handleLogin = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -59,12 +44,10 @@ export default function Page() {
 
         if (callback?.ok && !callback?.error) {
           toast.success('Logged in!');
-          push('/feed');
         }
       })
       .finally(() => dispatchState({ isLoading: false }));
   };
-
   return (
     status === 'unauthenticated' && (
       <>
@@ -154,4 +137,6 @@ export default function Page() {
       </>
     )
   );
-}
+};
+
+export default Login;

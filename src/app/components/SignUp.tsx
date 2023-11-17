@@ -26,7 +26,7 @@ const initialState = {
   dob: '',
   gender: genderOptions[0],
   pronoun: pronounOptions[0],
-  friendRequests: friendRequestsOptions[0],
+  friendRequestsVal: friendRequestsOptions[0],
   publicProfileVisible: true,
   agreeToTerms: false,
   isLoading: false
@@ -43,7 +43,7 @@ const SignUp: FC = () => {
       dob,
       gender,
       pronoun,
-      friendRequests,
+      friendRequestsVal,
       publicProfileVisible,
       agreeToTerms,
       isLoading
@@ -59,7 +59,7 @@ const SignUp: FC = () => {
     dob,
     gender,
     pronoun,
-    friendRequests,
+    friendRequestsVal,
     publicProfileVisible,
     agreeToTerms
   });
@@ -67,6 +67,7 @@ const SignUp: FC = () => {
   const handleSignUp = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     dispatchState({ isLoading: true });
+    const friendRequests = friendRequestsVal.val;
 
     const formData = {
       firstName,
@@ -155,7 +156,7 @@ const SignUp: FC = () => {
               label='Friend Requests'
               options={friendRequestsOptions}
               setSelected={(val) => dispatchState({ friendRequests: val })}
-              selected={friendRequests}
+              selected={friendRequestsVal}
             />
           </div>
         </div>
@@ -181,7 +182,7 @@ const SignUp: FC = () => {
           className='w-full bg-[#42BBFF] text-base font-medium py-2 rounded text-white'
           type='submit'
         >
-          Sign Up
+          {isLoading ? 'Signing up...' : 'Sign Up'}
         </Button>
       </div>
     </form>
