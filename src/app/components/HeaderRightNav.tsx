@@ -9,16 +9,16 @@ const HeaderRightNav = async () => {
   return (
     <ul className='col-end-11 col-span-2 flex justify-between items-center'>
       <li className='cursor-pointer'>
-        <HomeIcon />
+        <HomeIcon className='text-white' />
       </li>
       <li className='cursor-pointer'>
-        <PeopleIcon />
+        <PeopleIcon className='text-white' />
       </li>
       <li className='cursor-pointer'>
-        <ChatIcon />
+        <ChatIcon className='text-white' />
       </li>
       <li className='cursor-pointer'>
-        <BellIcon />
+        <BellIcon className='text-white' />
       </li>
       <AvatarMenu firstName={currentUser?.firstName} />
     </ul>
