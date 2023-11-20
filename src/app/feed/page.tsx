@@ -2,6 +2,8 @@ import Image from 'next/image';
 import { Quicksand } from 'next/font/google';
 import Link from 'next/link';
 import HeaderRightNav from '../components/HeaderRightNav';
+import LeftSideNav from './components/LeftSideNav';
+import FeedBody from './components/FeedBody';
 
 const quicksand = Quicksand({
   subsets: ['latin'],
@@ -10,9 +12,9 @@ const quicksand = Quicksand({
 
 const Feed = () => {
   return (
-    <div className='flex flex-col min-h-screen overflow-hidden relative bg-white'>
-      <header className='h-[56px] w-full border-b border-solid border-[#E5E5E5] px-6 items-center grid grid-cols-10'>
-        <div className='flex px-1.5 items-center h-full col-span-2'>
+    <div className='flex flex-col min-h-screen overflow-hidden relative bg-[rgba(110,201,247,0.15)]'>
+      <header className='h-[56px] w-full bg-[#0EA5E9] px-6 items-center drop-shadow-md grid grid-cols-10 gap-x-10'>
+        <div className='flex space-x-1.5 items-center h-full col-span-2'>
           <Link href='/' className='block'>
             <div className='relative h-10 w-10'>
               <Image src={'/images/logo/logo.png'} fill alt='Wraglet' />
@@ -20,7 +22,7 @@ const Feed = () => {
           </Link>
           <Link
             href={'/'}
-            className={`${quicksand.className} text-xl font-bold text-[#333333]`}
+            className={`${quicksand.className} text-xl font-bold text-white`}
           >
             wraglet
           </Link>
@@ -34,8 +36,8 @@ const Feed = () => {
         <HeaderRightNav />
       </header>
       <main className='flex-grow grid grid-cols-10 mx-6 gap-x-5'>
-        <section className='h-auto border-r border-solid border-[#E5E5E5] col-span-2'></section>
-        <section className='col-span-5 h-auto'></section>
+        <LeftSideNav />
+        <FeedBody />
         <section className='col-span-3 h-auto'></section>
       </main>
     </div>

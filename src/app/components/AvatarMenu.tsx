@@ -19,9 +19,9 @@ interface AvatarMenuProps {
 const AvatarMenu = ({ firstName }: AvatarMenuProps) => {
   return (
     <Menu as='li' className='inline-flex'>
-      <Menu.Button className='relative h-6 w-6 cursor-pointer'>
+      <Menu.Button className='relative h-9 w-9 cursor-pointer border border-solid border-white rounded-full'>
         <Image
-          className='rounded-full object-contain'
+          className='rounded-full object-cover'
           src={'/images/placeholder/male-placeholder.png'}
           fill
           alt={'Avatar'}
@@ -36,7 +36,7 @@ const AvatarMenu = ({ firstName }: AvatarMenuProps) => {
         leaveFrom='transform opacity-100 scale-100'
         leaveTo='transform opacity-0 scale-95'
       >
-        <Menu.Items className='absolute right-6 mt-10 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none'>
+        <Menu.Items className='absolute right-6 mt-12 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none'>
           <div className='px-1 py-1 '>
             <Menu.Item>
               {({ active }) => (
