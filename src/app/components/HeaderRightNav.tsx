@@ -5,7 +5,6 @@ import AvatarMenu from './AvatarMenu';
 
 const HeaderRightNav = async () => {
   const currentUser = await getCurrentUser();
-  console.log('currentUser: ', currentUser);
   return (
     <ul className='col-end-11 col-span-2 flex justify-between items-center'>
       <li className='cursor-pointer'>
