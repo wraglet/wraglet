@@ -1,23 +1,33 @@
-import React from 'react';
-import getCurrentUser from '@/app/actions/getCurrentUser';
+'use client';
+
+import React, { FC } from 'react';
 import CreatePost from './component/CreatePost';
-import getPosts from '@/app/actions/getPosts';
 import Post from './component/Post';
-import { PostInterface } from '@/app/interfaces/post';
+import { PostInterface, UserInterface } from '@/app/interfaces';
+import * as Ably from 'ably';
+import { AblyProvider } from 'ably/react';
 
-const FeedBody = async () => {
-  const currentUser = await getCurrentUser();
+interface FeedBodyInterface {
+  currentUser: UserInterface;
+  posts: PostInterface[];
+}
 
-  const getPublicPosts: PostInterface[] = await getPosts();
+const FeedBody: FC<FeedBodyInterface> = ({ currentUser, posts }) => {
+  const client = new Ably.Realtime.Promise({
+    authUrl: '/api/ably',
+    authMethod: 'GET'
+  });
 
   return (
-    <section className='col-span-5 h-auto flex flex-col mt-6 w-full gap-y-4'>
-      <CreatePost currentUser={currentUser} />
-      {/* Start of Feed Post */}
-      {getPublicPosts.map((post) => (
-        <Post key={post.id} currentUser={currentUser} post={post} />
-      ))}
-    </section>
+    <AblyProvider client={client}>
+      <section className='col-span-5 h-auto flex flex-col mt-6 w-full gap-y-4'>
+        <CreatePost currentUser={currentUser} />
+        {/* Start of Feed Post */}
+        {posts.map((post) => (
+          <Post key={post.id} post={post} />
+        ))}
+      </section>
+    </AblyProvider>
   );
 };
 

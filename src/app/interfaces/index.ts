@@ -20,6 +20,21 @@ export interface CommentInterface {
   postId: string;
 }
 
+export interface UserInterface {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  dob: Date | null;
+  gender: string;
+  bio: string | null;
+  pronoun: string;
+  profilePicture: string | null;
+  coverPhoto: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface AuthorInterface {
   id: string;
   firstName: string;
