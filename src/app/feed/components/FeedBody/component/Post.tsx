@@ -37,7 +37,9 @@ const Post = ({ post }: Props) => {
               </svg>
               {post.createdAt && (
                 <h4 className='text-xs text-zinc-500'>
-                  {formatDistanceToNow(post.createdAt, { addSuffix: true })}
+                  {formatDistanceToNow(new Date(post.createdAt), {
+                    addSuffix: true
+                  })}
                 </h4>
               )}
             </div>

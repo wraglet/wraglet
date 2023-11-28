@@ -7,7 +7,7 @@ const getPosts = async () => {
         audience: 'public'
       },
       orderBy: {
-        createdAt: 'asc'
+        createdAt: 'desc'
       },
       include: {
         author: {

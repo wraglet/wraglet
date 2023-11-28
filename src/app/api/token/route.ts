@@ -1,9 +1,9 @@
+import getCurrentUser from '@/app/actions/getCurrentUser';
 import Ably from 'ably/promises';
 import { NextResponse } from 'next/server';
-import getCurrentUser from '../../actions/getCurrentUser';
 
-export const GET = async (req: Request, res: Response) => {
-  const user = await getCurrentUser();
+export const POST = async () => {
+  const currentUser = await getCurrentUser();
   if (!process.env.ABLY_API_KEY) {
     return NextResponse.json(
       {
@@ -22,7 +22,7 @@ export const GET = async (req: Request, res: Response) => {
   }
   const client = new Ably.Realtime(process.env.ABLY_API_KEY);
   const tokenRequestData = await client.auth.createTokenRequest({
-    clientId: user?.email
+    clientId: currentUser?.id
   });
-  return Response.json(tokenRequestData);
+  return NextResponse.json(tokenRequestData);
 };
