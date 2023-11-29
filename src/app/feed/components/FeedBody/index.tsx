@@ -25,9 +25,9 @@ const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
 
   const [{ content, isLoading }, dispatch] = useReducer(reducer, initialState);
 
-  const { channel } = useChannel('post-channel', (post) => {
-    setPosts((posts: PostInterface[]) => [post.data, ...posts]);
-  });
+  // const { channel } = useChannel('post-channel', (post) => {
+  //   setPosts((posts: PostInterface[]) => [post.data, ...posts]);
+  // });
 
   const submitPost = async (e: FormEvent) => {
     e.preventDefault();
@@ -38,10 +38,10 @@ const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
       .post('/api/posts', { content })
       .then((res: any) => {
         console.log('response: ', res.data);
-        channel.publish({
-          name: 'post',
-          data: res.data
-        });
+        // channel.publish({
+        //   name: 'post',
+        //   data: res.data
+        // });
       })
       .catch(() => toast.error('An error occurred when creating a post'))
       .finally(() => dispatch({ isLoading: false, content: '' }));
@@ -55,10 +55,9 @@ const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
         content={content}
         setContent={(e) => dispatch({ content: e.target.value })}
       />
-      {/* Start of Feed Post
       {posts.map((post: PostInterface) => (
         <Post key={post.id} post={post} />
-      ))} */}
+      ))}
     </section>
   );
 };
