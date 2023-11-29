@@ -15,7 +15,7 @@ const quicksand = Quicksand({
 
 const Header = ({ currentUser }: { currentUser: UserInterface }) => {
   return (
-    <header className='h-[56px] w-full bg-[#0EA5E9] px-6 items-center drop-shadow-md grid grid-cols-10 gap-x-10'>
+    <header className='h-[56px] z-10 fixed w-full bg-[#0EA5E9] px-6 items-center drop-shadow-md grid grid-cols-10 gap-x-10'>
       <div className='flex space-x-1.5 items-center h-full col-span-2'>
         <Link href='/' className='block'>
           <div className='relative h-10 w-10'>

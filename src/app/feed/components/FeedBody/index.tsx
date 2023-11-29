@@ -70,7 +70,7 @@ const FeedBody: FC<FeedBodyInterface> = ({ currentUser, initialPosts }) => {
   console.log('posts: ', posts);
 
   return (
-    <section className='col-span-5 h-auto flex flex-col mt-6 w-full gap-y-4'>
+    <section className='col-span-5 h-auto flex flex-col mt-6 w-full gap-y-4 overflow-auto'>
       <CreatePost
         isLoading={isLoading}
         submitPost={submitPost}
