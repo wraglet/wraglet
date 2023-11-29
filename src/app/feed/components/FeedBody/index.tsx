@@ -55,10 +55,10 @@ const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
         content={content}
         setContent={(e) => dispatch({ content: e.target.value })}
       />
-      {/* Start of Feed Post */}
+      {/* Start of Feed Post
       {posts.map((post: PostInterface) => (
         <Post key={post.id} post={post} />
-      ))}
+      ))} */}
     </section>
   );
 };
