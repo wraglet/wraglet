@@ -22,9 +22,9 @@ const RightSideNav = dynamic(() => import('./components/RightSideNav'), {
 
 const Feed = async () => {
   const currentUser = await getCurrentUser();
-  const otherUsers: UserInterface[] = await getOtherUsers();
+  const otherUsers = await getOtherUsers();
 
-  const initialPosts: PostInterface[] = await getPosts();
+  const initialPosts = await getPosts();
 
   return (
     <div className='flex flex-col min-h-screen overflow-hidden relative bg-[rgba(110,201,247,0.15)]'>
