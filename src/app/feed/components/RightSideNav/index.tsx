@@ -4,11 +4,9 @@ import Avatar from '@/app/components/Avatar';
 import { UserInterface } from '@/app/interfaces';
 import { useDimensions } from '@/app/utils/useDimension';
 import { Lato } from 'next/font/google';
-import { Nunito_Sans } from 'next/font/google';
 import { useState, useRef, useEffect } from 'react';
 import { IoPersonAddSharp } from 'react-icons/io5';
 
-const nunito_sans = Nunito_Sans({ subsets: ['latin'] });
 const lato = Lato({
   subsets: ['latin'],
   weight: ['100', '300', '400', '700', '900']
