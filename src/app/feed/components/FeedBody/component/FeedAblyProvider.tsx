@@ -1,15 +1,9 @@
 'use client';
 
-import { PostInterface } from '@/app/interfaces';
 import * as Ably from 'ably';
 import { AblyProvider } from 'ably/react';
-import FeedBody from '..';
 
-const FeedAblyProvider = ({
-  initialPosts
-}: {
-  initialPosts: PostInterface[];
-}) => {
+const FeedAblyProvider = () => {
   const client = new Ably.Realtime.Promise({
     authUrl: '/api/token',
     authMethod: 'POST'
