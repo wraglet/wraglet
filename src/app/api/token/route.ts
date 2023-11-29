@@ -3,7 +3,6 @@ import Ably from 'ably/promises';
 import { NextResponse } from 'next/server';
 
 export const POST = async () => {
-  const currentUser = await getCurrentUser();
   if (!process.env.ABLY_API_KEY) {
     return NextResponse.json(
       {
@@ -22,7 +21,7 @@ export const POST = async () => {
   }
   const client = new Ably.Realtime(process.env.ABLY_API_KEY);
   const tokenRequestData = await client.auth.createTokenRequest({
-    clientId: currentUser?.id
+    clientId: 'wraglet-x-ably'
   });
   return NextResponse.json(tokenRequestData);
 };
