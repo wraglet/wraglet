@@ -96,6 +96,7 @@ model Post {
   authorId String @db.ObjectId
   comments Comment[]
   likes Like[]
+  audience String
 }
 
 model Comment {

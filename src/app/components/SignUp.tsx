@@ -64,9 +64,9 @@ const SignUp: FC = () => {
     agreeToTerms
   });
 
-  const handleSignUp = (e: FormEvent<HTMLFormElement>) => {
+  const handleSignUp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    dispatchState({ isLoading: true });
+
     const friendRequests = friendRequestsVal.val;
 
     const formData = {
@@ -82,11 +82,25 @@ const SignUp: FC = () => {
       agreeToTerms
     };
 
-    axios
-      .post('/api/register', formData)
-      .then(() => signIn('credentials', { email, password }))
-      .catch(() => toast.error('Something went wrong!'))
-      .finally(() => dispatchState({ isLoading: false }));
+    // axios
+    //   .post('/api/register', formData)
+    //   .then(() => signIn('credentials', { email, password }))
+    //   .catch(() => toast.error('Something went wrong!'))
+    //   .finally(() => dispatchState({ isLoading: false }));
+
+    try {
+      dispatchState({ isLoading: true });
+      await fetch('/api/register', {
+        method: 'POST',
+        body: JSON.stringify(formData)
+      });
+
+      signIn('credentials', { email, password });
+    } catch {
+      toast.error('Something went wrong!');
+    } finally {
+      dispatchState({ isLoading: false });
+    }
   };
   return (
     <form onSubmit={handleSignUp}>
