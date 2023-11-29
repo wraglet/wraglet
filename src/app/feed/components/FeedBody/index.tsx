@@ -26,30 +26,11 @@ const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
   const [{ content, isLoading }, dispatch] = useReducer(reducer, initialState);
 
   const { channel } = useChannel('post-channel', (post) => {
-    // Add new incoming comment to the list of comments
     setPosts((posts: PostInterface[]) => [post.data, ...posts]);
   });
 
   const submitPost = async (e: FormEvent) => {
     e.preventDefault();
-    /* try {
-      await dispatch({ isLoading: true });
-      const res = await fetch('/api/posts', {
-        method: 'POST',
-        body: JSON.stringify(content)
-      });
-
-      channel.publish({
-        name: 'post',
-        data: {
-          res
-        }
-      });
-    } catch (error) {
-      toast.error('An error occurred when creating a comment: ');
-    } finally {
-      dispatch({ isLoading: false });
-    } */
 
     dispatch({ isLoading: true });
 
