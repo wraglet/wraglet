@@ -1,13 +1,15 @@
 import Header from '../components/Header';
 import getCurrentUser from '../actions/getCurrentUser';
-// import { PostInterface, UserInterface } from '../interfaces';
 import getPosts from '../actions/getPosts';
 import dynamic from 'next/dynamic';
 import getOtherUsers from '../actions/getOtherUsers';
 
-const FeedBody = dynamic(() => import('./components/FeedBody'), {
-  ssr: false
-});
+const FeedAblyProvider = dynamic(
+  () => import('./components/FeedBody/component/FeedAblyProvider'),
+  {
+    ssr: false
+  }
+);
 
 const LeftSideNav = dynamic(() => import('./components/LeftSideNav'), {
   ssr: false
@@ -28,7 +30,7 @@ const Feed = async () => {
       <Header currentUser={currentUser!} />
       <main className='flex-grow grid grid-cols-10 mx-6 gap-x-5 mt-14'>
         <LeftSideNav currentUser={currentUser!} />
-        <FeedBody initialPosts={initialPosts!} />
+        <FeedAblyProvider initialPosts={initialPosts!} />
 
         <RightSideNav otherUsers={otherUsers!} />
       </main>
