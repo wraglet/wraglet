@@ -3,18 +3,17 @@
 import React, { FC, FormEvent, useReducer, useState } from 'react';
 import CreatePost from './component/CreatePost';
 import Post from './component/Post';
-import { PostInterface, UserInterface } from '@/app/interfaces';
+import { PostInterface } from '@/app/interfaces';
 import { useChannel } from 'ably/react';
 
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
 interface FeedBodyInterface {
-  currentUser: UserInterface;
   initialPosts: PostInterface[];
 }
 
-const FeedBody: FC<FeedBodyInterface> = ({ currentUser, initialPosts }) => {
+const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
   const reducer = (state: any, action: any) => ({ ...state, ...action });
 
   const [posts, setPosts] = useState<PostInterface[]>(initialPosts);
@@ -64,13 +63,11 @@ const FeedBody: FC<FeedBodyInterface> = ({ currentUser, initialPosts }) => {
         });
       })
       .catch(() => toast.error('An error occurred when creating a post'))
-      .finally(() => dispatch({ isLoading: false }));
+      .finally(() => dispatch({ isLoading: false, content: '' }));
   };
 
-  console.log('posts: ', posts);
-
   return (
-    <section className='col-span-5 h-auto flex flex-col mt-6 w-full gap-y-4 overflow-auto'>
+    <section className='col-start-3 col-end-8 h-auto flex flex-col mt-6 w-full gap-y-4 overflow-auto'>
       <CreatePost
         isLoading={isLoading}
         submitPost={submitPost}
