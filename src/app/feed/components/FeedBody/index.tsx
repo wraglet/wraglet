@@ -1,21 +1,85 @@
-import React from 'react';
-import getCurrentUser from '@/app/actions/getCurrentUser';
+'use client';
+
+import React, { FC, FormEvent, useReducer, useState } from 'react';
 import CreatePost from './component/CreatePost';
-import getPosts from '@/app/actions/getPosts';
 import Post from './component/Post';
-import { PostInterface } from '@/app/interfaces/post';
+import { PostInterface, UserInterface } from '@/app/interfaces';
+import { useChannel } from 'ably/react';
 
-const FeedBody = async () => {
-  const currentUser = await getCurrentUser();
+import toast from 'react-hot-toast';
+import axios from 'axios';
 
-  const getPublicPosts: PostInterface[] = await getPosts();
+interface FeedBodyInterface {
+  currentUser: UserInterface;
+  initialPosts: PostInterface[];
+}
+
+const FeedBody: FC<FeedBodyInterface> = ({ currentUser, initialPosts }) => {
+  const reducer = (state: any, action: any) => ({ ...state, ...action });
+
+  const [posts, setPosts] = useState<PostInterface[]>(initialPosts);
+
+  const initialState = {
+    content: '',
+    isLoading: false
+  };
+
+  const [{ content, isLoading }, dispatch] = useReducer(reducer, initialState);
+
+  const { channel } = useChannel('post-channel', (post) => {
+    // Add new incoming comment to the list of comments
+    setPosts((posts: PostInterface[]) => [post.data, ...posts]);
+  });
+
+  const submitPost = async (e: FormEvent) => {
+    e.preventDefault();
+    /* try {
+      await dispatch({ isLoading: true });
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        body: JSON.stringify(content)
+      });
+
+      channel.publish({
+        name: 'post',
+        data: {
+          res
+        }
+      });
+    } catch (error) {
+      toast.error('An error occurred when creating a comment: ');
+    } finally {
+      dispatch({ isLoading: false });
+    } */
+
+    dispatch({ isLoading: true });
+
+    axios
+      .post('/api/posts', { content })
+      .then((res: any) => {
+        console.log('response: ', res.data);
+        channel.publish({
+          name: 'post',
+          data: res.data
+        });
+      })
+      .catch(() => toast.error('An error occurred when creating a post'))
+      .finally(() => dispatch({ isLoading: false }));
+  };
+
+  console.log('posts: ', posts);
 
   return (
-    <section className='col-span-5 h-auto flex flex-col mt-6 w-full gap-y-4'>
-      <CreatePost currentUser={currentUser} />
+    <section className='col-span-5 h-auto flex flex-col mt-6 w-full gap-y-4 overflow-auto'>
+      <CreatePost
+        isLoading={isLoading}
+        submitPost={submitPost}
+        content={content}
+        setContent={(e) => dispatch({ content: e.target.value })}
+      />
       {/* Start of Feed Post */}
-      {getPublicPosts.map((post) => (
-        <Post key={post.id} currentUser={currentUser} post={post} />
+      {posts.map((post: PostInterface) => (
+        <Post key={post.id} post={post} />
       ))}
     </section>
   );

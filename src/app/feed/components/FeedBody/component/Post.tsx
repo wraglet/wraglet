@@ -3,7 +3,7 @@
 import Avatar from '@/app/components/Avatar';
 import Button from '@/app/components/Button';
 import { ShareIcon } from '@/app/components/Icons';
-import { PostInterface } from '@/app/interfaces/post';
+import { PostInterface } from '@/app/interfaces';
 import arrGenerator from '@/app/utils/arrGenerator';
 import { formatDistanceToNow } from 'date-fns';
 import React from 'react';
@@ -11,11 +11,10 @@ import { FaRegComment, FaRegHeart } from 'react-icons/fa6';
 import { LuArrowBigUp, LuArrowBigDown } from 'react-icons/lu';
 
 type Props = {
-  currentUser: any;
   post: PostInterface;
 };
 
-const Post = ({ currentUser, post }: Props) => {
+const Post = ({ post }: Props) => {
   return (
     <div className='flex w-full'>
       <div className='rounded-lg drop-shadow-md bg-white border border-solid border-neutral-200 flex px-4 py-3 gap-x-2 w-full items-start justify-between'>
@@ -38,7 +37,9 @@ const Post = ({ currentUser, post }: Props) => {
               </svg>
               {post.createdAt && (
                 <h4 className='text-xs text-zinc-500'>
-                  {formatDistanceToNow(post.createdAt, { addSuffix: true })}
+                  {formatDistanceToNow(new Date(post.createdAt), {
+                    addSuffix: true
+                  })}
                 </h4>
               )}
             </div>

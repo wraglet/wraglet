@@ -21,6 +21,24 @@ export const POST = async (request: Request) => {
             id: currentUser.id
           }
         }
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            dob: true,
+            gender: true,
+            bio: true,
+            pronoun: true,
+            profilePicture: true,
+            coverPhoto: true,
+            createdAt: true,
+            updatedAt: true
+          }
+        }
       }
     });
 
