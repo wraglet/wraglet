@@ -6,10 +6,12 @@ import { ShareIcon } from '@/app/components/Icons';
 import { PostInterface } from '@/app/interfaces';
 import arrGenerator from '@/app/utils/arrGenerator';
 import { formatDistanceToNow } from 'date-fns';
+import { Nunito_Sans } from 'next/font/google';
 import React from 'react';
 import { FaRegComment, FaRegHeart } from 'react-icons/fa6';
 import { LuArrowBigUp, LuArrowBigDown } from 'react-icons/lu';
 
+const nunito_sans = Nunito_Sans({ subsets: ['latin'] });
 type Props = {
   post: PostInterface;
 };
@@ -22,7 +24,9 @@ const Post = ({ post }: Props) => {
         <div className='flex flex-col gap-y-5 flex-grow justify-start'>
           <div className='flex flex-col gap-y-1'>
             <div className='flex space-x-1 items-baseline'>
-              <h3 className='text-base font-bold leading-none'>
+              <h3
+                className={`text-sm font-bold leading-none ${nunito_sans.className}`}
+              >
                 {post.author.firstName} {post.author.lastName}
               </h3>
               <svg

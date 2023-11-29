@@ -1,6 +1,6 @@
 'use client';
 
-import { PostInterface, UserInterface } from '@/app/interfaces';
+import { PostInterface } from '@/app/interfaces';
 import * as Ably from 'ably';
 import { AblyProvider } from 'ably/react';
 import dynamic from 'next/dynamic';
@@ -15,14 +15,13 @@ const client = new Ably.Realtime.Promise({
 });
 
 type Props = {
-  currentUser: UserInterface;
   initialPosts: PostInterface[];
 };
 
-const FeedAblyProvider = ({ currentUser, initialPosts }: Props) => {
+const FeedAblyProvider = ({ initialPosts }: Props) => {
   return (
     <AblyProvider client={client}>
-      <FeedBody currentUser={currentUser} initialPosts={initialPosts} />
+      <FeedBody initialPosts={initialPosts} />
     </AblyProvider>
   );
 };
