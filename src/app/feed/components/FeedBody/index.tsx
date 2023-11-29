@@ -4,7 +4,7 @@ import React, { FC, FormEvent, useReducer, useState } from 'react';
 import CreatePost from './component/CreatePost';
 import Post from './component/Post';
 import { PostInterface } from '@/app/interfaces';
-import { useChannel } from 'ably/react';
+// import { useChannel } from 'ably/react';
 
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -25,9 +25,9 @@ const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
 
   const [{ content, isLoading }, dispatch] = useReducer(reducer, initialState);
 
-  const { channel } = useChannel('post-channel', (post) => {
-    setPosts((posts: PostInterface[]) => [post.data, ...posts]);
-  });
+  // const { channel } = useChannel('post-channel', (post) => {
+  //   setPosts((posts: PostInterface[]) => [post.data, ...posts]);
+  // });
 
   const submitPost = async (e: FormEvent) => {
     e.preventDefault();
@@ -38,10 +38,10 @@ const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
       .post('/api/posts', { content })
       .then((res: any) => {
         console.log('response: ', res.data);
-        channel.publish({
-          name: 'post',
-          data: res.data
-        });
+        // channel.publish({
+        //   name: 'post',
+        //   data: res.data
+        // });
       })
       .catch(() => toast.error('An error occurred when creating a post'))
       .finally(() => dispatch({ isLoading: false, content: '' }));
