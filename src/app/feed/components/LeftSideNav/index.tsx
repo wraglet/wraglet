@@ -25,7 +25,7 @@ const LeftSideNav = ({ currentUser }: { currentUser: UserInterface }) => {
   }
 
   return (
-    <section ref={ref} className='col-span-2 full relative'>
+    <section ref={ref} className='col-start-1 col-span-2 relative'>
       <div
         className='fixed flex flex-col max-h-screen h-[calc(100vh-56px)]'
         style={{ width: `${width}px` }}
@@ -46,7 +46,7 @@ const LeftSideNav = ({ currentUser }: { currentUser: UserInterface }) => {
           <div className='flex flex-col rounded-lg drop-shadow-md bg-white border border-solid border-neutral-200'>
             <div className='group hover:bg-gray-400 h-[50px] w-full rounded-[inherit]'>
               <div className='flex items-center px-3 space-x-2 w-full h-full'>
-                <BlogOutlineIcon className='group-hover:text-white text-[#536471] h-7 w-auto' />
+                <BlogOutlineIcon className='group-hover:text-white text-[#536471] h-7 w-7' />
                 <h2 className='text-xs group-hover:text-white font-semibold text-[#333333]'>
                   Blog
                 </h2>
@@ -54,8 +54,8 @@ const LeftSideNav = ({ currentUser }: { currentUser: UserInterface }) => {
             </div>
 
             <div className='group hover:bg-gray-400 h-[50px] w-full rounded-[inherit]'>
-              <div className='flex items-center px-3 w-full h-full'>
-                <VideoIcon className='group-hover:text-white text-[#536471] h-7 w-auto' />
+              <div className='flex items-center px-3 space-x-2 w-full h-full'>
+                <VideoIcon className='group-hover:text-white text-[#536471] h-7 w-7' />
                 <h2 className='text-xs group-hover:text-white font-semibold text-[#333333]'>
                   Videos
                 </h2>
@@ -63,7 +63,7 @@ const LeftSideNav = ({ currentUser }: { currentUser: UserInterface }) => {
             </div>
           </div>
         </div>
-        <footer className='text-sm font-semibold pl-3 pb-2'>
+        <footer className='text-xs font-semibold pl-3 pb-2 text-[#0EA5E9]'>
           &copy; {new Date().getFullYear()} Wraglet
         </footer>
       </div>

@@ -46,7 +46,9 @@ const CreatePost = ({ submitPost, isLoading, setContent, content }: Props) => {
               className='rounded-lg drop-shadow-md flex items-center justify-center gap-1 bg-sky-500 px-2 py-1'
             >
               {isLoading ? (
-                'Submitting... '
+                <span className='text-white text-xs font-medium'>
+                  Submitting...
+                </span>
               ) : (
                 <>
                   <BsSend className='text-base text-white' />
