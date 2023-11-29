@@ -31,11 +31,7 @@ const Feed = async () => {
       <Header currentUser={currentUser!} />
       <main className='flex-grow grid grid-cols-10 mx-6 gap-x-5 mt-14'>
         <LeftSideNav currentUser={currentUser!} />
-        {!!initialPosts ? (
-          <FeedAblyProvider initialPosts={initialPosts} />
-        ) : (
-          <section className='col-span-5 h-auto flex flex-col mt-6 w-full gap-y-4 overflow-auto' />
-        )}
+        <FeedAblyProvider initialPosts={initialPosts!} />
 
         <RightSideNav otherUsers={otherUsers!} />
       </main>
