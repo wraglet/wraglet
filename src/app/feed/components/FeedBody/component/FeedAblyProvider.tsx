@@ -3,11 +3,7 @@
 import { PostInterface } from '@/app/interfaces';
 import * as Ably from 'ably';
 import { AblyProvider } from 'ably/react';
-import dynamic from 'next/dynamic';
-
-const FeedBody = dynamic(() => import('..'), {
-  ssr: false
-});
+import FeedBody from '..';
 
 const client = new Ably.Realtime.Promise({
   authUrl: '/api/token',
