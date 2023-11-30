@@ -5,10 +5,6 @@ const nextConfig = {
   // is only run once and only run on the client.
   reactStrictMode: false,
   swcMinify: true,
-  images: {
-    dangerouslyAllowSVG: true,
-    domains: ['static.ably.dev']
-  },
   webpack: (config) => {
     config.externals.push({
       'utf-8-validate': 'commonjs utf-8-validate',
