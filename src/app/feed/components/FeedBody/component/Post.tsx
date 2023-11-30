@@ -11,7 +11,7 @@ import React from 'react';
 import { FaRegComment, FaRegHeart } from 'react-icons/fa6';
 import { LuArrowBigUp, LuArrowBigDown } from 'react-icons/lu';
 
-const nunito_sans = Nunito_Sans({ subsets: ['latin'] });
+const nunito_sans = Nunito_Sans({ subsets: ['latin'], preload: true });
 type Props = {
   post: PostInterface;
 };

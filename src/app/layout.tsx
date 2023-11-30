@@ -4,7 +4,7 @@ import './globals.css';
 import AuthContext from './context/AuthContext';
 import ToasterContext from './context/ToasterContext';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], preload: true });
 
 export const metadata: Metadata = {
   title: 'Wraglet',

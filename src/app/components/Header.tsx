@@ -10,7 +10,8 @@ import { HomeIcon, PeopleIcon, ChatIcon, BellIcon } from './NavIcons';
 
 const quicksand = Quicksand({
   subsets: ['latin'],
-  display: 'swap'
+  display: 'swap',
+  preload: true
 });
 
 const Header = ({ currentUser }: { currentUser: UserInterface }) => {
