@@ -44,7 +44,11 @@ export const POST = async (request: Request) => {
 
     return NextResponse.json(newPost);
   } catch (err) {
-    console.log('Create Post error: ', err);
+    console.log('Fetching posts error: ', err);
+    console.error(
+      'Error happened while doing POST for /api/posts at route.ts: ',
+      err
+    );
     return new NextResponse('Internal Error: ', { status: 500 });
   }
 };

@@ -96,8 +96,9 @@ const SignUp: FC = () => {
       });
 
       signIn('credentials', { email, password });
-    } catch {
-      toast.error('Something went wrong!');
+    } catch (err) {
+      console.error('Error while signing up at handleSignUp SignUp.tsx: ', err);
+      toast.error('Something went wrong while signing up! ');
     } finally {
       dispatchState({ isLoading: false });
     }
