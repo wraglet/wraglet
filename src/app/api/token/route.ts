@@ -1,7 +1,9 @@
+import getCurrentUser from '@/app/actions/getCurrentUser';
 import * as Ably from 'ably/promises';
 import { NextResponse } from 'next/server';
 
-export const POST = async (req: Request) => {
+export const POST = async () => {
+  const currentUser = await getCurrentUser();
   if (!process.env.ABLY_API_KEY) {
     return NextResponse.json(
       {
@@ -18,14 +20,9 @@ export const POST = async (req: Request) => {
       }
     );
   }
-  const clientId =
-    (await req.formData()).get('clientId')?.toString() ||
-    process.env.DEFAULT_CLIENT_ID ||
-    'NO_CLIENT_ID';
   const client = new Ably.Rest(process.env.ABLY_API_KEY);
   const tokenRequestData = await client.auth.createTokenRequest({
-    clientId: clientId
+    clientId: currentUser?.id
   });
-  console.log(tokenRequestData);
   return NextResponse.json(tokenRequestData);
 };
