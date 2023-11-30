@@ -31,8 +31,8 @@ const getPosts = async () => {
 
     return posts;
   } catch (err: any) {
-    console.error('Error fetching posts: ', err);
-    throw err;
+    console.error('Error at getPosts() while fetching posts: ', err);
+    return [];
   }
 };
 

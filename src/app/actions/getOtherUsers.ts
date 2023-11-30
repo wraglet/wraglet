@@ -2,7 +2,12 @@ import prisma from '@/app/libs/prismadb';
 import getSession from './getSession';
 
 const getOtherUsers = async () => {
-  const session = await getSession();
+  const session = await getSession().catch((err) => {
+    console.error(
+      'Error happened while getting getSession on getOtherUsers: ',
+      err
+    );
+  });
 
   if (!session?.user?.email) {
     return [];
@@ -37,6 +42,7 @@ const getOtherUsers = async () => {
 
     return users;
   } catch (error: any) {
+    console.error('Some error happened while getting getOtherUsers(): ', error);
     return [];
   }
 };

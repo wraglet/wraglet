@@ -20,10 +20,25 @@ const RightSideNav = dynamic(() => import('./components/RightSideNav'), {
 });
 
 const Feed = async () => {
-  const currentUser = await getCurrentUser();
-  const otherUsers = await getOtherUsers();
+  const currentUser = await getCurrentUser().catch((err) => {
+    console.error(
+      'Error happened while getting getCurrentUser() on Feed component: ',
+      err
+    );
+  });
+  const otherUsers = await getOtherUsers().catch((err) => {
+    console.error(
+      'Error happened while getting getOtherUsers() on Feed component: ',
+      err
+    );
+  });
 
-  const initialPosts = await getPosts();
+  const initialPosts = await getPosts().catch((err) => {
+    console.error(
+      'Error happened while getting getPosts() on Feed component: ',
+      err
+    );
+  });
 
   return (
     <div className='flex flex-col min-h-screen overflow-hidden relative bg-[rgba(110,201,247,0.15)]'>
