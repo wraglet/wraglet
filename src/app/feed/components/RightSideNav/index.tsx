@@ -9,7 +9,8 @@ import { IoPersonAddSharp } from 'react-icons/io5';
 
 const lato = Lato({
   subsets: ['latin'],
-  weight: ['100', '300', '400', '700', '900']
+  weight: ['100', '300', '400', '700', '900'],
+  preload: true
 });
 
 const RigthSideNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
