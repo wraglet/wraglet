@@ -4,6 +4,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 import AuthContext from './context/AuthContext';
 import ToasterContext from './context/ToasterContext';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'], preload: true });
 
 export const metadata: Metadata = {
   title: 'Wraglet',
@@ -18,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang='en'>
-      <body>
+      <body className={inter.className}>
         <AuthContext>
           <ToasterContext />
           {children}
