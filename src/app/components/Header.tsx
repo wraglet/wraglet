@@ -6,6 +6,14 @@ import Image from 'next/image';
 import { UserInterface } from '../interfaces';
 import AvatarMenu from './AvatarMenu';
 import { HomeIcon, PeopleIcon, ChatIcon, BellIcon } from './NavIcons';
+import { Quicksand } from 'next/font/google';
+
+const quicksand = Quicksand({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  preload: true
+});
 
 const Header = ({ currentUser }: { currentUser: UserInterface }) => {
   return (
@@ -16,7 +24,10 @@ const Header = ({ currentUser }: { currentUser: UserInterface }) => {
             <Image src={'/images/logo/logo.png'} fill alt='Wraglet' />
           </div>
         </Link>
-        <Link href={'/'} className={`text-xl font-bold text-white`}>
+        <Link
+          href={'/'}
+          className={`${quicksand.className} text-xl font-bold text-white`}
+        >
           wraglet
         </Link>
       </div>
