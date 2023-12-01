@@ -1,12 +1,9 @@
 export const dynamic = 'force-dynamic';
 
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import AuthContext from './context/AuthContext';
 import ToasterContext from './context/ToasterContext';
-
-const inter = Inter({ subsets: ['latin'], preload: true });
 
 export const metadata: Metadata = {
   title: 'Wraglet',
@@ -21,7 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang='en'>
-      <body className={inter.className}>
+      <body>
         <AuthContext>
           <ToasterContext />
           {children}

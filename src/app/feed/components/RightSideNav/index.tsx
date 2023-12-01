@@ -3,15 +3,8 @@
 import Avatar from '@/app/components/Avatar';
 import { UserInterface } from '@/app/interfaces';
 import { useDimensions } from '@/app/utils/useDimension';
-import { Lato } from 'next/font/google';
 import { useState, useRef, useEffect } from 'react';
 import { IoPersonAddSharp } from 'react-icons/io5';
-
-const lato = Lato({
-  subsets: ['latin'],
-  weight: ['100', '300', '400', '700', '900'],
-  preload: true
-});
 
 const RigthSideNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
   const [hydrated, setHydrated] = useState(false);
@@ -34,9 +27,7 @@ const RigthSideNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
       <div style={{ width: `${width}px` }} className='fixed'>
         <div className='w-full drop-shadow-md  px-4 py-3'>
           <div className='flex flex-col w-full gap-y-3.5'>
-            <h6
-              className={`ml-4 ${lato.className} font-normal text-xs text-[#333333]`}
-            >
+            <h6 className={`ml-4 font-normal text-xs text-[#333333]`}>
               Friend Suggestions
             </h6>
 
