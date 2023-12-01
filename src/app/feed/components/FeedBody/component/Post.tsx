@@ -7,7 +7,7 @@ import { PostInterface } from '@/app/interfaces';
 import arrGenerator from '@/app/utils/arrGenerator';
 import { formatDistanceToNow } from 'date-fns';
 import { Nunito_Sans } from 'next/font/google';
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FaRegComment, FaRegHeart } from 'react-icons/fa6';
 import { LuArrowBigUp, LuArrowBigDown } from 'react-icons/lu';
 
@@ -17,6 +17,26 @@ type Props = {
 };
 
 const Post = ({ post }: Props) => {
+  const [isOpenComment, setIsOpenComment] = useState(false);
+  const content = useRef<HTMLDivElement | null>(null);
+
+  const [height, setHeight] = useState<string>('0px');
+
+  useEffect(() => {
+    if (isOpenComment) {
+      setHeight(`${content.current?.scrollHeight}px`);
+    }
+
+    if (!isOpenComment) {
+      setHeight('0px');
+    }
+  }, [isOpenComment]);
+
+  const toggleComment = () => {
+    setIsOpenComment((prev) => !prev);
+    setHeight(isOpenComment ? `${content.current?.scrollHeight}px` : '0px');
+  };
+
   return (
     <div className='flex w-full'>
       <div className='rounded-lg drop-shadow-md bg-white border border-solid border-neutral-200 flex px-4 py-3 gap-x-2 w-full items-start justify-between'>
@@ -49,20 +69,42 @@ const Post = ({ post }: Props) => {
             </div>
             <p className='text-gray-600 text-xs'>{post.content}</p>
           </div>
-          <div className='flex justify-between items-center'>
+          <div className='flex justify-between items-center z-10 bg-white'>
             <div className='flex items-center gap-1 border border-solid border-gray-400 rounded-full px-2 py-0.5'>
-              <LuArrowBigUp className='text-xs text-gray-600' />
-              <span className='text-xs text-gray-600'>12</span>
-              <LuArrowBigDown className='text-xs text-gray-600' />
+              <LuArrowBigUp className='text-xs text-gray-600 cursor-pointer' />
+              <span className='text-xs text-gray-600 cursor-pointer'>12</span>
+              <LuArrowBigDown className='text-xs text-gray-600 cursor-pointer' />
             </div>
             <div className='flex items-center gap-1 border border-solid border-gray-400 rounded-full px-2 py-0.5'>
-              <FaRegComment className='text-xs text-gray-600' />
+              <FaRegComment
+                className='text-xs text-gray-600 cursor-pointer'
+                onClick={toggleComment}
+              />
             </div>
             <div className='flex items-center gap-1 border border-solid border-gray-400 rounded-full px-2 py-0.5'>
-              <FaRegHeart className='text-xs text-gray-600' />
+              <FaRegHeart className='text-xs text-gray-600 cursor-pointer' />
             </div>
             <div className='flex items-center gap-1 border border-solid border-gray-400 rounded-full px-2 py-0.5'>
-              <ShareIcon className='text-xs text-gray-600' />
+              <ShareIcon className='text-xs text-gray-600 cursor-pointer' />
+            </div>
+          </div>
+
+          <div
+            style={{ maxHeight: `${height}` }}
+            ref={content}
+            className={`${
+              isOpenComment ? 'border-t border-solid border-[#E7ECF0]' : '-mt-6'
+            } w-full flex flex-col pt-2 overflow-hidden transition-all duration-300 ease-in-out gap-4`}
+          >
+            <div className='flex items-center gap-2'>
+              <Avatar size='h-6 w-6' />
+              <div className='flex-1'>
+                <input
+                  type='text'
+                  className='px-3 outline-none rounded-full h-[30px] w-full bg-[#E7ECF0] text-xs'
+                  placeholder='Comment something...'
+                />
+              </div>
             </div>
           </div>
         </div>
