@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: '/private/'
     },
-    sitemap: 'https://www.wraglet.com/sitemap.xml'
+    sitemap: 'https://wraglet.com/sitemap.xml'
   };
 }
