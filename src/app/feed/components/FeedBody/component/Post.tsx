@@ -38,7 +38,9 @@ const Post = ({ post }: Props) => {
   return (
     <div className='flex w-full'>
       <div className='rounded-lg drop-shadow-md bg-white border border-solid border-neutral-200 flex px-4 py-3 gap-x-2 w-full items-start justify-between'>
-        <Avatar />
+        <div className='block relative'>
+          <Avatar />
+        </div>
         <div className='flex flex-col gap-y-5 flex-grow justify-start'>
           <div className='flex flex-col gap-y-1'>
             <div className='flex space-x-1 items-baseline'>
