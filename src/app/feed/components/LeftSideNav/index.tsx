@@ -37,6 +37,7 @@ const LeftSideNav = ({ currentUser }: { currentUser: UserInterface }) => {
           <div className='group hover:bg-gray-400 px-3 h-[50px] w-full flex rounded-lg drop-shadow-md bg-white border border-solid border-neutral-200 items-center cursor-pointer'>
             <div className='flex items-center space-x-2'>
               <Avatar
+                gender={currentUser.gender}
                 className='group-hover:border-white'
                 alt={`${currentUser.firstName}'s Profile`}
                 src={currentUser.profilePicture}

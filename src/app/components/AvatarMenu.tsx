@@ -14,13 +14,15 @@ import Avatar from './Avatar';
 
 interface AvatarMenuProps {
   firstName: string | undefined;
+  gender: string;
 }
 
-const AvatarMenu = ({ firstName }: AvatarMenuProps) => {
+const AvatarMenu = ({ firstName, gender }: AvatarMenuProps) => {
   return (
     <Menu as='li' className='inline-flex'>
       <Menu.Button className='relative h-8 w-8 cursor-pointer border border-solid border-white rounded-full'>
         <Avatar
+          gender={gender}
           size='h-8 w-8'
           src={'/images/placeholder/male-placeholder.png'}
           alt={'Avatar'}

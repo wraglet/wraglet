@@ -41,6 +41,7 @@ const RigthSideNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
               >
                 <div className='flex items-center space-x-2 flex-1'>
                   <Avatar
+                    gender={user.gender}
                     className='group-hover:border-white'
                     alt={`${user.firstName}'s Profile`}
                     src={user.profilePicture}

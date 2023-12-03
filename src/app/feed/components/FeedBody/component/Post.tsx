@@ -3,7 +3,7 @@
 import Avatar from '@/app/components/Avatar';
 import Button from '@/app/components/Button';
 import { ShareIcon } from '@/app/components/Icons';
-import { PostInterface } from '@/app/interfaces';
+import { PostInterface, UserInterface } from '@/app/interfaces';
 import arrGenerator from '@/app/utils/arrGenerator';
 import { formatDistanceToNow } from 'date-fns';
 import React, { useEffect, useRef, useState } from 'react';
@@ -11,10 +11,11 @@ import { FaRegComment, FaRegHeart } from 'react-icons/fa6';
 import { LuArrowBigUp, LuArrowBigDown } from 'react-icons/lu';
 
 type Props = {
+  currentUser: UserInterface;
   post: PostInterface;
 };
 
-const Post = ({ post }: Props) => {
+const Post = ({ currentUser, post }: Props) => {
   const [isOpenComment, setIsOpenComment] = useState(false);
   const content = useRef<HTMLDivElement | null>(null);
 
@@ -39,7 +40,7 @@ const Post = ({ post }: Props) => {
     <div className='flex w-full'>
       <div className='rounded-lg drop-shadow-md bg-white border border-solid border-neutral-200 flex px-4 py-3 gap-x-2 w-full items-start justify-between'>
         <div className='block relative'>
-          <Avatar />
+          <Avatar gender={currentUser.gender} />
         </div>
         <div className='flex flex-col gap-y-5 flex-grow justify-start'>
           <div className='flex flex-col gap-y-1'>
@@ -95,7 +96,7 @@ const Post = ({ post }: Props) => {
             } w-full flex flex-col pt-2 overflow-hidden transition-all duration-300 ease-in-out gap-4`}
           >
             <div className='flex items-center gap-2'>
-              <Avatar size='h-6 w-6' />
+              <Avatar gender={currentUser.gender} size='h-6 w-6' />
               <div className='flex-1'>
                 <input
                   type='text'

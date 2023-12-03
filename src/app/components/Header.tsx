@@ -52,7 +52,10 @@ const Header = ({ currentUser }: { currentUser: UserInterface }) => {
         <li className='cursor-pointer'>
           <BellIcon className='text-white' />
         </li>
-        <AvatarMenu firstName={currentUser.firstName} />
+        <AvatarMenu
+          gender={currentUser.gender}
+          firstName={currentUser.firstName}
+        />
       </ul>
     </header>
   );
