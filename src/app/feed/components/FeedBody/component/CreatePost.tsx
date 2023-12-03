@@ -18,7 +18,9 @@ const CreatePost = ({ submitPost, isLoading, setContent, content }: Props) => {
   return (
     <div className='flex w-full items-start rounded-lg drop-shadow-md bg-white border border-solid border-neutral-200'>
       <div className='flex px-4 py-3 gap-x-2 w-full'>
-        <Avatar />
+        <div className='block relative'>
+          <Avatar />
+        </div>
         <form
           onSubmit={submitPost}
           className='flex flex-col gap-y-1.5 flex-grow justify-start'

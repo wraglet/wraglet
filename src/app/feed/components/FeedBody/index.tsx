@@ -59,7 +59,7 @@ const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
   }
 
   return (
-    <section className='col-start-3 col-end-8 h-auto flex flex-col my-6 w-full gap-y-4 overflow-auto'>
+    <section className='md:w-[600px] lg:w-auto col-start-3 col-end-8 h-auto flex flex-col my-6 w-full gap-y-4 overflow-auto mx-auto'>
       <CreatePost
         isLoading={isLoading}
         submitPost={submitPost}

@@ -23,7 +23,10 @@ const RigthSideNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
     return null;
   }
   return (
-    <section ref={ref} className='col-end-11 col-span-3 h-auto mt-6 relative'>
+    <section
+      ref={ref}
+      className='hidden lg:block col-end-11 col-span-3 h-auto mt-6 relative'
+    >
       <div style={{ width: `${width}px` }} className='fixed'>
         <div className='w-full drop-shadow-md  px-4 py-3'>
           <div className='flex flex-col w-full gap-y-3.5'>

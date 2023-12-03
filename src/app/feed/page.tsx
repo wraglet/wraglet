@@ -43,7 +43,7 @@ const Feed = async () => {
   return (
     <div className='flex flex-col min-h-screen overflow-hidden relative bg-[rgba(110,201,247,0.15)]'>
       <Header currentUser={currentUser!} />
-      <main className='flex-grow grid grid-cols-10 mx-6 gap-x-5 mt-14'>
+      <main className='flex-grow flex lg:grid grid-cols-10 mx-6 gap-x-5 mt-14'>
         <LeftSideNav currentUser={currentUser!} />
         <FeedAblyProvider initialPosts={initialPosts!} />
 

@@ -25,7 +25,10 @@ const LeftSideNav = ({ currentUser }: { currentUser: UserInterface }) => {
   }
 
   return (
-    <section ref={ref} className='col-start-1 col-span-2 relative'>
+    <section
+      ref={ref}
+      className='hidden lg:block col-start-1 col-span-2 relative'
+    >
       <div
         className='fixed flex flex-col max-h-screen h-[calc(100vh-56px)]'
         style={{ width: `${width}px` }}

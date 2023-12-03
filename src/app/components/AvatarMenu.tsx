@@ -2,7 +2,6 @@
 
 import { Menu, Transition } from '@headlessui/react';
 import { signOut } from 'next-auth/react';
-import Image from 'next/image';
 import React, { Fragment } from 'react';
 import { FaCircleUser, FaRegCircleUser } from 'react-icons/fa6';
 import {
@@ -11,6 +10,7 @@ import {
   HiArrowRightOnRectangle,
   HiOutlineArrowRightOnRectangle
 } from 'react-icons/hi2';
+import Avatar from './Avatar';
 
 interface AvatarMenuProps {
   firstName: string | undefined;
@@ -19,11 +19,10 @@ interface AvatarMenuProps {
 const AvatarMenu = ({ firstName }: AvatarMenuProps) => {
   return (
     <Menu as='li' className='inline-flex'>
-      <Menu.Button className='relative h-9 w-9 cursor-pointer border border-solid border-white rounded-full'>
-        <Image
-          className='rounded-full object-cover'
+      <Menu.Button className='relative h-8 w-8 cursor-pointer border border-solid border-white rounded-full'>
+        <Avatar
+          size='h-8 w-8'
           src={'/images/placeholder/male-placeholder.png'}
-          fill
           alt={'Avatar'}
         />
       </Menu.Button>

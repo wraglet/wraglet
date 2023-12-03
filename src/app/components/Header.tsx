@@ -17,29 +17,31 @@ const quicksand = Quicksand({
 
 const Header = ({ currentUser }: { currentUser: UserInterface }) => {
   return (
-    <header className='h-[56px] z-10 fixed w-full bg-[#0EA5E9] px-6 items-center drop-shadow-md grid grid-cols-10 gap-x-10'>
+    <header className='h-[56px] z-10 fixed w-full bg-[#0EA5E9] px-2.5 lg:px-6 drop-shadow-md flex items-center justify-between gap-x-5 md:gap-x-8 lg:gap-x-10'>
       <div className='flex space-x-1.5 items-center h-full col-span-2'>
-        <Link href='/' className='block'>
+        <Link href='/feed' className='block'>
           <div className='relative h-10 w-10'>
             <Image src={'/images/logo/logo.png'} fill alt='Wraglet' />
           </div>
         </Link>
         <Link
-          href={'/'}
-          className={`${quicksand.className} text-xl font-bold text-white`}
+          href={'/feed'}
+          className={`${quicksand.className} text-xl font-bold text-white hidden md:block`}
         >
           wraglet
         </Link>
       </div>
-      <div className='col-start-4 col-span-3 h-full flex items-center'>
+      <div className='h-full flex w-full lg:w-[600px] items-center'>
         <input
           type='search'
           className='bg-[#E7ECF0] w-full h-[30px] rounded-2xl border border-solid border-[#E5E5E5] focus:outline-none px-2 text-sm text-[#333333]'
         />
       </div>
-      <ul className='col-end-11 col-span-2 flex justify-between items-center'>
-        <li className='cursor-pointer'>
-          <HomeIcon className='text-white' />
+      <ul className='flex justify-between gap-x-4 lg:gap-x-6 items-center'>
+        <li className='cursor-pointer hidden md:block'>
+          <Link href={'/feed'}>
+            <HomeIcon className='text-white' />
+          </Link>
         </li>
         <li className='cursor-pointer'>
           <PeopleIcon className='text-white' />

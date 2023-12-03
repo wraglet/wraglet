@@ -1,14 +1,24 @@
 'use client';
+
+import { ReactNode } from 'react';
+
 const Footer = () => {
+  const lists: (string | ReactNode)[] = [
+    'About',
+    'Help',
+    'Terms of Service',
+    'Privacy Policy',
+    'Cookie Policy',
+    'Advertising',
+    <>&copy; {new Date().getFullYear()} Wraglet</>
+  ];
   return (
-    <footer className='h-[50px] w-full flex items-center justify-center gap-[50px] text-xs font-medium z-20 bg-white'>
-      <h3>About</h3>
-      <h3>Help</h3>
-      <h3>Terms of Service</h3>
-      <h3>Privacy Policy</h3>
-      <h3>Cookie Policy</h3>
-      <h3>Advertising</h3>
-      <h3>&copy; {new Date().getFullYear()} Wraglet</h3>
+    <footer className='bg-white w-full h-10 md:h-[50px] justify-center flex items-center z-10'>
+      <ul className='flex items-center justify-center gap-x-[50px] text-[10px] md:text-xs font-medium flex-wrap'>
+        {lists.map((item, i) => (
+          <span key={i}>{item}</span>
+        ))}
+      </ul>
     </footer>
   );
 };
