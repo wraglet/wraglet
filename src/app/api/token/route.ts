@@ -1,4 +1,4 @@
-import getCurrentUser from '@/app/actions/getCurrentUser';
+import getCurrentUser from '@/actions/getCurrentUser';
 import * as Ably from 'ably/promises';
 import { NextResponse } from 'next/server';
 

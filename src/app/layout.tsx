@@ -2,8 +2,8 @@ export const dynamic = 'force-dynamic';
 
 import type { Metadata } from 'next';
 import './globals.css';
-import AuthContext from './context/AuthContext';
-import ToasterContext from './context/ToasterContext';
+import AuthContext from '@/context/AuthContext';
+import ToasterContext from '@/context/ToasterContext';
 import { Inter } from 'next/font/google';
 
 const inter = Inter({ subsets: ['latin'], preload: true });

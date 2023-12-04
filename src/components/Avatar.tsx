@@ -1,7 +1,7 @@
 import Image from 'next/image';
 
 type AvatarProps = {
-  gender: string;
+  gender?: string;
   size?: string;
   className?: string;
   alt?: string;

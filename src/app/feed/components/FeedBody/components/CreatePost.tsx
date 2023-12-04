@@ -1,36 +1,28 @@
 'use client';
 
-import Avatar from '@/app/components/Avatar';
-import Button from '@/app/components/Button';
-import { GalleryIcon, TerminalIcon } from '@/app/components/Icons';
-import { UserInterface } from '@/app/interfaces';
+import Avatar from '@/components/Avatar';
+import Button from '@/components/Button';
+import { GalleryIcon, TerminalIcon } from '@/components/Icons';
+import { useAppSelector } from '@/libs/hooks';
+import { RootState } from '@/libs/store';
 import React, { ChangeEvent, FormEvent } from 'react';
 import { BsSend } from 'react-icons/bs';
 import { HiOutlinePlayCircle } from 'react-icons/hi2';
 
 type Props = {
-  currentUser: UserInterface;
   submitPost: (e: FormEvent) => Promise<void>;
   isLoading: boolean;
   setContent: (e: ChangeEvent<HTMLInputElement>) => void;
   content: string;
 };
 
-const CreatePost = ({
-  currentUser,
-  submitPost,
-  isLoading,
-  setContent,
-  content
-}: Props) => {
+const CreatePost = ({ submitPost, isLoading, setContent, content }: Props) => {
+  const { user } = useAppSelector((state: RootState) => state.userState);
   return (
     <div className='flex w-full items-start rounded-lg drop-shadow-md bg-white border border-solid border-neutral-200'>
       <div className='flex px-4 py-3 gap-x-2 w-full'>
         <div className='block relative'>
-          <Avatar
-            gender={currentUser.gender}
-            alt={`${currentUser.firstName}'s photo`}
-          />
+          <Avatar gender={user?.gender} alt={`${user?.firstName}'s photo`} />
         </div>
         <form
           onSubmit={submitPost}

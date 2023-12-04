@@ -1,13 +1,16 @@
 'use client';
 
-import { BlogOutlineIcon } from '@/app/components/Icons';
+import { BlogOutlineIcon } from '@/components/Icons';
 import { useEffect, useRef, useState } from 'react';
 import VideoIcon from './icons/VideoIcon';
-import Avatar from '@/app/components/Avatar';
-import { UserInterface } from '@/app/interfaces';
-import { useDimensions } from '@/app/utils/useDimension';
+import Avatar from '@/components/Avatar';
+import { UserInterface } from '@/interfaces';
+import { useDimensions } from '@/utils/useDimension';
+import { useAppSelector } from '@/libs/hooks';
+import { RootState } from '@/libs/store';
 
-const LeftSideNav = ({ currentUser }: { currentUser: UserInterface }) => {
+const LeftSideNav = () => {
+  const { user } = useAppSelector((state:RootState) => state.userState);
   const [hydrated, setHydrated] = useState(false);
 
   const ref = useRef(null);
@@ -24,6 +27,8 @@ const LeftSideNav = ({ currentUser }: { currentUser: UserInterface }) => {
     return null;
   }
 
+  
+
   return (
     <section
       ref={ref}
@@ -37,13 +42,13 @@ const LeftSideNav = ({ currentUser }: { currentUser: UserInterface }) => {
           <div className='group hover:bg-gray-400 px-3 h-[50px] w-full flex rounded-lg drop-shadow-md bg-white border border-solid border-neutral-200 items-center cursor-pointer'>
             <div className='flex items-center space-x-2'>
               <Avatar
-                gender={currentUser.gender}
+                gender={user?.gender}
                 className='group-hover:border-white'
-                alt={`${currentUser.firstName}'s Profile`}
-                src={currentUser.profilePicture}
+                alt={`${user?.firstName}'s Profile`}
+                src={user?.profilePicture}
               />
               <h2 className='group-hover:text-white text-xs font-semibold text-[#333333]'>
-                {currentUser?.firstName}
+                {user?.firstName}
               </h2>
             </div>
           </div>

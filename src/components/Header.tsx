@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import React from 'react';
+import React, { useRef } from 'react';
 import Image from 'next/image';
 import { UserInterface } from '../interfaces';
 import AvatarMenu from './AvatarMenu';
 import { HomeIcon, PeopleIcon, ChatIcon, BellIcon } from './NavIcons';
 import { Quicksand } from 'next/font/google';
+import { useAppStore } from '@/libs/hooks';
+import { setUser } from '@/libs/features/userSlice';
 
 const quicksand = Quicksand({
   subsets: ['latin'],
@@ -20,6 +22,14 @@ type Props = {
 };
 
 const Header = ({ currentUser }: Props) => {
+  // Initialize the store with the product information
+  const store = useAppStore();
+  const initialized = useRef(false);
+  if (!initialized.current) {
+    store.dispatch(setUser(currentUser));
+    initialized.current = true;
+  }
+
   return (
     <header className='h-[56px] z-10 fixed w-full bg-[#0EA5E9] px-2.5 lg:px-6 drop-shadow-md flex items-center justify-between gap-x-5 md:gap-x-8 lg:gap-x-10'>
       <div className='flex space-x-1.5 items-center h-full col-span-2'>
@@ -56,7 +66,7 @@ const Header = ({ currentUser }: Props) => {
         <li className='cursor-pointer'>
           <BellIcon className='text-white' />
         </li>
-        <AvatarMenu currentUser={currentUser} />
+        <AvatarMenu />
       </ul>
     </header>
   );

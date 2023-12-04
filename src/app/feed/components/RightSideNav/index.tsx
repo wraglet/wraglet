@@ -1,8 +1,8 @@
 'use client';
 
-import Avatar from '@/app/components/Avatar';
-import { UserInterface } from '@/app/interfaces';
-import { useDimensions } from '@/app/utils/useDimension';
+import Avatar from '@/components/Avatar';
+import { UserInterface } from '@/interfaces';
+import { useDimensions } from '@/utils/useDimension';
 import { useState, useRef, useEffect } from 'react';
 import { IoPersonAddSharp } from 'react-icons/io5';
 

@@ -1,20 +1,19 @@
 'use client';
 
 import React, { FC, FormEvent, useEffect, useReducer, useState } from 'react';
-import CreatePost from './component/CreatePost';
-import Post from './component/Post';
-import { PostInterface, UserInterface } from '@/app/interfaces';
+import CreatePost from './components/CreatePost';
+import Post from './components/Post';
+import { PostInterface } from '@/interfaces';
 import { useChannel } from 'ably/react';
 
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
 interface FeedBodyInterface {
-  currentUser: UserInterface;
   initialPosts: PostInterface[];
 }
 
-const FeedBody: FC<FeedBodyInterface> = ({ currentUser, initialPosts }) => {
+const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
   const [hydrated, setHydrated] = useState(false);
   const reducer = (state: any, action: any) => ({ ...state, ...action });
 
@@ -62,14 +61,13 @@ const FeedBody: FC<FeedBodyInterface> = ({ currentUser, initialPosts }) => {
   return (
     <section className='md:w-[600px] lg:w-auto col-start-3 col-end-8 h-auto flex flex-col my-6 w-full gap-y-4 overflow-auto mx-auto'>
       <CreatePost
-        currentUser={currentUser}
         isLoading={isLoading}
         submitPost={submitPost}
         content={content}
         setContent={(e) => dispatch({ content: e.target.value })}
       />
       {posts.map((post: PostInterface) => (
-        <Post currentUser={currentUser} key={post.id} post={post} />
+        <Post key={post.id} post={post} />
       ))}
     </section>
   );
