@@ -16,7 +16,8 @@ model User {
   suffix String?
   email String @unique
   hashedPassword String
-  dob DateTime?
+  username String
+  dob DateTime
   gender String
   bio String?
   pronoun String

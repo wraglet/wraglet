@@ -17,6 +17,7 @@ const getPosts = async () => {
             lastName: true,
             email: true,
             dob: true,
+            username: true,
             gender: true,
             pronoun: true,
             profilePicture: true,

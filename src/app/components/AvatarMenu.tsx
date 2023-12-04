@@ -11,18 +11,15 @@ import {
   HiOutlineArrowRightOnRectangle
 } from 'react-icons/hi2';
 import Avatar from './Avatar';
+import { UserInterface } from '../interfaces';
+import Link from 'next/link';
 
-interface AvatarMenuProps {
-  firstName: string | undefined;
-  gender: string;
-}
-
-const AvatarMenu = ({ firstName, gender }: AvatarMenuProps) => {
+const AvatarMenu = ({ currentUser }: { currentUser: UserInterface }) => {
   return (
     <Menu as='li' className='inline-flex'>
       <Menu.Button className='relative h-8 w-8 cursor-pointer border border-solid border-white rounded-full'>
         <Avatar
-          gender={gender}
+          gender={currentUser.gender}
           size='h-8 w-8'
           src={'/images/placeholder/male-placeholder.png'}
           alt={'Avatar'}
@@ -41,7 +38,8 @@ const AvatarMenu = ({ firstName, gender }: AvatarMenuProps) => {
           <div className='px-1 py-1 '>
             <Menu.Item>
               {({ active }) => (
-                <button
+                <Link
+                  href={`${currentUser.username}`}
                   className={`${
                     active ? 'bg-[#1B87EA] text-white' : 'text-gray-900'
                   } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
@@ -54,8 +52,8 @@ const AvatarMenu = ({ firstName, gender }: AvatarMenuProps) => {
                       aria-hidden='true'
                     />
                   )}
-                  {firstName}
-                </button>
+                  {currentUser.firstName}
+                </Link>
               )}
             </Menu.Item>
             <Menu.Item>

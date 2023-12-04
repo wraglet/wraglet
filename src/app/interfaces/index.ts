@@ -2,8 +2,8 @@ export interface PostInterface {
   id: string;
   content: string;
   image: null | string;
-  createdAt: Date | null;
-  updatedAt: Date | null;
+  createdAt: Date;
+  updatedAt?: Date;
   authorId: string;
   audience: string;
   author: AuthorInterface;
@@ -21,11 +21,12 @@ export interface CommentInterface {
 }
 
 export interface UserInterface {
+  username: string;
   id: string;
-  email: string;
   firstName: string;
   lastName: string;
-  dob: Date | null;
+  email: string;
+  dob: Date;
   gender: string;
   bio: string | null;
   pronoun: string;
@@ -40,12 +41,13 @@ export interface AuthorInterface {
   firstName: string;
   lastName: string;
   email: string;
-  dob: Date | null;
+  username: string;
+  dob: Date;
   gender: string;
   pronoun: string;
-  profilePicture: null | string;
-  coverPhoto: null | string;
-  createdAt: Date | null;
+  profilePicture: string | null;
+  coverPhoto: string | null;
+  createdAt: Date;
 }
 
 export interface LikeInterface {

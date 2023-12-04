@@ -32,10 +32,8 @@ export const metadata: Metadata = {
   }
 };
 
-export default function FeedLayout({
-  children
-}: {
-  children: React.ReactNode;
-}) {
+const FeedLayout = ({ children }: { children: React.ReactNode }) => {
   return <Suspense fallback={<Loading />}>{children}</Suspense>;
-}
+};
+
+export default FeedLayout;

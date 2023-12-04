@@ -15,7 +15,11 @@ const quicksand = Quicksand({
   preload: true
 });
 
-const Header = ({ currentUser }: { currentUser: UserInterface }) => {
+type Props = {
+  currentUser: UserInterface;
+};
+
+const Header = ({ currentUser }: Props) => {
   return (
     <header className='h-[56px] z-10 fixed w-full bg-[#0EA5E9] px-2.5 lg:px-6 drop-shadow-md flex items-center justify-between gap-x-5 md:gap-x-8 lg:gap-x-10'>
       <div className='flex space-x-1.5 items-center h-full col-span-2'>
@@ -52,10 +56,7 @@ const Header = ({ currentUser }: { currentUser: UserInterface }) => {
         <li className='cursor-pointer'>
           <BellIcon className='text-white' />
         </li>
-        <AvatarMenu
-          gender={currentUser.gender}
-          firstName={currentUser.firstName}
-        />
+        <AvatarMenu currentUser={currentUser} />
       </ul>
     </header>
   );

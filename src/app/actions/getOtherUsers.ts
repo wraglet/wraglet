@@ -30,6 +30,7 @@ const getOtherUsers = async () => {
         lastName: true,
         email: true,
         dob: true,
+        username: true,
         gender: true,
         bio: true,
         pronoun: true,
