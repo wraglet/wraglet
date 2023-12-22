@@ -1,57 +1,90 @@
 export interface PostInterface {
-  id: string;
-  content: string;
-  image: null | string;
+  _id: string;
+  content: {
+    text?: string;
+    images?: Array<{
+      url: string;
+      key: string;
+    }>;
+  };
+  audience: string;
   createdAt: Date;
   updatedAt?: Date;
-  authorId: string;
-  audience: string;
   author: AuthorInterface;
-  comments: CommentInterface[];
-  likes: LikeInterface[];
+  comments?: CommentInterface[];
+  reactions?: ReactionInterface[];
+  upvotes: number;
+  downvotes: number;
+  votes: PostVoteInterface[];
 }
 
 export interface CommentInterface {
-  id: string;
+  _id: string;
   content: string;
   createdAt: Date;
-  updatedAt: Date;
-  authorId: string;
+  updatedAt?: Date;
+  authorId: string | undefined;
   postId: string;
+  reactions?: ReactionInterface[];
+}
+
+export interface ReactionInterface {
+  _id: string;
+  type: string;
+  userId: string;
+  postId: string;
+  createdAt: Date;
+  updatedAt?: Date;
 }
 
 export interface UserInterface {
-  username: string;
-  id: string;
+  _id: string;
   firstName: string;
   lastName: string;
+  suffix?: string;
   email: string;
+  hashedPassword: string;
+  username: string;
   dob: Date;
   gender: string;
-  bio: string | null;
+  bio?: string | null;
   pronoun: string;
-  profilePicture: string | null;
-  coverPhoto: string | null;
+  profilePicture?: {
+    url: string;
+    key: string;
+  } | null;
+  coverPhoto?: {
+    url: string;
+    key: string;
+  } | null;
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt?: Date;
+  publicProfileVisible: boolean;
+  friendRequests?: string | null;
+  friends: string[];
 }
 
 export interface AuthorInterface {
-  id: string;
   firstName: string;
   lastName: string;
-  email: string;
   username: string;
-  dob: Date;
   gender: string;
   pronoun: string;
-  profilePicture: string | null;
-  coverPhoto: string | null;
-  createdAt: Date;
+  profilePicture?: {
+    url: string;
+    key: string;
+  } | null;
+  coverPhoto?: {
+    url: string;
+    key: string;
+  } | null;
 }
 
-export interface LikeInterface {
-  id: string;
-  userId: string;
+export interface PostVoteInterface {
+  _id: string;
   postId: string;
+  userId: string;
+  voteType: 'upvote' | 'downvote';
+  createdAt: Date;
+  updatedAt?: Date;
 }

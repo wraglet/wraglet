@@ -16,7 +16,7 @@ const Footer = () => {
     <footer className='bg-white w-full h-10 md:h-[50px] justify-center flex items-center z-10'>
       <ul className='flex items-center justify-center gap-x-[50px] text-[10px] md:text-xs font-medium flex-wrap'>
         {lists.map((item, i) => (
-          <span key={i}>{item}</span>
+          <li key={i}>{item}</li>
         ))}
       </ul>
     </footer>

@@ -22,8 +22,9 @@ const Avatar = ({
       <Image
         className='rounded-full object-over'
         fill
+        sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
         src={
-          src ??
+          src ||
           (gender === 'Male'
             ? '/images/placeholder/male-placeholder.png'
             : '/images/placeholder/female-placeholder.png')

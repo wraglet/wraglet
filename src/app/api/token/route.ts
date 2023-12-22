@@ -23,10 +23,10 @@ export const POST = async () => {
     }
     const client = new Ably.Rest({
       key: process.env.ABLY_API_KEY,
-      log: { level: 4 }
+      log: { level: 3 }
     });
     const tokenRequestData = await client.auth.createTokenRequest({
-      clientId: currentUser?.id
+      clientId: currentUser?._id
     });
     return NextResponse.json(tokenRequestData);
   } catch (error: any) {

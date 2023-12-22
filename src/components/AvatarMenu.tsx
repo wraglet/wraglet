@@ -12,17 +12,27 @@ import {
 } from 'react-icons/hi2';
 import Avatar from './Avatar';
 import Link from 'next/link';
-import { useAppSelector } from '@/libs/hooks';
+import { useAppSelector } from '@/libs/redux/hooks';
+import { useDispatch } from 'react-redux';
+import { clearUser } from '@/libs/redux/features/userSlice';
+import { clearGlobalState } from '@/libs/redux/features/globalSlice';
+import { clearFeedPosts } from '@/libs/redux/features/feedPostsSlice';
 
 const AvatarMenu = () => {
   const { user } = useAppSelector((state) => state.userState);
+  const dispatch = useDispatch();
   return (
     <Menu as='li' className='inline-flex'>
       <Menu.Button className='relative h-8 w-8 cursor-pointer border border-solid border-white rounded-full'>
         <Avatar
-          gender={user!.gender}
+          gender={user?.gender}
           size='h-8 w-8'
-          src={'/images/placeholder/male-placeholder.png'}
+          src={
+            user?.profilePicture?.url ||
+            (user?.gender === 'Female'
+              ? '/images/placeholder/male-placeholder.png'
+              : '/images/placeholder/male-placeholder.png')
+          }
           alt={'Avatar'}
         />
       </Menu.Button>
@@ -40,7 +50,7 @@ const AvatarMenu = () => {
             <Menu.Item>
               {({ active }) => (
                 <Link
-                  href={`${user!.username}`}
+                  href={`/profile/${user?.username}`}
                   className={`${
                     active ? 'bg-[#1B87EA] text-white' : 'text-gray-900'
                   } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
@@ -53,7 +63,7 @@ const AvatarMenu = () => {
                       aria-hidden='true'
                     />
                   )}
-                  {user!.firstName}
+                  {user?.firstName}
                 </Link>
               )}
             </Menu.Item>
@@ -78,7 +88,12 @@ const AvatarMenu = () => {
             <Menu.Item>
               {({ active }) => (
                 <button
-                  onClick={() => signOut()}
+                  onClick={() => {
+                    signOut();
+                    dispatch(clearUser());
+                    dispatch(clearGlobalState());
+                    dispatch(clearFeedPosts());
+                  }}
                   className={`${
                     active ? 'bg-[#1B87EA] text-white' : 'text-gray-900'
                   } group flex w-full items-center rounded-md px-2 py-2 text-sm`}

@@ -1,44 +1,61 @@
-import bcrypt from 'bcrypt';
 import { AuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
-
-import prisma from '@/libs/prismadb';
+import bcrypt from 'bcrypt';
+import dbConnect from '@/libs/dbConnect';
+import User, { UserDocument } from '@/models/User';
 
 export const authOptions: AuthOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
-      name: 'credentials',
+      id: 'credentials',
+      name: 'Credentials',
       credentials: {
-        email: { label: 'email', type: 'text' },
-        password: { label: 'password', type: 'password' }
+        email: {
+          label: 'Email',
+          type: 'text'
+        },
+        password: {
+          label: 'Password',
+          type: 'text'
+        }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Invalid Credentials');
-        }
+        // Check if the user exists.
+        await dbConnect();
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
+        const user: UserDocument | null = await User.findOne({
+          email: credentials?.email?.toLowerCase()
+        }).lean();
+
+        if (user) {
+          const isPasswordCorrect = await bcrypt.compare(
+            credentials!.password,
+            user.hashedPassword
+          );
+
+          if (isPasswordCorrect) {
+            // Cast user to UserDocument to access properties
+            const typedUser: UserDocument = user as UserDocument;
+
+            return {
+              id: typedUser._id.toString(), // convert ObjectId to string
+              firstName: typedUser.firstName,
+              lastName: typedUser.lastName,
+              email: typedUser.email,
+              dob: typedUser.dob,
+              username: typedUser.username,
+              gender: typedUser.gender,
+              bio: typedUser.bio,
+              pronoun: typedUser.pronoun,
+              profilePicture: typedUser.profilePicture,
+              coverPhoto: typedUser.coverPhoto
+            };
+          } else {
+            throw new Error('Wrong Credentials!');
           }
-        });
-
-        if (!user || !user?.hashedPassword) {
-          throw new Error('Invalid credentials');
+        } else {
+          throw new Error('User not found!');
         }
-
-        const isCorrectPassword = await bcrypt.compare(
-          credentials.password,
-          user.hashedPassword
-        );
-
-        if (!isCorrectPassword) {
-          throw new Error('Invalid credentials');
-        }
-
-        return user;
       }
     })
   ],

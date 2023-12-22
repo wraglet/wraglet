@@ -4,10 +4,11 @@ import Avatar from '@/components/Avatar';
 import Button from '@/components/Button';
 import { ShareIcon } from '@/components/Icons';
 import { PostInterface } from '@/interfaces';
-import { useAppSelector } from '@/libs/hooks';
-import { RootState } from '@/libs/store';
+import { useAppSelector } from '@/libs/redux/hooks';
+import { RootState } from '@/libs/redux/store';
 import arrGenerator from '@/utils/arrGenerator';
 import { formatDistanceToNow } from 'date-fns';
+import Image from 'next/image';
 import React, { useEffect, useRef, useState } from 'react';
 import { FaRegComment, FaRegHeart } from 'react-icons/fa6';
 import { LuArrowBigUp, LuArrowBigDown } from 'react-icons/lu';
@@ -40,9 +41,12 @@ const Post = ({ post }: Props) => {
 
   return (
     <div className='flex w-full'>
-      <div className='rounded-lg drop-shadow-md bg-white border border-solid border-neutral-200 flex px-4 py-3 gap-x-2 w-full items-start justify-between'>
+      <div className='sm:rounded-lg drop-shadow-md bg-white border border-solid border-neutral-200 flex px-4 py-3 gap-x-2 w-full items-start justify-between'>
         <div className='block relative'>
-          <Avatar gender={user?.gender} />
+          <Avatar
+            gender={post.author?.gender}
+            src={post.author.profilePicture?.url}
+          />
         </div>
         <div className='flex flex-col gap-y-5 flex-grow justify-start'>
           <div className='flex flex-col gap-y-1'>
@@ -68,7 +72,29 @@ const Post = ({ post }: Props) => {
                 </h4>
               )}
             </div>
-            <p className='text-gray-600 text-xs'>{post.content}</p>
+            {post.content.text && (
+              <p className='text-gray-600 text-xs'>{post.content.text}</p>
+            )}
+
+            {post.content.images &&
+              post.content.images.map((image) => (
+                <div
+                  key={image.key}
+                  className='block rounded-md overflow-hidden my-3'
+                >
+                  <Image
+                    src={image.url}
+                    alt='Post Image'
+                    sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
+                    width={1}
+                    height={1}
+                    style={{
+                      height: 'auto',
+                      width: '100%'
+                    }}
+                  />
+                </div>
+              ))}
           </div>
           <div className='flex justify-between items-center z-10 bg-white'>
             <div className='flex items-center gap-1 border border-solid border-gray-400 rounded-full px-2 py-0.5'>
@@ -98,7 +124,11 @@ const Post = ({ post }: Props) => {
             } w-full flex flex-col pt-2 overflow-hidden transition-all duration-300 ease-in-out gap-4`}
           >
             <div className='flex items-center gap-2'>
-              <Avatar gender={user?.gender} size='h-6 w-6' />
+              <Avatar
+                gender={user?.gender}
+                size='h-6 w-6'
+                src={user?.profilePicture?.url}
+              />
               <div className='flex-1'>
                 <input
                   type='text'
