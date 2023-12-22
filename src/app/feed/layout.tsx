@@ -3,9 +3,9 @@ export const dynamic = 'force-dynamic';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Loading from '../loading';
-import ReduxProvider from '@/providers/ReduxProvider';
 import Header from '@/components/Header';
 import getCurrentUser from '@/actions/getCurrentUser';
+import deJSONify from '@/utils/deJSONify';
 
 export const metadata: Metadata = {
   title: 'Wraglet Feed - Explore Impactful Connections',
@@ -36,19 +36,19 @@ export const metadata: Metadata = {
 };
 
 const FeedLayout = async ({ children }: { children: React.ReactNode }) => {
-  const currentUser = await getCurrentUser().catch((err) => {
+  const jsonUser = await getCurrentUser().catch((err) => {
     console.error(
       'Error happened while getting getCurrentUser() on Feed component: ',
       err
     );
   });
+
+  const currentUser = deJSONify(jsonUser);
   return (
-    <ReduxProvider>
-      <div className='flex flex-col min-h-screen overflow-hidden relative bg-[rgba(110,201,247,0.15)]'>
-        <Header currentUser={currentUser!} />
-        <Suspense fallback={<Loading />}>{children}</Suspense>
-      </div>
-    </ReduxProvider>
+    <div className='flex flex-col min-h-screen overflow-hidden items-center relative bg-[rgba(110,201,247,0.15)]'>
+      <Header currentUser={currentUser!} />
+      <Suspense fallback={<Loading />}>{children}</Suspense>
+    </div>
   );
 };
 

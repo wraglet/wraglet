@@ -1,10 +1,12 @@
 import bcrypt from 'bcrypt';
-
-import prisma from '@/libs/prismadb';
 import { NextResponse } from 'next/server';
+import dbConnect from '@/libs/dbConnect';
+import User from '@/models/User';
 
 export async function POST(request: Request) {
   try {
+    await dbConnect();
+
     const body = await request.json();
     const {
       firstName,
@@ -36,19 +38,17 @@ export async function POST(request: Request) {
 
     const username = generateUsername(firstName, lastName);
 
-    const user = await prisma.user.create({
-      data: {
-        firstName,
-        lastName,
-        email,
-        username, // Include the generated username
-        hashedPassword,
-        dob,
-        gender,
-        pronoun,
-        friendRequests,
-        publicProfileVisible
-      }
+    const user = await User.create({
+      firstName,
+      lastName,
+      email,
+      username,
+      hashedPassword,
+      dob,
+      gender,
+      pronoun,
+      friendRequests,
+      publicProfileVisible
     });
 
     return NextResponse.json(user);

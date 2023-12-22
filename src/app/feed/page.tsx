@@ -1,43 +1,49 @@
 import getPosts from '@/actions/getPosts';
 import dynamic from 'next/dynamic';
 import getOtherUsers from '@/actions/getOtherUsers';
-import WragletAblyProvider from '../../providers/WragletAblyProvider';
+import deJSONify from '@/utils/deJSONify';
 
-const FeedBody = dynamic(() => import('./components/FeedBody'), {
+const AblyWrapper = dynamic(
+  () => import('./components/Feed/components/AblyWrapper'),
+  {
+    ssr: false
+  }
+);
+
+const LeftNav = dynamic(() => import('./components/LeftNav'), {
   ssr: false
 });
 
-const LeftSideNav = dynamic(() => import('./components/LeftSideNav'), {
-  ssr: false
-});
-
-const RightSideNav = dynamic(() => import('./components/RightSideNav'), {
+const RightNav = dynamic(() => import('./components/RightNav'), {
   ssr: false
 });
 
 const Page = async () => {
-  const otherUsers = await getOtherUsers().catch((err) => {
+  const jsonOtherUsers = await getOtherUsers().catch((err: any) => {
     console.error(
       'Error happened while getting getOtherUsers() on Feed component: ',
       err
     );
   });
 
-  const initialPosts = await getPosts().catch((err) => {
+  const jsonInitialPosts = await getPosts().catch((err: any) => {
     console.error(
       'Error happened while getting getPosts() on Feed component: ',
       err
     );
   });
 
-  return (
-    <main className='flex-grow flex lg:grid grid-cols-10 mx-6 gap-x-5 mt-14'>
-      <LeftSideNav />
-      <WragletAblyProvider>
-        <FeedBody initialPosts={initialPosts!} />
-      </WragletAblyProvider>
+  const otherUsers = deJSONify(jsonOtherUsers);
+  const initialPosts = deJSONify(jsonInitialPosts);
 
-      <RightSideNav otherUsers={otherUsers!} />
+  return (
+    <main className='flex-grow flex w-full items-start mx-6 gap-x-5 mt-14 3xl:max-w-screen-2xl'>
+      <LeftNav />
+      <div className='tablet:ml-10 xl:ml-20 xl:mx-auto 2xl:ml-auto flex items-start gap-x-5 flex-grow sm:mx-10'>
+        <AblyWrapper initialPosts={initialPosts!} />
+
+        <RightNav otherUsers={otherUsers!} />
+      </div>
     </main>
   );
 };

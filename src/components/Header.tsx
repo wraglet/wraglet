@@ -1,14 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useRef } from 'react';
+import React, { useEffect } from 'react';
 import Image from 'next/image';
-import { UserInterface } from '../interfaces';
 import AvatarMenu from './AvatarMenu';
 import { HomeIcon, PeopleIcon, ChatIcon, BellIcon } from './NavIcons';
 import { Quicksand } from 'next/font/google';
-import { useAppStore } from '@/libs/hooks';
-import { setUser } from '@/libs/features/userSlice';
+import { setUser } from '@/libs/redux/features/userSlice';
+import { UserDocument } from '@/models/User';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/libs/redux/store';
+import {
+  setJustLoggedIn,
+  setUserSliceInitialized
+} from '@/libs/redux/features/globalSlice';
 
 const quicksand = Quicksand({
   subsets: ['latin'],
@@ -18,24 +23,39 @@ const quicksand = Quicksand({
 });
 
 type Props = {
-  currentUser: UserInterface;
+  currentUser: UserDocument;
 };
 
 const Header = ({ currentUser }: Props) => {
   // Initialize the store with the product information
-  const store = useAppStore();
-  const initialized = useRef(false);
-  if (!initialized.current) {
-    store.dispatch(setUser(currentUser));
-    initialized.current = true;
-  }
+  const dispatch = useDispatch();
+  const { justLoggedIn, userSliceInitialized } = useSelector(
+    (state: RootState) => state.globalState
+  );
+
+  useEffect(() => {
+    if (!justLoggedIn && !userSliceInitialized) {
+      dispatch(setJustLoggedIn(true));
+    }
+
+    if (justLoggedIn && !userSliceInitialized) {
+      dispatch(setUser(currentUser));
+      dispatch(setUserSliceInitialized(true));
+      dispatch(setJustLoggedIn(false));
+    }
+  }, [currentUser, dispatch, justLoggedIn, userSliceInitialized]);
 
   return (
-    <header className='h-[56px] z-10 fixed w-full bg-[#0EA5E9] px-2.5 lg:px-6 drop-shadow-md flex items-center justify-between gap-x-5 md:gap-x-8 lg:gap-x-10'>
+    <header className='h-[56px] z-50 fixed w-full bg-[#0EA5E9] px-2.5 lg:px-6 drop-shadow-md flex items-center justify-between gap-x-5 md:gap-x-8 lg:gap-x-10'>
       <div className='flex space-x-1.5 items-center h-full col-span-2'>
         <Link href='/feed' className='block'>
           <div className='relative h-10 w-10'>
-            <Image src={'/images/logo/logo.png'} fill alt='Wraglet' />
+            <Image
+              src={'/favicon-32x32.png'}
+              fill
+              sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
+              alt='Wraglet'
+            />
           </div>
         </Link>
         <Link

@@ -1,34 +1,21 @@
-import prisma from '@/libs/prismadb';
+import dbConnect from '@/libs/dbConnect';
+import Post from '@/models/Post';
+import Comment from '@/models/Comment';
+import Reaction from '@/models/Reaction';
+import PostVote from '@/models/PostVote';
 
 const getPosts = async () => {
+  await dbConnect();
   try {
-    const posts = await prisma.post.findMany({
-      where: {
-        audience: 'public'
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            dob: true,
-            username: true,
-            gender: true,
-            pronoun: true,
-            profilePicture: true,
-            coverPhoto: true,
-            createdAt: true
-          }
-        },
-        comments: true,
-        likes: true
-      }
-    });
+    const posts = await Post.find({ audience: 'public' })
+      .sort({ createdAt: 'desc' })
+      .populate({
+        path: 'author',
+        select:
+          'firstName lastName username gender pronoun profilePicture coverPhoto'
+      })
+      .populate('comments reactions')
+      .exec();
 
     return posts;
   } catch (err: any) {

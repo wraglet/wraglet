@@ -59,7 +59,7 @@ const ComboBox: ForwardRefRenderFunction<HTMLInputElement, ComboBoxProps> = (
                   {({ active, selected }) => (
                     <li
                       className={`cursor-pointer px-4 py-2 ${
-                        active ? 'bg-teal-600 text-white' : ''
+                        active ? 'bg-sky-600 text-white' : ''
                       } ${selected ? 'font-medium' : ''}`}
                     >
                       {option}

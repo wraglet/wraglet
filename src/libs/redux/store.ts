@@ -1,10 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 import userReducer from './features/userSlice';
+import globalReducer from './features/globalSlice';
+import feedPostsReducer from './features/feedPostsSlice';
 
 export const makeStore = () => {
   return configureStore({
     reducer: {
-      userState: userReducer
+      userState: userReducer,
+      globalState: globalReducer,
+      feedPostsState: feedPostsReducer
     }
   });
 };
