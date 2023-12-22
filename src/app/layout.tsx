@@ -1,17 +1,42 @@
 export const dynamic = 'force-dynamic';
 
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
-import AuthContext from './context/AuthContext';
-import ToasterContext from './context/ToasterContext';
+import AuthContext from '@/context/AuthContext';
+import ToasterContext from '@/context/ToasterContext';
+import { Inter } from 'next/font/google';
+import ReduxProvider from '@/providers/ReduxProvider';
 
 const inter = Inter({ subsets: ['latin'], preload: true });
 
+const title = 'Wraglet';
+
 export const metadata: Metadata = {
-  title: 'Wraglet',
+  title: title,
   description:
-    "Wraglet combines the brevity of Twitter, the engagement of Reddit, and the social connections of Facebook. With a focus on concise posts (up to 800 characters) and a robust upvoting system, we're redefining the way we share content online. Additionally, our innovative Blog section allows for long-form expression, fostering deeper discussions within our community."
+    "Wraglet is more than a social platform; it's a movement towards profound connections. Embrace a future where impactful brevity takes center stage, and every voice resonates. Join Wraglet today and be part of the evolution of meaningful online interaction.",
+  twitter: {
+    images: {
+      url: 'https://wraglet.com/images/logo/logo.png',
+      alt: 'Wraglet - Redefining Social Connection',
+      type: 'image/png',
+      width: 300,
+      height: 300
+    }
+  },
+  openGraph: {
+    title: title,
+    images: {
+      url: 'https://wraglet.com/images/logo/logo.png',
+      alt: 'Wraglet - Redefining Social Connection',
+      type: 'image/png',
+      width: 300,
+      height: 300
+    },
+    siteName: title,
+    description:
+      'Discover Wraglet, where concise expression meets impactful connection. Redefining social media, Wraglet fosters meaningful interactions with a focus on brevity and resonance. Join us for a future where every voice matters.'
+  }
 };
 
 export default function RootLayout({
@@ -23,8 +48,10 @@ export default function RootLayout({
     <html lang='en'>
       <body className={inter.className}>
         <AuthContext>
-          <ToasterContext />
-          {children}
+          <ReduxProvider>
+            <ToasterContext />
+            {children}
+          </ReduxProvider>
         </AuthContext>
       </body>
     </html>
