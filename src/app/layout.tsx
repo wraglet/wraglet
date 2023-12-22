@@ -2,9 +2,10 @@ export const dynamic = 'force-dynamic';
 
 import type { Metadata } from 'next';
 import './globals.css';
-import AuthContext from './context/AuthContext';
-import ToasterContext from './context/ToasterContext';
+import AuthContext from '@/context/AuthContext';
+import ToasterContext from '@/context/ToasterContext';
 import { Inter } from 'next/font/google';
+import ReduxProvider from '@/providers/ReduxProvider';
 
 const inter = Inter({ subsets: ['latin'], preload: true });
 
@@ -47,8 +48,10 @@ export default function RootLayout({
     <html lang='en'>
       <body className={inter.className}>
         <AuthContext>
-          <ToasterContext />
-          {children}
+          <ReduxProvider>
+            <ToasterContext />
+            {children}
+          </ReduxProvider>
         </AuthContext>
       </body>
     </html>

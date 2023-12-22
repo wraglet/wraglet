@@ -4,13 +4,13 @@ import { signIn, useSession } from 'next-auth/react';
 import { FormEvent, useEffect, useReducer } from 'react';
 import { useRouter } from 'next/navigation';
 import { HiOutlineChatBubbleLeftRight, HiOutlineUsers } from 'react-icons/hi2';
-import Button from './components/Button';
-import Footer from './components/Footer';
-import Modal from './components/Modal';
-import SignUp from './components/SignUp';
+import Button from '@/components/Button';
+import Footer from '@/components/Footer';
+import Modal from '@/components/Modal';
+import SignUp from '@/components/SignUp';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
-import Input from './components/Input';
+import Input from '@/components/Input';
 import { Quicksand } from 'next/font/google';
 
 const quicksand = Quicksand({

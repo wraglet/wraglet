@@ -1,59 +1,51 @@
-import Header from '../components/Header';
-import getCurrentUser from '../actions/getCurrentUser';
-import getPosts from '../actions/getPosts';
+import getPosts from '@/actions/getPosts';
 import dynamic from 'next/dynamic';
-import getOtherUsers from '../actions/getOtherUsers';
+import getOtherUsers from '@/actions/getOtherUsers';
+import deJSONify from '@/utils/deJSONify';
 
-const FeedAblyProvider = dynamic(
-  () => import('./components/FeedBody/component/FeedAblyProvider'),
+const AblyWrapper = dynamic(
+  () => import('./components/Feed/components/AblyWrapper'),
   {
     ssr: false
   }
 );
 
-const LeftSideNav = dynamic(() => import('./components/LeftSideNav'), {
+const LeftNav = dynamic(() => import('./components/LeftNav'), {
   ssr: false
 });
 
-const RightSideNav = dynamic(() => import('./components/RightSideNav'), {
+const RightNav = dynamic(() => import('./components/RightNav'), {
   ssr: false
 });
 
-const Feed = async () => {
-  const currentUser = await getCurrentUser().catch((err) => {
-    console.error(
-      'Error happened while getting getCurrentUser() on Feed component: ',
-      err
-    );
-  });
-  const otherUsers = await getOtherUsers().catch((err) => {
+const Page = async () => {
+  const jsonOtherUsers = await getOtherUsers().catch((err: any) => {
     console.error(
       'Error happened while getting getOtherUsers() on Feed component: ',
       err
     );
   });
 
-  const initialPosts = await getPosts().catch((err) => {
+  const jsonInitialPosts = await getPosts().catch((err: any) => {
     console.error(
       'Error happened while getting getPosts() on Feed component: ',
       err
     );
   });
 
-  return (
-    <div className='flex flex-col min-h-screen overflow-hidden relative bg-[rgba(110,201,247,0.15)]'>
-      <Header currentUser={currentUser!} />
-      <main className='flex-grow flex lg:grid grid-cols-10 mx-6 gap-x-5 mt-14'>
-        <LeftSideNav currentUser={currentUser!} />
-        <FeedAblyProvider
-          initialPosts={initialPosts!}
-          currentUser={currentUser!}
-        />
+  const otherUsers = deJSONify(jsonOtherUsers);
+  const initialPosts = deJSONify(jsonInitialPosts);
 
-        <RightSideNav otherUsers={otherUsers!} />
-      </main>
-    </div>
+  return (
+    <main className='flex-grow flex w-full items-start mx-6 gap-x-5 mt-14 3xl:max-w-screen-2xl'>
+      <LeftNav />
+      <div className='tablet:ml-10 xl:ml-20 xl:mx-auto 2xl:ml-auto flex items-start gap-x-5 flex-grow sm:mx-10'>
+        <AblyWrapper initialPosts={initialPosts!} />
+
+        <RightNav otherUsers={otherUsers!} />
+      </div>
+    </main>
   );
 };
 
-export default Feed;
+export default Page;

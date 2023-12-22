@@ -27,21 +27,16 @@ Make sure you have the following tools installed on your system:
 3. **Setup .env file**
 
    ```js
-   # Environment variables declared in this file are automatically made available to Prisma.
-   # See the documentation for more detail: https://pris.ly/d/prisma-schema#accessing-environment-variables-from-the-schema
+   MONGODB_URI = 'your-mongodb-url'
 
-   # Prisma supports the native connection string format for PostgreSQL, MySQL, SQLite, SQL Server, MongoDB and CockroachDB.
-   # See the documentation for all the connection string options: https://pris.ly/d/connection-strings
+   NEXTAUTH_SECRET = 'any-long-string'
+   ABLY_API_KEY = 'your-ably-api-key'
 
-   DATABASE_URL="your-mongodb-url"
-
-   NEXTAUTH_SECRET="ANYLONGSTRING"
-   ABLY_API_KEY=YOURABLYAPIKEY
-   ```
-
-4. **Setup Prisma**
-   ```shell
-   npx prisma db push
+   # AWS
+   AWS_ACCESS_KEY_ID_PROD='your-aws-key-id'
+   AWS_SECRET_ACCESS_KEY_PROD='your-aws-secret-access-key'
+   AWS_REGION_PROD='select-aws-region'
+   AWS_S3_BUCKET='name-of-your-aws-s3-bucket'
    ```
 
 ## Project Structure
