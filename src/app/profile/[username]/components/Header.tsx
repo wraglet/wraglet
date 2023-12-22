@@ -1,7 +1,6 @@
 'use client';
 
 import Avatar from '@/components/Avatar';
-import { UserInterface } from '@/interfaces';
 import { setUser } from '@/libs/redux/features/userSlice';
 import { useAppSelector } from '@/libs/redux/hooks';
 import { RootState } from '@/libs/redux/store';
