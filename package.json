@@ -28,6 +28,7 @@
     "react-icons": "^4.11.0",
     "react-image-file-resizer": "^0.4.8",
     "react-redux": "^9.0.0",
+    "sharp": "^0.33.1",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
