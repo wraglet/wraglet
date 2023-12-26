@@ -3,12 +3,16 @@ import dbConnect from '@/libs/dbConnect';
 import getCurrentUser from '@/actions/getCurrentUser';
 import Post from '@/models/Post';
 import { v4 as uuidv4 } from 'uuid';
-import AWS from 'aws-sdk';
+import { Upload } from '@aws-sdk/lib-storage';
+import { ObjectCannedACL, S3 } from '@aws-sdk/client-s3';
 
 export const POST = async (request: Request) => {
-  const s3 = new AWS.S3({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID_PROD,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_PROD,
+  const s3 = new S3({
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID_PROD || '',
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_PROD || ''
+    },
+
     region: process.env.AWS_REGION_PROD
   });
 
@@ -36,7 +40,7 @@ export const POST = async (request: Request) => {
         Bucket: string;
         Key: string;
         Body: Buffer;
-        ACL: string;
+        ACL: ObjectCannedACL | undefined;
         ContentEncoding: string;
         ContentType: string;
       } = {
@@ -47,8 +51,11 @@ export const POST = async (request: Request) => {
         ContentEncoding: 'base64',
         ContentType: `image/${type}`
       };
-      const data = await s3.upload(params).promise();
-      return { url: data.Location, key };
+      const data = await new Upload({
+        client: s3,
+        params
+      }).done();
+      return { url: data.Location!, key };
     };
 
     let content = {};
