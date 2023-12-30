@@ -2,13 +2,17 @@ import getCurrentUser from '@/actions/getCurrentUser';
 import { NextResponse } from 'next/server';
 import dbConnect from '@/libs/dbConnect';
 import User, { UserDocument } from '@/models/User';
-import AWS from 'aws-sdk';
+import { Upload } from '@aws-sdk/lib-storage';
+import { ObjectCannedACL, S3 } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 
 export const PATCH = async (request: Request) => {
-  const s3 = new AWS.S3({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID_PROD,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_PROD,
+  const s3 = new S3({
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID_PROD || '',
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_PROD || ''
+    },
+
     region: process.env.AWS_REGION_PROD
   });
 
@@ -36,7 +40,7 @@ export const PATCH = async (request: Request) => {
         Key: `user/${currentUser.profilePicture.key}`
       };
 
-      await s3.deleteObject(deleteParams).promise();
+      await s3.deleteObject(deleteParams);
     }
 
     // Upload the new profile picture to S3
@@ -45,7 +49,7 @@ export const PATCH = async (request: Request) => {
       Bucket: string;
       Key: string;
       Body: Buffer;
-      ACL: string;
+      ACL: ObjectCannedACL | undefined;
       ContentEncoding: string;
       ContentType: string;
     } = {
@@ -57,7 +61,10 @@ export const PATCH = async (request: Request) => {
       ContentType: `image/${type}`
     };
 
-    const data = await s3.upload(params).promise();
+    const data = await new Upload({
+      client: s3,
+      params
+    }).done();
     console.log('AWS UPLOAD RES DATA FOR PROFILE PICTURE: ', data);
 
     // Update user's profilePicture in MongoDB
