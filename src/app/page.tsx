@@ -28,7 +28,7 @@ const initialState = {
   isLoading: false
 }
 
-export default function Page() {
+const Page = () => {
   const { status } = useSession()
   const { push } = useRouter()
 
@@ -240,3 +240,5 @@ export default function Page() {
     )
   )
 }
+
+export default Page

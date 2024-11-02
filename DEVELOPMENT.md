@@ -50,7 +50,7 @@ Make sure you have the following tools installed on your system:
     - **`/interfaces`**: TypeScript interface declarations.
 - **`/public`**: Static assets like images, fonts, and other files.
 - **`/node_modules`**: Node.js modules and dependencies.
-- **`/next.config.mjs`**: Next.js configuration file.
+- **`/next.config.ts`**: Next.js configuration file.
 - **`/tsconfig.json`**: TypeScript configuration file.
 
 ## Development Workflow
@@ -58,11 +58,11 @@ Make sure you have the following tools installed on your system:
 1. **Start the Development Server:**
 
    ```bash
-   yarn dev      # If you use Yarn
+   yarn dev
    ```
 
 2. **Access the Application:**
-   Open your browser and navigate to [http://localhost:4000](http://localhost:4000) to view the application.
+   Open your browser and navigate to [http://localhost:3000](http://localhost:3000) to view the application.
 
 3. **Development Tasks:**
    - Create new components and pages inside the `/src` directory.

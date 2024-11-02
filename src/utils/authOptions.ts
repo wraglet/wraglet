@@ -15,7 +15,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         // Check if the user exists.
-        await mongoose.connect(process.env.MONGODB_URI!);
+        await mongoose.connect(process.env.MONGODB_URI!)
 
         const user = (await User.findOne({
           email: credentials?.email?.toLowerCase()
