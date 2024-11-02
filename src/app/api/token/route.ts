@@ -1,10 +1,10 @@
-import getCurrentUser from '@/actions/getCurrentUser';
-import * as Ably from 'ably/promises';
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
+import getCurrentUser from '@/actions/getCurrentUser'
+import Ably from 'ably'
 
-export const POST = async () => {
+export const GET = async () => {
   try {
-    const currentUser = await getCurrentUser();
+    const currentUser = await getCurrentUser()
     if (!process.env.ABLY_API_KEY) {
       return NextResponse.json(
         {
@@ -19,22 +19,22 @@ export const POST = async () => {
             'content-type': 'application/json'
           })
         }
-      );
+      )
     }
-    const client = new Ably.Rest({
-      key: process.env.ABLY_API_KEY,
-      log: { level: 3 }
-    });
+
+    const client = new Ably.Rest(process.env.ABLY_API_KEY)
+    // Removed 'await' as createTokenRequest is not a promise
     const tokenRequestData = await client.auth.createTokenRequest({
+      // clientId: 'wraglet-ably'
       clientId: currentUser?._id
-    });
-    return NextResponse.json(tokenRequestData);
+    })
+    return NextResponse.json(tokenRequestData)
   } catch (error: any) {
-    console.log('Accessing Ably token route error: ', error);
+    console.log('Accessing Ably token route error: ', error)
     console.error(
       'Error happened while doing POST for /api/token at route.ts: ',
       error
-    );
-    return new NextResponse('Internal Error: ', { status: 500 });
+    )
+    return new NextResponse('Internal Error: ', { status: 500 })
   }
-};
+}

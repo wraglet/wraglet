@@ -1,36 +1,38 @@
-import dbConnect from '@/libs/dbConnect';
-import Post, { PostDocument } from '@/models/Post'; // Update import statement
-import User from '@/models/User';
+import Post, { PostDocument } from '@/models/Post'
+import User from '@/models/User'
+import mongoose from 'mongoose'
 
 const getPostsByUsername = async (
   username: string
 ): Promise<PostDocument[]> => {
   try {
-    await dbConnect();
+    // Connect to the database
+    await mongoose.connect(process.env.MONGODB_URI!)
 
-    const user = await User.findOne({ username });
+    // Find the user by username
+    const user = await User.findOne({ username })
     if (!user) {
-      return [];
+      return [] // Return an empty array if the user is not found
     }
 
+    // Fetch posts authored by the user with audience 'public'
     const userPosts = await Post.find({
       author: user._id,
       audience: 'public'
     })
-      .sort({ createdAt: 'desc' })
-      .populate<PostDocument>({
+      .sort({ createdAt: 'desc' }) // Sort posts by creation date
+      .populate({
         path: 'author',
         select:
           'firstName lastName username gender pronoun profilePicture coverPhoto'
       })
-      .populate('comments reactions')
-      .exec();
+      .exec()
 
-    return userPosts;
-  } catch (err: any) {
-    console.error(`Error at getPostsByUsername(${username}): `, err);
-    return [];
+    return userPosts // Return the fetched posts
+  } catch (error) {
+    console.error(`Error at getPostsByUsername(${username}): `, error)
+    return [] // Return an empty array on error
   }
-};
+}
 
-export default getPostsByUsername;
+export default getPostsByUsername

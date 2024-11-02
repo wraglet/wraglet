@@ -1,12 +1,14 @@
-import dbConnect from '@/libs/dbConnect';
-import Post from '@/models/Post';
-import Comment from '@/models/Comment';
-import Reaction from '@/models/Reaction';
-import PostVote from '@/models/PostVote';
+import Post, { PostDocument } from '@/models/Post'
+import mongoose from 'mongoose'
 
-const getPosts = async () => {
-  await dbConnect();
+// Import PostDocument for type safety
+
+const getPosts = async (): Promise<PostDocument[]> => {
   try {
+    // Connect to the database
+    await mongoose.connect(process.env.MONGODB_URI!)
+
+    // Fetch posts with audience 'public', sorted by creation date
     const posts = await Post.find({ audience: 'public' })
       .sort({ createdAt: 'desc' })
       .populate({
@@ -14,14 +16,13 @@ const getPosts = async () => {
         select:
           'firstName lastName username gender pronoun profilePicture coverPhoto'
       })
-      .populate('comments reactions')
-      .exec();
+      .exec()
 
-    return posts;
-  } catch (err: any) {
-    console.error('Error at getPosts() while fetching posts: ', err);
-    return [];
+    return posts // Return the fetched posts
+  } catch (error) {
+    console.error('Error at getPosts() while fetching posts: ', error)
+    return [] // Return an empty array on error
   }
-};
+}
 
-export default getPosts;
+export default getPosts

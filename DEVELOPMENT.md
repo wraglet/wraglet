@@ -21,7 +21,7 @@ Make sure you have the following tools installed on your system:
 2. **Install Dependencies:**
 
    ```bash
-   npm i
+   yarn install
    ```
 
 3. **Setup .env file**
@@ -50,7 +50,7 @@ Make sure you have the following tools installed on your system:
     - **`/interfaces`**: TypeScript interface declarations.
 - **`/public`**: Static assets like images, fonts, and other files.
 - **`/node_modules`**: Node.js modules and dependencies.
-- **`/next.config.js`**: Next.js configuration file.
+- **`/next.config.ts`**: Next.js configuration file.
 - **`/tsconfig.json`**: TypeScript configuration file.
 
 ## Development Workflow
@@ -58,9 +58,7 @@ Make sure you have the following tools installed on your system:
 1. **Start the Development Server:**
 
    ```bash
-   npm run dev   # If you use npm
-   # OR
-   yarn dev      # If you use Yarn
+   yarn dev
    ```
 
 2. **Access the Application:**

@@ -1,30 +1,50 @@
-import mongoose, { Document, Schema } from 'mongoose';
+'use server'
+
+import mongoose, { Document, Schema } from 'mongoose'
+
+mongoose.connect(process.env.MONGODB_URI!)
 
 export interface UserDocument extends Document {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  suffix?: string;
-  email: string;
-  hashedPassword: string;
-  username: string;
-  dob: Date;
-  gender: string;
-  bio?: string;
-  pronoun: string;
+  firstName: string
+  lastName: string
+  suffix?: string
+  email: string
+  hashedPassword: string
+  username: string
+  dob: Date
+  gender: string
+  bio?: string
+  pronoun: string
   profilePicture?: {
-    url: string;
-    key: string;
-  };
+    url: string
+    key: string
+  }
   coverPhoto?: {
-    url: string;
-    key: string;
-  };
-  publicProfileVisible: boolean;
-  friendRequests: string;
-  friends: string[];
-  createdAt: Date;
-  updatedAt?: Date;
+    url: string
+    key: string
+  }
+  publicProfileVisible: boolean
+  friendRequests: string
+  followers: [
+    {
+      userId: string
+      createdAt: Date
+    }
+  ]
+  following: [
+    {
+      userId: string
+
+      createdAt: Date
+    }
+  ]
+  friends: [
+    {
+      userId: string
+      relationship: string
+      createdAt: Date
+    }
+  ]
 }
 
 const UserSchema = new Schema<UserDocument>(
@@ -43,10 +63,26 @@ const UserSchema = new Schema<UserDocument>(
     coverPhoto: { type: Object, url: String, key: String },
     publicProfileVisible: { type: Boolean, default: true },
     friendRequests: String,
-    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Friendship' }]
+    followers: [
+      {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+      }
+    ],
+    following: [
+      {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+      }
+    ],
+    friends: [
+      {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        relationship: String
+      }
+    ]
   },
   { timestamps: true }
-);
+)
 
-export default mongoose.models.User ||
-  mongoose.model<UserDocument>('User', UserSchema);
+const User =
+  mongoose.models.User || mongoose.model<UserDocument>('User', UserSchema)
+export default User

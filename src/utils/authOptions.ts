@@ -1,60 +1,46 @@
-import { AuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import bcrypt from 'bcrypt';
-import dbConnect from '@/libs/dbConnect';
-import User, { UserDocument } from '@/models/User';
+import { NextAuthOptions } from 'next-auth'
+import CredentialsProvider from 'next-auth/providers/credentials'
+import User, { UserDocument } from '@/models/User'
+import bcrypt from 'bcryptjs'
+import mongoose, { Types } from 'mongoose'
 
-export const authOptions: AuthOptions = {
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       id: 'credentials',
       name: 'Credentials',
       credentials: {
-        email: {
-          label: 'Email',
-          type: 'text'
-        },
-        password: {
-          label: 'Password',
-          type: 'text'
-        }
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
         // Check if the user exists.
-        await dbConnect();
+        await mongoose.connect(process.env.MONGODB_URI!)
 
-        const user: UserDocument | null = await User.findOne({
+        const user = (await User.findOne({
           email: credentials?.email?.toLowerCase()
-        }).lean();
+        }).lean()) as UserDocument | null
 
         if (user) {
           const isPasswordCorrect = await bcrypt.compare(
             credentials!.password,
             user.hashedPassword
-          );
+          )
 
           if (isPasswordCorrect) {
-            // Cast user to UserDocument to access properties
-            const typedUser: UserDocument = user as UserDocument;
-
+            // Return only the necessary fields for the User type
             return {
-              id: typedUser._id.toString(), // convert ObjectId to string
-              firstName: typedUser.firstName,
-              lastName: typedUser.lastName,
-              email: typedUser.email,
-              dob: typedUser.dob,
-              username: typedUser.username,
-              gender: typedUser.gender,
-              bio: typedUser.bio,
-              pronoun: typedUser.pronoun,
-              profilePicture: typedUser.profilePicture,
-              coverPhoto: typedUser.coverPhoto
-            };
+              id: (user._id as Types.ObjectId).toString(),
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              username: user.username
+            }
           } else {
-            throw new Error('Wrong Credentials!');
+            throw new Error('Wrong Credentials!')
           }
         } else {
-          throw new Error('User not found!');
+          throw new Error('User not found!')
         }
       }
     })
@@ -67,4 +53,4 @@ export const authOptions: AuthOptions = {
   pages: {
     error: '/'
   }
-};
+}

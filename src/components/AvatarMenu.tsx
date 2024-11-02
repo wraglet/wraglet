@@ -1,123 +1,104 @@
-'use client';
+'use client'
 
-import { Menu, Transition } from '@headlessui/react';
-import { signOut } from 'next-auth/react';
-import React, { Fragment } from 'react';
-import { FaCircleUser, FaRegCircleUser } from 'react-icons/fa6';
+import React, { Fragment } from 'react'
+import { signOut } from 'next-auth/react'
+import Link from 'next/link'
+import useFeedPostsStore from '@/store/feedPosts'
+import useGlobalStore from '@/store/global'
+import useUserStore from '@/store/user'
+import {
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Transition
+} from '@headlessui/react'
+import { FaCircleUser } from 'react-icons/fa6'
 import {
   HiCog,
-  HiOutlineCog,
-  HiArrowRightOnRectangle,
-  HiOutlineArrowRightOnRectangle
-} from 'react-icons/hi2';
-import Avatar from './Avatar';
-import Link from 'next/link';
-import { useAppSelector } from '@/libs/redux/hooks';
-import { useDispatch } from 'react-redux';
-import { clearUser } from '@/libs/redux/features/userSlice';
-import { clearGlobalState } from '@/libs/redux/features/globalSlice';
-import { clearFeedPosts } from '@/libs/redux/features/feedPostsSlice';
+  HiOutlineArrowRightOnRectangle,
+  HiOutlineCog
+} from 'react-icons/hi2'
+
+import Avatar from '@/components/Avatar'
 
 const AvatarMenu = () => {
-  const { user } = useAppSelector((state) => state.userState);
-  const dispatch = useDispatch();
+  const { user, clearUser } = useUserStore()
+  const { clearGlobalState } = useGlobalStore()
+  const { clearFeedPosts } = useFeedPostsStore()
+
+  const handleLogout = () => {
+    signOut()
+    clearUser()
+    clearGlobalState()
+    clearFeedPosts()
+  }
   return (
-    <Menu as='li' className='inline-flex'>
-      <Menu.Button className='relative h-8 w-8 cursor-pointer border border-solid border-white rounded-full'>
+    <Menu as="li" className="inline-flex">
+      <MenuButton className="relative h-8 w-8 cursor-pointer rounded-full border border-solid border-white">
         <Avatar
           gender={user?.gender}
-          size='h-8 w-8'
-          src={
-            user?.profilePicture?.url ||
-            (user?.gender === 'Female'
-              ? '/images/placeholder/male-placeholder.png'
-              : '/images/placeholder/male-placeholder.png')
-          }
+          size="h-8 w-8"
+          src={user?.profilePicture?.url!}
           alt={'Avatar'}
         />
-      </Menu.Button>
+      </MenuButton>
       <Transition
         as={Fragment}
-        enter='transition ease-out duration-100'
-        enterFrom='transform opacity-0 scale-95'
-        enterTo='transform opacity-100 scale-100'
-        leave='transition ease-in duration-75'
-        leaveFrom='transform opacity-100 scale-100'
-        leaveTo='transform opacity-0 scale-95'
+        enter="transition ease-out duration-100"
+        enterFrom="transform opacity-0 scale-95"
+        enterTo="transform opacity-100 scale-100"
+        leave="transition ease-in duration-75"
+        leaveFrom="transform opacity-100 scale-100"
+        leaveTo="transform opacity-0 scale-95"
       >
-        <Menu.Items className='absolute right-6 mt-12 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none'>
-          <div className='px-1 py-1 '>
-            <Menu.Item>
-              {({ active }) => (
-                <Link
-                  href={`/profile/${user?.username}`}
-                  className={`${
-                    active ? 'bg-[#1B87EA] text-white' : 'text-gray-900'
-                  } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                >
-                  {active ? (
-                    <FaCircleUser className='mr-2 h-5 w-5' aria-hidden='true' />
-                  ) : (
-                    <FaRegCircleUser
-                      className='mr-2 h-5 w-5'
-                      aria-hidden='true'
-                    />
-                  )}
-                  {user?.firstName}
-                </Link>
-              )}
-            </Menu.Item>
-            <Menu.Item>
-              {({ active }) => (
-                <button
-                  className={`${
-                    active ? 'bg-[#1B87EA] text-white' : 'text-gray-900'
-                  } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                >
-                  {active ? (
-                    <HiCog className='mr-2 h-5 w-5' aria-hidden='true' />
-                  ) : (
-                    <HiOutlineCog className='mr-2 h-5 w-5' aria-hidden='true' />
-                  )}
-                  Account Settings
-                </button>
-              )}
-            </Menu.Item>
+        <MenuItems className="absolute right-6 mt-12 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
+          <div className="px-1 py-1">
+            <MenuItem>
+              <Link
+                href={`/${user?.username}`}
+                className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 data-[focus]:bg-[#1B87EA] data-[focus]:text-white"
+              >
+                <FaCircleUser className="mr-2 h-5 w-5" aria-hidden="true" />
+                {user?.firstName}
+              </Link>
+            </MenuItem>
+            <MenuItem>
+              <button
+                type="button"
+                className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 data-[focus]:bg-[#1B87EA] data-[focus]:text-white"
+              >
+                <HiOutlineCog
+                  className="mr-2 h-5 w-5 group-data-[focus]:hidden"
+                  aria-hidden="true"
+                />
+                <HiCog
+                  className="mr-2 hidden h-5 w-5 group-data-[focus]:inline"
+                  aria-hidden="true"
+                />
+                Account Settings
+              </button>
+            </MenuItem>
           </div>
-          <div className='px-1 py-1'>
-            <Menu.Item>
-              {({ active }) => (
-                <button
-                  onClick={() => {
-                    signOut();
-                    dispatch(clearUser());
-                    dispatch(clearGlobalState());
-                    dispatch(clearFeedPosts());
-                  }}
-                  className={`${
-                    active ? 'bg-[#1B87EA] text-white' : 'text-gray-900'
-                  } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                >
-                  {active ? (
-                    <HiArrowRightOnRectangle
-                      className='mr-2 h-5 w-5 text-[#bg-[#1B87EA]]'
-                      aria-hidden='true'
-                    />
-                  ) : (
-                    <HiOutlineArrowRightOnRectangle
-                      className='mr-2 h-5 w-5 text-red-400'
-                      aria-hidden='true'
-                    />
-                  )}
-                  Logout
-                </button>
-              )}
-            </Menu.Item>
+          <div className="px-1 py-1">
+            <MenuItem>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 data-[focus]:bg-[#1B87EA] data-[focus]:text-white"
+              >
+                <HiOutlineArrowRightOnRectangle
+                  className="mr-2 h-5 w-5 text-red-400 group-data-[focus]:text-white"
+                  aria-hidden="true"
+                />
+                Logout
+              </button>
+            </MenuItem>
           </div>
-        </Menu.Items>
+        </MenuItems>
       </Transition>
     </Menu>
-  );
-};
+  )
+}
 
-export default AvatarMenu;
+export default AvatarMenu

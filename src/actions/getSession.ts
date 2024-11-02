@@ -1,11 +1,12 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../utils/authOptions';
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/utils/authOptions'
 
 export default async function GetSession() {
-  return await getServerSession(authOptions).catch((err) => {
-    console.error(
-      'Error happened while getting getServerSession(authOptions) at getSession.ts: ',
-      err
-    );
-  });
+  try {
+    const session = await getServerSession(authOptions)
+    return session // Return the session directly
+  } catch (err) {
+    console.error('Error while getting session: ', err)
+    return null // Return null on error for better handling
+  }
 }

@@ -1,95 +1,99 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import React, { useEffect } from 'react';
-import Image from 'next/image';
-import AvatarMenu from './AvatarMenu';
-import { HomeIcon, PeopleIcon, ChatIcon, BellIcon } from './NavIcons';
-import { Quicksand } from 'next/font/google';
-import { setUser } from '@/libs/redux/features/userSlice';
-import { UserDocument } from '@/models/User';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '@/libs/redux/store';
-import {
-  setJustLoggedIn,
-  setUserSliceInitialized
-} from '@/libs/redux/features/globalSlice';
+import React, { useEffect } from 'react'
+import { Quicksand } from 'next/font/google'
+import Image from 'next/image'
+import Link from 'next/link'
+import { UserInterface } from '@/interfaces'
+import { UserDocument } from '@/models/User'
+import useGlobalStore from '@/store/global'
+import useUserStore from '@/store/user'
+
+import AvatarMenu from '@/components/AvatarMenu'
+import { BellIcon, ChatIcon, HomeIcon, PeopleIcon } from '@/components/NavIcons'
 
 const quicksand = Quicksand({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   display: 'swap',
   preload: true
-});
+})
 
-type Props = {
-  currentUser: UserDocument;
-};
-
-const Header = ({ currentUser }: Props) => {
-  // Initialize the store with the product information
-  const dispatch = useDispatch();
-  const { justLoggedIn, userSliceInitialized } = useSelector(
-    (state: RootState) => state.globalState
-  );
+const Header = ({ currentUser }: { currentUser: UserDocument }) => {
+  const { justLoggedIn, userInitialized, setJustLoggedIn, setUserInitialized } =
+    useGlobalStore()
+  const { setUser } = useUserStore()
 
   useEffect(() => {
-    if (!justLoggedIn && !userSliceInitialized) {
-      dispatch(setJustLoggedIn(true));
+    if (!justLoggedIn && !userInitialized) {
+      setJustLoggedIn(true)
     }
 
-    if (justLoggedIn && !userSliceInitialized) {
-      dispatch(setUser(currentUser));
-      dispatch(setUserSliceInitialized(true));
-      dispatch(setJustLoggedIn(false));
+    if (justLoggedIn && !userInitialized) {
+      const transformedUser = {
+        ...currentUser,
+        friends: currentUser?.friends.map(
+          (friend: { userId: string }) => friend.userId
+        )
+      } as unknown as UserInterface
+      setUser(transformedUser)
+      setUserInitialized(true)
+      setJustLoggedIn(false)
     }
-  }, [currentUser, dispatch, justLoggedIn, userSliceInitialized]);
+  }, [
+    setUser,
+    currentUser,
+    justLoggedIn,
+    userInitialized,
+    setJustLoggedIn,
+    setUserInitialized
+  ])
 
   return (
-    <header className='h-[56px] z-50 fixed w-full bg-[#0EA5E9] px-2.5 lg:px-6 drop-shadow-md flex items-center justify-between gap-x-5 md:gap-x-8 lg:gap-x-10'>
-      <div className='flex space-x-1.5 items-center h-full col-span-2'>
-        <Link href='/feed' className='block'>
-          <div className='relative h-10 w-10'>
+    <header className="fixed z-50 flex h-[56px] w-full items-center justify-between gap-x-5 bg-[#0EA5E9] px-2.5 drop-shadow-md md:gap-x-8 lg:gap-x-10 lg:px-6">
+      <div className="col-span-2 flex h-full items-center space-x-1.5">
+        <Link href="/feed" className="block">
+          <div className="relative h-10 w-10">
             <Image
               src={'/favicon-32x32.png'}
               fill
-              sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
-              alt='Wraglet'
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              alt="Wraglet"
             />
           </div>
         </Link>
         <Link
           href={'/feed'}
-          className={`${quicksand.className} text-xl font-bold text-white hidden md:block`}
+          className={`${quicksand.className} hidden text-xl font-bold text-white md:block`}
         >
           wraglet
         </Link>
       </div>
-      <div className='h-full flex w-full lg:w-[600px] items-center'>
+      <div className="flex h-full w-full items-center lg:w-[600px]">
         <input
-          type='search'
-          className='bg-[#E7ECF0] w-full h-[30px] rounded-2xl border border-solid border-[#E5E5E5] focus:outline-none px-2 text-sm text-[#333333]'
+          type="search"
+          className="h-[30px] w-full rounded-2xl border border-solid border-[#E5E5E5] bg-[#E7ECF0] px-2 text-sm text-[#333333] focus:outline-none"
         />
       </div>
-      <ul className='flex justify-between gap-x-4 lg:gap-x-6 items-center'>
-        <li className='cursor-pointer hidden md:block'>
+      <ul className="flex items-center justify-between gap-x-4 lg:gap-x-6">
+        <li className="hidden cursor-pointer md:block">
           <Link href={'/feed'}>
-            <HomeIcon className='text-white' />
+            <HomeIcon className="text-white" />
           </Link>
         </li>
-        <li className='cursor-pointer'>
-          <PeopleIcon className='text-white' />
+        <li className="cursor-pointer">
+          <PeopleIcon className="text-white" />
         </li>
-        <li className='cursor-pointer'>
-          <ChatIcon className='text-white' />
+        <li className="cursor-pointer">
+          <ChatIcon className="text-white" />
         </li>
-        <li className='cursor-pointer'>
-          <BellIcon className='text-white' />
+        <li className="cursor-pointer">
+          <BellIcon className="text-white" />
         </li>
         <AvatarMenu />
       </ul>
     </header>
-  );
-};
+  )
+}
 
-export default Header;
+export default Header

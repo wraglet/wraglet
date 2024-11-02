@@ -1,30 +1,31 @@
-import dbConnect from '@/libs/dbConnect';
-import getSession from './getSession';
-import User from '@/models/User';
+import getSession from '@/actions/getSession'
+import User from '@/models/User'
+import mongoose from 'mongoose'
 
 const getCurrentUser = async () => {
   try {
-    const session = await getSession();
+    // Get the session
+    const session = await getSession()
 
+    // Check if the session has a valid user email
     if (!session?.user?.email) {
-      return null;
+      return null // Return null if no email is found
     }
 
-    await dbConnect();
+    // Connect to the database
+    await mongoose.connect(process.env.MONGODB_URI!)
 
+    // Find the user by email, excluding the hashed password
     const currentUser = await User.findOne({
       email: session.user.email
-    }).select('-hashedPassword');
+    }).select('-hashedPassword')
 
-    if (!currentUser) {
-      return null;
-    }
-
-    return currentUser;
-  } catch (error: any) {
-    console.error('Some error happened while getting getCurrentUser: ', error);
-    return null;
+    // Return null if the user is not found
+    return currentUser || null // Simplified return statement
+  } catch (error) {
+    console.error('Error while getting current user: ', error)
+    return null // Return null on error
   }
-};
+}
 
-export default getCurrentUser;
+export default getCurrentUser

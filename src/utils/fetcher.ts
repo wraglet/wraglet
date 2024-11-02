@@ -1,11 +1,11 @@
-import getCurrentUser from '@/actions/getCurrentUser';
-import { setUser } from '@/libs/redux/features/userSlice';
-import { AppDispatch } from '@/libs/redux/store';
-import deJSONify from './deJSONify';
+import getCurrentUser from '@/actions/getCurrentUser'
+import useUserStore from '@/store/user'
+import deJSONify from '@/utils/deJSONify'
 
-export const fetchUser = async (dispatch: AppDispatch) => {
-  const jsonUser = await getCurrentUser();
-  const user = deJSONify(jsonUser);
+export const fetchUser = async () => {
+  const jsonUser = await getCurrentUser()
+  const user = deJSONify(jsonUser)
 
-  dispatch(setUser(user!));
-};
+  const setUser = useUserStore.getState().setUser
+  setUser(user)
+}
