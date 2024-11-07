@@ -1,3 +1,5 @@
+'use server'
+
 import Post, { PostDocument } from '@/models/Post'
 import User from '@/models/User'
 import mongoose from 'mongoose'

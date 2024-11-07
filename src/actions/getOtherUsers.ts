@@ -1,3 +1,5 @@
+'use server'
+
 import getSession from '@/actions/getSession'
 import User from '@/models/User'
 import mongoose from 'mongoose'
@@ -24,7 +26,14 @@ const getOtherUsers = async () => {
       .sort({ createdAt: 'desc' })
       .exec()
 
-    return users
+    // Convert each user document to a plain object and convert ObjectId to string
+    const plainUsers = users.map(user => {
+      const userObject = user.toObject()
+      userObject._id = userObject._id.toString()
+      return userObject
+    })
+
+    return plainUsers
   } catch (error: any) {
     console.error('Some error happened while getting getOtherUsers(): ', error)
     return []

@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/utils/authOptions'
 
-export default async function GetSession() {
+const getSession = async () => {
   try {
     const session = await getServerSession(authOptions)
     return session // Return the session directly
@@ -10,3 +10,5 @@ export default async function GetSession() {
     return null // Return null on error for better handling
   }
 }
+
+export default getSession
