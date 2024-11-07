@@ -1,3 +1,5 @@
+'use server'
+
 import getSession from '@/actions/getSession'
 import User from '@/models/User'
 import mongoose from 'mongoose'
@@ -10,6 +12,7 @@ const getUserByUsername = async (username: string) => {
 
     // Check if the session has a valid user email
     if (!session?.user?.email) {
+      console.log('No valid email in session')
       return null // Return null if no email is found
     }
 
@@ -21,8 +24,14 @@ const getUserByUsername = async (username: string) => {
     // Check if the found user is the current user
     const isCurrentUser = user && user.email === session?.user?.email
 
-    // Return the user object with isCurrentUser property
-    return user ? { ...user.toObject(), isCurrentUser } : null
+    // Convert the user document to a plain object and handle ObjectId
+    if (user) {
+      const userObject = user.toObject()
+      userObject._id = userObject._id.toString()
+      return { ...userObject, isCurrentUser }
+    }
+
+    return null // Return null if the user is not found
   } catch (error) {
     console.error('Error while getting user by username: ', error)
     return null // Return null on error
