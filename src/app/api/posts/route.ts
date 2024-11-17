@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import Post from '@/models/Post'
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import mongoose from 'mongoose'
 import { v4 as uuidv4 } from 'uuid'
+import client from '@/lib/db'
 
 export const POST = async (request: Request) => {
   const s3Client = new S3Client({
@@ -16,7 +16,7 @@ export const POST = async (request: Request) => {
   })
 
   try {
-    await mongoose.connect(process.env.MONGODB_URI!)
+    await client()
 
     const currentUser = await getCurrentUser()
     const body = await request.json()
@@ -35,7 +35,7 @@ export const POST = async (request: Request) => {
       )
       const type = image.split(';')[0].split('/')[1]
       const key = `user/post/${uuidv4()}.${type}`
-      const bucketName = process.env.CLOUDFLARE_R2_BUCKET_NAME
+      const bucketName = process.env.CLOUDFLARE_R2_USERS_BUCKET_NAME
 
       const command = new PutObjectCommand({
         Bucket: bucketName,

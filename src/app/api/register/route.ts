@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server'
+import { generateUsername } from '@/lib/utils'
 import User from '@/models/User'
 import bcrypt from 'bcryptjs'
-import mongoose from 'mongoose'
+import client from '@/lib/db'
 
-export async function POST(request: Request) {
+export const POST = async (request: Request) => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI!)
-
     const body = await request.json()
     const {
       firstName,
@@ -35,8 +34,9 @@ export async function POST(request: Request) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12)
-
     const username = generateUsername(firstName, lastName)
+
+    console.log('Creating user with username:', username)
 
     const user = await User.create({
       firstName,
@@ -51,21 +51,16 @@ export async function POST(request: Request) {
       publicProfileVisible
     })
 
+    console.log('User created:', user)
+
     return NextResponse.json(user)
   } catch (error: any) {
     console.log('REGISTRATION ERROR: ', error)
+    // Log detailed error information
     console.error(
       'Some error happened while accessing POST at /api/register at route.ts: ',
       error
     )
     return new NextResponse('Internal Error', { status: 500 })
   }
-}
-
-// Function to generate username
-function generateUsername(firstName: string, lastName: string): string {
-  const firstNameWithoutSpaces = firstName.toLowerCase().replace(/\s/g, '')
-  const lastNameWithoutSpaces = lastName.toLowerCase().replace(/\s/g, '')
-  const randomDigits = Math.floor(Math.random() * 90) + 10 // Generate random two-digit number
-  return `@${firstNameWithoutSpaces}${lastNameWithoutSpaces}${randomDigits}`
 }

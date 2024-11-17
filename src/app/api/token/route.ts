@@ -26,7 +26,7 @@ export const GET = async () => {
     // Removed 'await' as createTokenRequest is not a promise
     const tokenRequestData = await client.auth.createTokenRequest({
       // clientId: 'wraglet-ably'
-      clientId: currentUser?._id
+      clientId: currentUser?._id as string
     })
     return NextResponse.json(tokenRequestData)
   } catch (error: any) {
