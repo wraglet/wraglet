@@ -29,7 +29,7 @@ Make sure you have the following tools installed on your system:
    ```js
    MONGODB_URI = 'your-mongodb-url'
 
-   NEXTAUTH_SECRET = 'any-long-string'
+   AUTH_SECRET = 'any-long-string'
    ABLY_API_KEY = 'your-ably-api-key'
 
    # AWS
