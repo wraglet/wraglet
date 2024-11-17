@@ -1,15 +1,15 @@
 'use server'
 
+import client from '@/lib/db'
 import Post, { PostDocument } from '@/models/Post'
 import User from '@/models/User'
-import mongoose from 'mongoose'
 
 const getPostsByUsername = async (
   username: string
 ): Promise<PostDocument[]> => {
   try {
     // Connect to the database
-    await mongoose.connect(process.env.MONGODB_URI!)
+    await client()
 
     // Find the user by username
     const user = await User.findOne({ username })

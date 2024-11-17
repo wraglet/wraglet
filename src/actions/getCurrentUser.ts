@@ -1,6 +1,7 @@
 'use server'
 
 import getSession from '@/actions/getSession'
+import client from '@/lib/db'
 import User from '@/models/User'
 import mongoose from 'mongoose'
 
@@ -15,7 +16,7 @@ const getCurrentUser = async () => {
     }
 
     // Connect to the database
-    await mongoose.connect(process.env.MONGODB_URI!)
+    await client()
 
     // Find the user by email, excluding the hashed password
     const currentUser = await User.findOne({
@@ -26,7 +27,9 @@ const getCurrentUser = async () => {
     if (currentUser) {
       const userObject = currentUser.toObject()
       // Convert ObjectId to string
-      userObject._id = userObject._id.toString()
+      if (userObject._id instanceof mongoose.Types.ObjectId) {
+        userObject._id = userObject._id.toString()
+      }
       return userObject
     }
 
