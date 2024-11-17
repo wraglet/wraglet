@@ -1,20 +1,17 @@
-import { NextAuthOptions } from 'next-auth'
+import  { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import User, { UserDocument } from '@/models/User'
-import bcrypt from 'bcryptjs'
 import mongoose, { Types } from 'mongoose'
+import User, { UserDocument } from '@/models/User'
+import bcrypt from 'bcrypt'
 
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
-      id: 'credentials',
-      name: 'Credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-        // Check if the user exists.
         await mongoose.connect(process.env.MONGODB_URI!)
 
         const user = (await User.findOne({
@@ -28,7 +25,6 @@ export const authOptions: NextAuthOptions = {
           )
 
           if (isPasswordCorrect) {
-            // Return only the necessary fields for the User type
             return {
               id: (user._id as Types.ObjectId).toString(),
               email: user.email,
@@ -36,12 +32,9 @@ export const authOptions: NextAuthOptions = {
               lastName: user.lastName,
               username: user.username
             }
-          } else {
-            throw new Error('Wrong Credentials!')
           }
-        } else {
-          throw new Error('User not found!')
         }
+        return null
       }
     })
   ],
@@ -51,6 +44,7 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
+    signIn: '/',
     error: '/'
   }
 }
