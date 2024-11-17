@@ -3,12 +3,12 @@
   "short_name": "Wraglet - www.wraglet.com",
   "icons": [
     {
-      "src": "/android-chrome-192x192.png",
+      "src": "https://pub-c5365d46e2924ca2be4f4198d5b3d377.r2.dev/images/logo/android-chrome-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/android-chrome-512x512.png",
+      "src": "https://pub-c5365d46e2924ca2be4f4198d5b3d377.r2.dev/images/logo/android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
