@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   }
 }
 
-const Layout = ({ children }: { children: React.ReactNode }) => {
+const Layout = async ({ children }: { children: React.ReactNode }) => {
   return (
     <html suppressHydrationWarning lang="en" className="scroll-smooth">
       <body
