@@ -5,12 +5,18 @@ import { FaCamera, FaPencil, FaUserPen } from 'react-icons/fa6'
 
 import Avatar from '@/components/Avatar'
 
-import UploadProfilePicture from '@/app/(authenticated)/[username]/_components/UploadProfilePicture'
-
 const ProfileHeader = async ({ username }: { username: string }) => {
   const user = await getUserByUsername(username)
 
   const isCurrentUser = user?.isCurrentUser
+
+  const profilePictureUrl = user?.profilePicture?.url
+  const defaultProfilePictureUrl =
+    user?.gender === 'Male'
+      ? `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/male-placeholder.png`
+      : `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/female-placeholder.png`
+
+  const finalProfilePictureUrl = profilePictureUrl ?? defaultProfilePictureUrl
 
   return (
     <>
@@ -29,9 +35,8 @@ const ProfileHeader = async ({ username }: { username: string }) => {
             <Image
               fill
               src={
-                user?.coverPhoto
-                  ? user.coverPhoto.url
-                  : '/images/placeholder/cover-photo-default.jpg'
+                user?.coverPhoto?.url ??
+                `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/cover-photo-default.jpg`
               }
               alt={
                 user?.coverPhoto
@@ -49,7 +54,7 @@ const ProfileHeader = async ({ username }: { username: string }) => {
           <div className="absolute -bottom-[50px] left-4 z-10 overflow-hidden md:-bottom-[80px] lg:-bottom-[90px] lg:left-16">
             <div className="group relative block">
               <Avatar
-                src={user?.profilePicture?.url}
+                src={finalProfilePictureUrl}
                 gender={user?.gender}
                 alt={`${user?.firstName}'s avatar`}
                 size="shadow-md h-[100px] w-[100px] md:h-[160px] md:w-[160px]"

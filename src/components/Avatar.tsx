@@ -15,6 +15,13 @@ const Avatar = ({
   alt,
   src
 }: AvatarProps) => {
+  const defaultProfilePictureUrl =
+    gender === 'Male'
+      ? `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/male-placeholder.png`
+      : `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/female-placeholder.png`
+
+  const finalProfilePictureUrl = src ?? defaultProfilePictureUrl
+
   return (
     <div
       className={`relative block rounded-full border border-solid border-neutral-200 ${className} ${size}`}
@@ -23,12 +30,7 @@ const Avatar = ({
         className="object-over rounded-full"
         fill
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        src={
-          src ||
-          (gender === 'Male'
-            ? '/images/placeholder/male-placeholder.png'
-            : '/images/placeholder/female-placeholder.png')
-        }
+        src={finalProfilePictureUrl}
         alt={alt ?? 'Avatar'}
       />
     </div>

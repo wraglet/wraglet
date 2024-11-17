@@ -221,7 +221,10 @@ const UploadPostImage: FC<Props> = ({
                     fallback={<Skeleton className="h-full w-full bg-white" />}
                   >
                     <Image
-                      src={image || '/images/placeholder/img-placeholder.png'}
+                      src={
+                        image ??
+                        `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/img-placeholder.png`
+                      }
                       alt="Post Image to upload"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       width={1}

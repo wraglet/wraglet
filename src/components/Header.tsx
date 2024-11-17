@@ -55,7 +55,7 @@ const Header = ({ currentUser }: { currentUser: UserDocument }) => {
         <Link href="/feed" className="block">
           <div className="relative h-10 w-10">
             <Image
-              src={'/favicon-32x32.png'}
+              src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/logo/android-chrome-192x192.png`}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               alt="Wraglet"

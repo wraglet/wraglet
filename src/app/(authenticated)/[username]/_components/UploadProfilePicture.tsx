@@ -79,6 +79,13 @@ const UploadProfilePicture: FC<Props> = ({
 
   const gender = useUserStore((state: any) => state.user?.gender)
 
+  const defaultProfilePictureUrl =
+    gender === 'Male'
+      ? `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/male-placeholder.png`
+      : `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/female-placeholder.png`
+
+  const finalProfilePictureUrl = image ?? defaultProfilePictureUrl
+
   const isValid = image !== '' && image !== profilePicture
 
   useEffect(() => {
@@ -230,12 +237,7 @@ const UploadProfilePicture: FC<Props> = ({
                       fallback={<Skeleton className="h-full w-full bg-white" />}
                     >
                       <Image
-                        src={
-                          image ||
-                          (gender === 'Female'
-                            ? '/images/placeholder/female-placeholder.png'
-                            : '/images/placeholder/male-placeholder.png')
-                        }
+                        src={finalProfilePictureUrl}
                         alt="profile picture"
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         width={1}
