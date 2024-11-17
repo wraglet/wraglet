@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
-import { PostInterface } from '@/interfaces'
+import { PostDocument } from '@/models/Post'
 import useUserStore from '@/store/user'
 import arrGenerator from '@/utils/arrGenerator'
 import { formatDistanceToNow } from 'date-fns'
@@ -15,7 +15,7 @@ import ReactionIcon from '@/components/ReactionIcon'
 import { Button } from '@/components/ui/button'
 
 type Props = {
-  post: PostInterface
+  post: PostDocument
 }
 
 const Post = ({ post }: Props) => {
@@ -166,7 +166,7 @@ const Post = ({ post }: Props) => {
               </svg>
               {post.createdAt && (
                 <h4 className="text-xs text-zinc-500">
-                  {formatDistanceToNow(new Date(post.createdAt), {
+                  {formatDistanceToNow(new Date(post.createdAt.toString()), {
                     addSuffix: true
                   })}
                 </h4>

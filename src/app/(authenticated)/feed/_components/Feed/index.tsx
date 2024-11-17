@@ -2,6 +2,7 @@
 
 import React, { FC, FormEvent, useEffect, useReducer, useState } from 'react'
 import { PostInterface } from '@/interfaces'
+import { PostDocument } from '@/models/Post'
 import useFeedPostsStore from '@/store/feedPosts'
 import { useChannel } from 'ably/react'
 import axios from 'axios'
@@ -11,7 +12,7 @@ import CreatePost from '@/components/CreatePost'
 import Post from '@/components/Post'
 
 interface FeedBodyInterface {
-  initialPosts: PostInterface[]
+  initialPosts: PostDocument[]
 }
 
 const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
@@ -92,7 +93,7 @@ const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
           setPostImage={(image) => dispatchState({ image: image })}
         />
         {posts.map((post: PostInterface) => (
-          <Post key={post._id} post={post} />
+          <Post key={post._id} post={post as unknown as PostDocument} />
         ))}
       </div>
     </section>

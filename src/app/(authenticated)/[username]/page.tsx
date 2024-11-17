@@ -18,7 +18,7 @@ const ProfilePage = async ({
   return (
     <main className="relative flex min-h-screen w-full flex-col items-center gap-y-6 overflow-hidden">
       <Header username={decodedUsername} />
-      <ProfileParent initialPosts={initialPosts} />
+      <ProfileParent initialPosts={initialPosts} username={decodedUsername} />
     </main>
   )
 }

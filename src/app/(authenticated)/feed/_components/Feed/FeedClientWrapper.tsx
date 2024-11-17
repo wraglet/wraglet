@@ -2,14 +2,14 @@
 
 import React from 'react'
 import dynamic from 'next/dynamic'
-import { PostInterface } from '@/interfaces'
+import { PostDocument } from '@/models/Post'
 
 const FeedAbly = dynamic(() => import('./FeedAbly'), { ssr: false })
 
 const FeedClientWrapper = ({
   initialPosts
 }: {
-  initialPosts: PostInterface[]
+  initialPosts: PostDocument[]
 }) => {
   return <FeedAbly initialPosts={initialPosts} />
 }
