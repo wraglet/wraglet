@@ -4,6 +4,7 @@ import React, { FC } from 'react'
 import { signIn } from 'next-auth/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
+import axios from 'axios'
 import { FormProvider, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { z } from 'zod'
@@ -54,20 +55,6 @@ const signUpSchema = z.object({
 
 type SignUpFormData = z.infer<typeof signUpSchema>
 
-const registerUser = async (data: SignUpFormData) => {
-  const { friendRequestsVal, ...rest } = data
-  const formData = {
-    ...rest,
-    friendRequests: friendRequestsVal.val
-  }
-
-  const response = await fetch('/api/register', {
-    method: 'POST',
-    body: JSON.stringify(formData)
-  })
-  return response.json()
-}
-
 const SignUp: FC = () => {
   const formMethods = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -93,7 +80,29 @@ const SignUp: FC = () => {
   } = formMethods
 
   const mutation = useMutation({
-    mutationFn: registerUser,
+    mutationFn: async (data: SignUpFormData) => {
+      const { friendRequestsVal, ...rest } = data
+      const formData = {
+        ...rest,
+        friendRequests: friendRequestsVal.val
+      }
+
+      console.log('Sending formData:', formData)
+
+      try {
+        const response = await axios.post('/api/register', formData)
+        console.log('Response status:', response.status)
+        console.log('Response data:', response.data)
+
+        if (response.status !== 200) {
+          throw new Error('Network response was not ok')
+        }
+        return response.data
+      } catch (error) {
+        console.error('Error during registration request:', error)
+        throw error
+      }
+    },
     onSuccess: (data) => {
       console.log('data: ', data)
       signIn('credentials', {
@@ -298,8 +307,15 @@ const SignUp: FC = () => {
                       <ListBox
                         label="Friend Requests"
                         options={friendRequestsOptions}
-                        setSelected={field.onChange}
-                        selected={field.value}
+                        setSelected={(name) => {
+                          const selectedOption = friendRequestsOptions.find(
+                            (option) => option.name === name
+                          )
+                          if (selectedOption) {
+                            field.onChange(selectedOption)
+                          }
+                        }}
+                        selected={field.value.name}
                       />
                     </FormControl>
                     {errors.friendRequestsVal && (
