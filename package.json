@@ -29,7 +29,7 @@
     "lucide-react": "^0.445.0",
     "mongoose": "^8.6.3",
     "next": "^15.0.2",
-    "next-auth": "^4.24.7",
+    "next-auth": "^5.0.0-beta.25",
     "react": "19.0.0-rc-02c0e824-20241028",
     "react-dom": "19.0.0-rc-02c0e824-20241028",
     "react-dropzone": "^14.2.9",
@@ -69,5 +69,5 @@
     "@humanwhocodes/config-array": "^0.13.0",
     "@humanwhocodes/object-schema": "^2.0.3"
   },
-  "packageManager": "yarn@4.5.0"
+  "packageManager": "yarn@4.5.1"
 }
