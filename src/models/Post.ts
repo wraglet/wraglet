@@ -4,9 +4,8 @@ import { AuthorInterface, PostVoteInterface } from '@/interfaces'
 import { PostReactionDocument } from '@/models/PostReaction'
 import mongoose, { Document, Schema } from 'mongoose'
 
-mongoose.connect(process.env.MONGODB_URI!)
-
 export interface PostDocument extends Document {
+  createdAt: any
   content: {
     text?: string
     images?: {

@@ -2,8 +2,6 @@
 
 import mongoose, { Document, Schema } from 'mongoose'
 
-mongoose.connect(process.env.MONGODB_URI!)
-
 export interface UserDocument extends Document {
   firstName: string
   lastName: string
@@ -84,5 +82,7 @@ const UserSchema = new Schema<UserDocument>(
 )
 
 const User =
-  mongoose.models.User || mongoose.model<UserDocument>('User', UserSchema)
+  (mongoose.models.User as mongoose.Model<UserDocument>) ||
+  mongoose.model<UserDocument>('User', UserSchema)
+
 export default User

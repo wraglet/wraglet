@@ -1,9 +1,9 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose'
 
 export interface PostVoteDocument extends Document {
-  postId: mongoose.Types.ObjectId;
-  userId: mongoose.Types.ObjectId;
-  voteType: 'upvote' | 'downvote';
+  postId: mongoose.Types.ObjectId
+  userId: mongoose.Types.ObjectId
+  voteType: 'upvote' | 'downvote'
 }
 
 const PostVoteSchema = new Schema<PostVoteDocument>(
@@ -13,7 +13,7 @@ const PostVoteSchema = new Schema<PostVoteDocument>(
     voteType: { type: String, enum: ['upvote', 'downvote'] }
   },
   { timestamps: true }
-);
+)
 
 export default mongoose.models.PostVote ||
-  mongoose.model<PostVoteDocument>('PostVote', PostVoteSchema);
+  mongoose.model<PostVoteDocument>('PostVote', PostVoteSchema)

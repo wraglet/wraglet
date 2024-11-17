@@ -3,8 +3,6 @@
 import { AuthorInterface } from '@/interfaces'
 import mongoose, { Document, Schema } from 'mongoose'
 
-mongoose.connect(process.env.MONGODB_URI!)
-
 export interface PostReactionDocument extends Document {
   type: string
   postId: mongoose.Types.ObjectId

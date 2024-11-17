@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose'
 
 enum ReactionType {
   Like = 'like',
@@ -7,10 +7,10 @@ enum ReactionType {
 }
 
 export interface ReactionDocument extends Document {
-  type: ReactionType;
-  userId: mongoose.Types.ObjectId;
-  postId: mongoose.Types.ObjectId;
-  commentId: mongoose.Types.ObjectId;
+  type: ReactionType
+  userId: mongoose.Types.ObjectId
+  postId: mongoose.Types.ObjectId
+  commentId: mongoose.Types.ObjectId
 }
 
 const ReactionSchema = new Schema<ReactionDocument>(
@@ -21,7 +21,7 @@ const ReactionSchema = new Schema<ReactionDocument>(
     commentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }
   },
   { timestamps: true }
-);
+)
 
 export default mongoose.models.Reaction ||
-  mongoose.model<ReactionDocument>('Reaction', ReactionSchema);
+  mongoose.model<ReactionDocument>('Reaction', ReactionSchema)
