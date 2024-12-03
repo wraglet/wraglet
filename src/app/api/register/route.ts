@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
+import client from '@/lib/db'
 import { generateUsername } from '@/lib/utils'
 import User from '@/models/User'
 import bcrypt from 'bcryptjs'
-import client from '@/lib/db'
 
 export const POST = async (request: Request) => {
   try {
+    await client()
+
     const body = await request.json()
     const {
       firstName,
