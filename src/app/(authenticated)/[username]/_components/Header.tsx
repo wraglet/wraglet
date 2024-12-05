@@ -1,9 +1,11 @@
-import React from 'react'
 import Image from 'next/image'
 import getUserByUsername from '@/actions/getUserByUsername'
-import { FaCamera, FaPencil, FaUserPen } from 'react-icons/fa6'
+import { FaPencil, FaUserPen } from 'react-icons/fa6'
 
 import Avatar from '@/components/Avatar'
+
+import CoverPhotoHover from '@/app/(authenticated)/[username]/_components/CoverPhotoHover'
+import ProfilePictureHover from '@/app/(authenticated)/[username]/_components/ProfilePictureHover'
 
 const ProfileHeader = async ({ username }: { username: string }) => {
   const user = await getUserByUsername(username)
@@ -20,15 +22,6 @@ const ProfileHeader = async ({ username }: { username: string }) => {
 
   return (
     <>
-      {/* <UploadProfilePicture
-        isLoading={isLoading}
-        profilePicture={profilePicture}
-        show={openUploadProfilePictureModal && user?.username === username}
-        close={() => dispatchState({ openUploadProfilePictureModal: false })}
-        setProfilePicture={(profilePicture: string, e) =>
-          handleUpdateProfilePicture(e, profilePicture)
-        }
-      /> */}
       <section className="mt-14 flex h-auto w-full flex-col items-center bg-white shadow-md lg:rounded-md xl:w-[1250px]">
         <div className="relative block h-[114px] w-full md:h-[284px] lg:h-[360px]">
           <div className="group relative block h-[114px] w-full md:h-[284px] lg:h-[360px]">
@@ -44,11 +37,7 @@ const ProfileHeader = async ({ username }: { username: string }) => {
                   : `User's default cover photo`
               }
             />
-            {isCurrentUser && (
-              <div className="absolute bottom-2.5 right-2.5 hidden h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-[#D9D9D9] shadow-md group-hover:flex md:h-9 md:w-9">
-                <FaCamera className="text-[8px] text-black md:text-sm" />
-              </div>
-            )}
+            {isCurrentUser && <CoverPhotoHover />}
           </div>
 
           <div className="absolute -bottom-[50px] left-4 z-10 overflow-hidden md:-bottom-[80px] lg:-bottom-[90px] lg:left-16">
@@ -59,16 +48,9 @@ const ProfileHeader = async ({ username }: { username: string }) => {
                 alt={`${user?.firstName}'s avatar`}
                 size="shadow-md h-[100px] w-[100px] md:h-[160px] md:w-[160px]"
               />
-              {/* {isCurrentUser && (
-                <button
-                  onClick={() =>
-                    dispatchState({ openUploadProfilePictureModal: true })
-                  }
-                  className="absolute bottom-2.5 right-2.5 hidden h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-[#D9D9D9] shadow-md group-hover:flex md:h-9 md:w-9"
-                >
-                  <FaCamera className="text-[8px] text-black md:text-sm" />
-                </button>
-              )} */}
+              {isCurrentUser && (
+                <ProfilePictureHover profilePicture={finalProfilePictureUrl} />
+              )}
             </div>
           </div>
         </div>

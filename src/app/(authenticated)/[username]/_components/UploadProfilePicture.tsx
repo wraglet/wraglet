@@ -1,4 +1,4 @@
-import React, {
+import {
   CSSProperties,
   FC,
   Fragment,
@@ -71,8 +71,7 @@ const UploadProfilePicture: FC<Props> = ({
   profilePicture,
   show,
   close,
-  setProfilePicture,
-  isLoading
+  setProfilePicture
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null)
   const [image, setImage] = useState<string>(profilePicture)
