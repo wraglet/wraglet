@@ -1,6 +1,6 @@
 'use client'
 
-import React, { FC } from 'react'
+import { FC } from 'react'
 import { signIn } from 'next-auth/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
@@ -81,18 +81,15 @@ const SignUp: FC = () => {
 
   const mutation = useMutation({
     mutationFn: async (data: SignUpFormData) => {
-      const { friendRequestsVal, ...rest } = data
+      const { friendRequestsVal, email, ...rest } = data
       const formData = {
         ...rest,
+        email: email.toLowerCase(),
         friendRequests: friendRequestsVal.val
       }
 
-      console.log('Sending formData:', formData)
-
       try {
         const response = await axios.post('/api/register', formData)
-        console.log('Response status:', response.status)
-        console.log('Response data:', response.data)
 
         if (response.status !== 200) {
           throw new Error('Network response was not ok')
@@ -106,7 +103,7 @@ const SignUp: FC = () => {
     onSuccess: (data) => {
       console.log('data: ', data)
       signIn('credentials', {
-        email: formMethods.getValues('email'),
+        email: formMethods.getValues('email').toLowerCase(),
         password: formMethods.getValues('password')
       })
       toast.success('Account created successfully!')

@@ -38,12 +38,10 @@ export const POST = async (request: Request) => {
     const hashedPassword = await bcrypt.hash(password, 12)
     const username = generateUsername(firstName, lastName)
 
-    console.log('Creating user with username:', username)
-
     const user = await User.create({
       firstName,
       lastName,
-      email,
+      email: email.toLowerCase(),
       username,
       hashedPassword,
       dob,
@@ -53,7 +51,7 @@ export const POST = async (request: Request) => {
       publicProfileVisible
     })
 
-    console.log('User created:', user)
+    console.log('User created successfully!')
 
     return NextResponse.json(user)
   } catch (error: any) {
