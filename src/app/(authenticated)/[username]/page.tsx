@@ -1,9 +1,10 @@
-import React from 'react'
 import getPostsByUsername from '@/actions/getPostsByUsername'
+import getUserByUsername from '@/actions/getUserByUsername'
 import deJSONify from '@/utils/deJSONify'
 
 import Header from '@/app/(authenticated)/[username]/_components/Header'
-import ProfileParent from '@/app/(authenticated)/[username]/_components/ProfileParent'
+import ProfileBody from '@/app/(authenticated)/[username]/_components/ProfileBody'
+import ProfilePostsClientWrapper from '@/app/(authenticated)/[username]/_components/ProfilePostsClientWrapper'
 
 const ProfilePage = async ({
   params
@@ -12,13 +13,22 @@ const ProfilePage = async ({
 }) => {
   const { username } = await params
   const decodedUsername = decodeURIComponent(username)
+  const user = await getUserByUsername(decodedUsername)
 
   const jsonInitialPosts = await getPostsByUsername(decodedUsername)
   const initialPosts = deJSONify(jsonInitialPosts)
+
   return (
     <main className="relative flex min-h-screen w-full flex-col items-center gap-y-6 overflow-hidden">
       <Header username={decodedUsername} />
-      <ProfileParent initialPosts={initialPosts} username={decodedUsername} />
+      {user?.isCurrentUser ? (
+        <ProfilePostsClientWrapper
+          initialPosts={initialPosts}
+          username={decodedUsername}
+        />
+      ) : (
+        <ProfileBody initialPosts={initialPosts} username={decodedUsername} />
+      )}
     </main>
   )
 }

@@ -1,12 +1,6 @@
 'use client'
 
-import React, {
-  FormEvent,
-  Suspense,
-  useEffect,
-  useReducer,
-  useState
-} from 'react'
+import { FormEvent, Suspense, useReducer, useState } from 'react'
 import getPostsByUsername from '@/actions/getPostsByUsername'
 import getUserByUsername from '@/actions/getUserByUsername'
 import { PostDocument } from '@/models/Post'
@@ -25,7 +19,6 @@ type ProfileBodyProps = {
 }
 
 const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
-  const [hydrated, setHydrated] = useState(false)
   const reducer = (state: any, action: any) => ({ ...state, ...action })
 
   const [userPosts, setUserPosts] = useState(initialPosts)
@@ -83,12 +76,6 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
       .catch(() => toast.error('An error occurred when creating a post'))
       .finally(() => dispatchState({ isLoading: false, text: '', image: null }))
   }
-
-  useEffect(() => {
-    setHydrated(true)
-  }, [])
-
-  if (!hydrated) return null
 
   return (
     <div className="mb-6 flex w-full items-start gap-x-10 tablet:px-5 lg:px-10 xl:w-[1250px] xl:px-0">

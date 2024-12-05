@@ -1,6 +1,6 @@
 'use client'
 
-import React, { FC, FormEvent, useEffect, useReducer, useState } from 'react'
+import { FC, FormEvent, useEffect, useReducer } from 'react'
 import { PostInterface } from '@/interfaces'
 import { PostDocument } from '@/models/Post'
 import useFeedPostsStore from '@/store/feedPosts'
@@ -16,7 +16,6 @@ interface FeedBodyInterface {
 }
 
 const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
-  const [hydrated, setHydrated] = useState(false)
   const {
     posts,
     setFeedPosts,
@@ -67,16 +66,6 @@ const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
       })
       .catch(() => toast.error('An error occurred when creating a post'))
       .finally(() => dispatchState({ isLoading: false, text: '', image: null }))
-  }
-
-  useEffect(() => {
-    // This forces a rerender, so the date is rendered
-    // the second time but not the first
-    setHydrated(true)
-  }, [])
-  if (!hydrated) {
-    // Returns null on first render, so the client and server match
-    return null
   }
 
   console.log(posts)

@@ -1,12 +1,12 @@
 'use client'
 
+import { PostDocument } from '@/models/Post'
 import * as Ably from 'ably'
 import { AblyProvider, ChannelProvider } from 'ably/react'
 
-import Body from '@/app/(authenticated)/[username]/_components/Body'
-import { PostDocument } from '@/models/Post'
+import ProfileBody from '@/app/(authenticated)/[username]/_components/ProfileBody'
 
-const ProfileParent = ({
+const ProfilePostsAbly = ({
   username,
   initialPosts
 }: {
@@ -17,10 +17,10 @@ const ProfileParent = ({
   return (
     <AblyProvider client={client}>
       <ChannelProvider channelName="post-channel">
-        <Body username={username} initialPosts={initialPosts} />
+        <ProfileBody username={username} initialPosts={initialPosts} />
       </ChannelProvider>
     </AblyProvider>
   )
 }
 
-export default ProfileParent
+export default ProfilePostsAbly
