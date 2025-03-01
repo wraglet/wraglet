@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { PostDocument } from '@/models/Post'
 import useUserStore from '@/store/user'
@@ -248,6 +248,7 @@ const Post = ({ post }: Props) => {
                   className="absolute -top-8 flex w-fit -translate-x-9 -translate-y-0.5 gap-1 rounded-full border border-solid border-gray-400 bg-white p-2 px-2 py-0.5"
                 >
                   {reactions.map((reaction) => (
+                    // @ts-ignore
                     <lottie-player
                       key={reaction.name}
                       id={reaction.name}
@@ -255,7 +256,7 @@ const Post = ({ post }: Props) => {
                       autoplay
                       loop
                       mode="normal"
-                      src={`/lottie/${reaction.name}.json`}
+                      src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/lottie/${reaction.name}.json`}
                       onClick={() => handleReaction(reaction.name)}
                       style={{ width: '24px', height: '24px' }}
                     />
