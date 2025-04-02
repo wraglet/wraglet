@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react'
+import { Suspense } from 'react'
 import getOtherUsers from '@/actions/getOtherUsers'
 import getPosts from '@/actions/getPosts'
 import deJSONify from '@/utils/deJSONify'
@@ -27,15 +27,14 @@ const Page = async () => {
   const initialPosts = deJSONify(jsonInitialPosts)
 
   return (
-    <main className="mx-6 mt-14 flex w-full grow items-start gap-x-5 3xl:max-w-(--breakpoint-2xl)">
+    <main className="mx-auto flex min-h-screen w-full max-w-7xl items-start px-4 pt-14">
       <LeftNav />
-      <div className="flex grow items-start gap-x-5 sm:mx-10 tablet:ml-10 xl:mx-auto xl:ml-20 2xl:ml-auto">
+      <div className="mx-auto flex-1 px-4 md:px-8">
         <Suspense fallback={<Loading />}>
           <FeedClientWrapper initialPosts={initialPosts} />
         </Suspense>
-
-        <RightNav otherUsers={otherUsers} />
       </div>
+      <RightNav otherUsers={otherUsers} />
     </main>
   )
 }

@@ -47,18 +47,16 @@ const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
   )
 
   const { publish } = useChannel('post-channel', (post) => {
-    setFeedPosts([post.data, ...posts]) // Update posts with new post
+    setFeedPosts([post.data, ...posts])
   })
 
   const submitPost = async (e: FormEvent) => {
     e.preventDefault()
-
     dispatchState({ isLoading: true })
 
     axios
       .post('/api/posts', { text, image })
       .then((res: any) => {
-        console.log('response: ', res.data)
         publish({
           name: 'post',
           data: res.data
@@ -68,11 +66,9 @@ const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
       .finally(() => dispatchState({ isLoading: false, text: '', image: null }))
   }
 
-  console.log(posts)
-
   return (
-    <section className="mx-auto my-6 flex h-auto grow justify-center">
-      <div className="flex w-full flex-col gap-y-4 xl:w-[600px] 2xl:w-[680px]">
+    <div className="mx-auto w-full max-w-2xl">
+      <div className="space-y-4">
         <CreatePost
           isLoading={isLoading}
           submitPost={submitPost}
@@ -85,7 +81,7 @@ const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
           <Post key={post._id} post={post as unknown as PostDocument} />
         ))}
       </div>
-    </section>
+    </div>
   )
 }
 
