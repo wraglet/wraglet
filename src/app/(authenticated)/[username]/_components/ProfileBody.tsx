@@ -55,7 +55,10 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
     initialState
   )
 
-  const { channel } = useChannel('post-channel')
+  const { publish } = useChannel('post-channel', (message) => {
+    // Handle real-time messages here
+    console.log('Received message:', message)
+  })
 
   const submitPost = async (e: FormEvent) => {
     e.preventDefault()
@@ -65,10 +68,7 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
     axios
       .post('/api/posts', { text, image })
       .then((res: any) => {
-        channel.publish({
-          name: 'post',
-          data: res.data
-        })
+        publish('post', res.data)
 
         setFeedPosts([res.data, ...feedPosts])
         setUserPosts([res.data, ...userPosts])
@@ -78,9 +78,9 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
   }
 
   return (
-    <div className="mb-6 flex w-full items-start gap-x-10 tablet:px-5 lg:px-10 xl:w-[1250px] xl:px-0">
-      <div className="hidden h-[500px] flex-col rounded-lg border border-solid border-neutral-200 bg-white drop-shadow-md tablet:flex tablet:w-2/5" />
-      <div className="flex w-full flex-col gap-y-4 sm:mx-10 md:mx-auto md:w-[680px] tablet:flex-grow">
+    <div className="tablet:px-5 mb-6 flex w-full items-start gap-x-10 lg:px-10 xl:w-[1250px] xl:px-0">
+      <div className="tablet:flex tablet:w-2/5 hidden h-[500px] flex-col rounded-lg border border-solid border-neutral-200 bg-white drop-shadow-md" />
+      <div className="tablet:grow flex w-full flex-col gap-y-4 sm:mx-10 md:mx-auto md:w-[680px]">
         {user?.isCurrentUser && (
           <Suspense fallback={<div>Loading...</div>}>
             <CreatePost
@@ -97,10 +97,7 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
         {userPosts &&
           !isPending &&
           userPosts.map((post: PostDocument) => (
-            <Post
-              key={post._id as string}
-              post={post as unknown as PostDocument}
-            />
+            <Post key={post._id as string} post={post} />
           ))}
       </div>
     </div>

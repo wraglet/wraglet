@@ -5,6 +5,7 @@ import '@/app/globals.css'
 
 import ToasterContext from '@/context/ToasterContext'
 import Providers from '@/providers'
+import { AblyProvider } from '@/providers/AblyProvider'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,10 +56,12 @@ const Layout = async ({ children }: { children: React.ReactNode }) => {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>
-          <ToasterContext />
-          {children}
-        </Providers>
+        <AblyProvider>
+          <Providers>
+            <ToasterContext />
+            {children}
+          </Providers>
+        </AblyProvider>
       </body>
     </html>
   )

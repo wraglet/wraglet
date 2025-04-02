@@ -19,7 +19,7 @@ const Dropdown: ForwardRefRenderFunction<HTMLSelectElement, DropdownProps> = (
       <select
         ref={ref}
         {...props}
-        className='hover:border-slate-300 focus:border-indigo-300 h-8 w-full border border-solid border-slate-200 rounded py-1.5 px-4 text-sm active:border-indigo-300 focus:outline-none'
+        className='hover:border-slate-300 focus:border-indigo-300 h-8 w-full border border-solid border-slate-200 rounded py-1.5 px-4 text-sm active:border-indigo-300 focus:outline-hidden'
       >
         {options.map((option) => (
           <option key={option} value={option}>

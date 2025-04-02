@@ -370,7 +370,7 @@ const UploadProfilePicture: FC<Props> = ({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="rounded-md border border-solid border-gray-200 px-3 py-1 text-base font-medium text-[#01205D] shadow-sm hover:bg-slate-100 active:bg-slate-200"
+                  className="rounded-md border border-solid border-gray-200 px-3 py-1 text-base font-medium text-[#01205D] shadow-xs hover:bg-slate-100 active:bg-slate-200"
                 >
                   Cancel
                 </button>

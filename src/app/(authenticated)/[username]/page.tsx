@@ -3,7 +3,6 @@ import getUserByUsername from '@/actions/getUserByUsername'
 import deJSONify from '@/utils/deJSONify'
 
 import Header from '@/app/(authenticated)/[username]/_components/Header'
-import ProfileBody from '@/app/(authenticated)/[username]/_components/ProfileBody'
 import ProfilePostsClientWrapper from '@/app/(authenticated)/[username]/_components/ProfilePostsClientWrapper'
 
 const ProfilePage = async ({
@@ -21,14 +20,10 @@ const ProfilePage = async ({
   return (
     <main className="relative flex min-h-screen w-full flex-col items-center gap-y-6 overflow-hidden">
       <Header username={decodedUsername} />
-      {user?.isCurrentUser ? (
-        <ProfilePostsClientWrapper
-          initialPosts={initialPosts}
-          username={decodedUsername}
-        />
-      ) : (
-        <ProfileBody initialPosts={initialPosts} username={decodedUsername} />
-      )}
+      <ProfilePostsClientWrapper
+        initialPosts={initialPosts}
+        username={decodedUsername}
+      />
     </main>
   )
 }

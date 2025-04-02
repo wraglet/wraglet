@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Key, useEffect, useRef, useState } from 'react'
+import { StaticImport } from 'next/dist/shared/lib/get-img-props'
 import Image from 'next/image'
 import { PostDocument } from '@/models/Post'
 import useUserStore from '@/store/user'
@@ -13,6 +14,15 @@ import Avatar from '@/components/Avatar'
 import { ShareIcon } from '@/components/Icons'
 import ReactionIcon from '@/components/ReactionIcon'
 import { Button } from '@/components/ui/button'
+
+type Reaction = {
+  userId: {
+    _id: string
+    // other user fields...
+  }
+  type: string
+  // other reaction fields...
+}
 
 type Props = {
   post: PostDocument
@@ -148,10 +158,10 @@ const Post = ({ post }: Props) => {
             src={post.author.profilePicture?.url!}
           />
         </div>
-        <div className="flex flex-grow flex-col justify-start gap-y-5">
+        <div className="flex grow flex-col justify-start gap-y-5">
           <div className="flex flex-col gap-y-1">
             <div className="flex items-baseline space-x-1">
-              <h3 className={`text-sm font-bold leading-none`}>
+              <h3 className={`text-sm leading-none font-bold`}>
                 {post.author.firstName} {post.author.lastName}
               </h3>
               <svg
@@ -177,24 +187,29 @@ const Post = ({ post }: Props) => {
             )}
 
             {post.content.images
-              ? post.content.images.map((image) => (
-                  <div
-                    key={image.key}
-                    className="my-3 block overflow-hidden rounded-md"
-                  >
-                    <Image
-                      src={image.url}
-                      alt="Post Image"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      width={1}
-                      height={1}
-                      style={{
-                        height: 'auto',
-                        width: '100%'
-                      }}
-                    />
-                  </div>
-                ))
+              ? post.content.images.map(
+                  (image: {
+                    key: Key | null | undefined
+                    url: string | StaticImport
+                  }) => (
+                    <div
+                      key={image.key}
+                      className="my-3 block overflow-hidden rounded-md"
+                    >
+                      <Image
+                        src={image.url}
+                        alt="Post Image"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        width={1}
+                        height={1}
+                        style={{
+                          height: 'auto',
+                          width: '100%'
+                        }}
+                      />
+                    </div>
+                  )
+                )
               : null}
           </div>
           <div className="z-10 flex items-center justify-between bg-white">
@@ -216,29 +231,30 @@ const Post = ({ post }: Props) => {
               onMouseEnter={handleHoverStart}
               onMouseLeave={handleHoverEnd}
             >
-              {postReactions &&
-              postReactions.find(
-                (reaction) => reaction.userId._id === user?._id
-              ) ? (
-                <ReactionIcon
-                  type={
-                    postReactions.find(
-                      (reaction) => reaction.userId._id === user?._id
-                    )!.type
-                  }
-                  onClick={() => handleReaction('heart')}
-                />
+              {postReactions && postReactions.length > 0 && user ? (
+                postReactions.find(
+                  (reaction) => reaction.userId?._id === user?._id
+                ) ? (
+                  <ReactionIcon
+                    type={
+                      postReactions.find(
+                        (reaction) => reaction.userId?._id === user?._id
+                      )!.type
+                    }
+                    onClick={() => handleReaction('heart')}
+                  />
+                ) : (
+                  <FaRegHeart
+                    className="cursor-pointer text-xs text-gray-600"
+                    onClick={() => handleReaction('heart')}
+                  />
+                )
               ) : (
                 <FaRegHeart
                   className="cursor-pointer text-xs text-gray-600"
                   onClick={() => handleReaction('heart')}
                 />
               )}
-
-              <FaRegHeart
-                className="cursor-pointer text-xs text-gray-600"
-                onClick={() => handleReaction('heart')}
-              />
 
               {showEmojis && (
                 <div
@@ -285,7 +301,7 @@ const Post = ({ post }: Props) => {
               <div className="flex-1">
                 <input
                   type="text"
-                  className="h-[30px] w-full rounded-full bg-[#E7ECF0] px-3 text-xs outline-none"
+                  className="h-[30px] w-full rounded-full bg-[#E7ECF0] px-3 text-xs outline-hidden"
                   placeholder="Comment something..."
                 />
               </div>

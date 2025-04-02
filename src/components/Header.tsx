@@ -72,7 +72,7 @@ const Header = ({ currentUser }: { currentUser: UserDocument }) => {
       <div className="flex h-full w-full items-center lg:w-[600px]">
         <input
           type="search"
-          className="h-[30px] w-full rounded-2xl border border-solid border-[#E5E5E5] bg-[#E7ECF0] px-2 text-sm text-[#333333] focus:outline-none"
+          className="h-[30px] w-full rounded-2xl border border-solid border-[#E5E5E5] bg-[#E7ECF0] px-2 text-sm text-[#333333] focus:outline-hidden"
         />
       </div>
       <ul className="flex items-center justify-between gap-x-4 lg:gap-x-6">

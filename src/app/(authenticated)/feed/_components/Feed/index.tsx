@@ -71,7 +71,7 @@ const FeedBody: FC<FeedBodyInterface> = ({ initialPosts }) => {
   console.log(posts)
 
   return (
-    <section className="mx-auto my-6 flex h-auto flex-grow justify-center">
+    <section className="mx-auto my-6 flex h-auto grow justify-center">
       <div className="flex w-full flex-col gap-y-4 xl:w-[600px] 2xl:w-[680px]">
         <CreatePost
           isLoading={isLoading}

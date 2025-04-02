@@ -36,7 +36,7 @@ const Input = forwardRef(
                 ? 'text'
                 : props.type
             }
-            className='hover:border-slate-300 focus:border-indigo-300 h-8 w-full border border-solid border-slate-200 rounded py-1.5 px-4 text-xs pr-10 active:border-indigo-300 focus:outline-none'
+            className='hover:border-slate-300 focus:border-indigo-300 h-8 w-full border border-solid border-slate-200 rounded py-1.5 px-4 text-xs pr-10 active:border-indigo-300 focus:outline-hidden'
             ref={ref}
           />
           {props.type === 'password' && (

@@ -37,7 +37,7 @@ const ComboBox: ForwardRefRenderFunction<HTMLInputElement, ComboBoxProps> = (
           <ComboboxInput
             ref={ref}
             {...props}
-            className="h-8 w-full rounded border border-solid border-slate-200 px-4 py-1.5 text-sm hover:border-slate-300 focus:border-indigo-300 focus:outline-none active:border-indigo-300"
+            className="h-8 w-full rounded border border-solid border-slate-200 px-4 py-1.5 text-sm hover:border-slate-300 focus:border-indigo-300 focus:outline-hidden active:border-indigo-300"
             onChange={(e) => onChange(e)}
             value={value}
           />

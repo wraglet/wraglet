@@ -15,7 +15,7 @@ const Page = async () => {
   } else
     return (
       <main className="flex min-h-screen flex-col items-center justify-between overflow-hidden">
-        <section className="grid w-full flex-grow grid-cols-2">
+        <section className="grid w-full grow grid-cols-2">
           <div className="relative col-span-1 block bg-[#42BBFF]">
             <div className="ml-44 flex h-full w-full flex-col justify-center gap-y-4 text-white">
               <div className="flex items-center gap-5">

@@ -46,7 +46,7 @@ const CreatePost = ({
         close={() => dispatchState({ openUploadModal: false })}
         setPostImage={setPostImage}
       />
-      <div className="flex w-full flex-grow items-start border border-solid border-neutral-200 bg-white drop-shadow-md sm:rounded-lg">
+      <div className="flex w-full grow items-start border border-solid border-neutral-200 bg-white drop-shadow-md sm:rounded-lg">
         <div className="flex w-full gap-x-2 px-4 py-3">
           <div className="relative block">
             <Avatar
@@ -57,12 +57,12 @@ const CreatePost = ({
           </div>
           <form
             onSubmit={submitPost}
-            className="flex flex-grow flex-col justify-start gap-y-1.5"
+            className="flex grow flex-col justify-start gap-y-1.5"
           >
             <input
               type="text"
               value={text}
-              className="h-[30px] w-full rounded-2xl border border-solid border-[#E5E5E5] bg-[#E7ECF0] px-2 text-sm text-[#333333] drop-shadow-md focus:outline-none"
+              className="h-[30px] w-full rounded-2xl border border-solid border-[#E5E5E5] bg-[#E7ECF0] px-2 text-sm text-[#333333] drop-shadow-md focus:outline-hidden"
               placeholder="Wanna share something up?"
               onChange={setText}
             />
