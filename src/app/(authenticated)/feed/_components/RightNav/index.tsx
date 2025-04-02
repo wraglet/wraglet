@@ -22,7 +22,7 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
   }
 
   return (
-    <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-[280px] flex-shrink-0 overflow-y-auto md:block xl:w-[320px]">
+    <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-[280px] flex-shrink-0 md:block xl:w-[320px]">
       <div className="flex h-full flex-col py-4">
         <div className="rounded-lg border border-neutral-200 bg-white p-4">
           <h2 className="mb-4 text-sm font-semibold text-[#333333]">

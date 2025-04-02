@@ -1,16 +1,21 @@
 'use client'
 
-import { Key, useEffect, useRef, useState } from 'react'
+import { FormEvent, Key, useEffect, useRef, useState } from 'react'
 import { StaticImport } from 'next/dist/shared/lib/get-img-props'
 import Image from 'next/image'
-import { PostDocument } from '@/models/Post'
+import { IComment } from '@/models/Comment'
+import { IPost } from '@/models/Post'
 import useUserStore from '@/store/user'
 import arrGenerator from '@/utils/arrGenerator'
+import { useChannel } from 'ably/react'
+import axios from 'axios'
 import { formatDistanceToNow } from 'date-fns'
+import toast from 'react-hot-toast'
 import { FaRegComment, FaRegHeart } from 'react-icons/fa6'
 import { LuArrowBigDown, LuArrowBigUp } from 'react-icons/lu'
 
 import Avatar from '@/components/Avatar'
+import Comment from '@/components/Comment'
 import { ShareIcon } from '@/components/Icons'
 import ReactionIcon from '@/components/ReactionIcon'
 import { Button } from '@/components/ui/button'
@@ -25,16 +30,38 @@ type Reaction = {
 }
 
 type Props = {
-  post: PostDocument
+  post: IPost
 }
 
 const Post = ({ post }: Props) => {
   useEffect(() => {
     import('@lottiefiles/lottie-player')
   })
+
   const { user } = useUserStore()
-  const [isOpenComment, setIsOpenComment] = useState(false)
-  const content = useRef<HTMLDivElement | null>(null)
+  const [isCommentOpen, setIsCommentOpen] = useState(false)
+  const [comment, setComment] = useState('')
+  const [comments, setComments] = useState<IComment[]>(
+    (post.comments || []).filter(
+      (comment): comment is IComment =>
+        typeof comment !== 'string' && '_id' in comment
+    )
+  )
+  // Keep track of comment IDs we've seen
+  const commentIdsRef = useRef(new Set(comments.map((c) => c._id.toString())))
+
+  // Try to use Ably channel, but don't break if it fails
+  const channel = useChannel(`post-${post._id}`, (message) => {
+    if (message.name === 'comment') {
+      const newComment = message.data
+      // Only add the comment if we haven't seen it before
+      if (!commentIdsRef.current.has(newComment._id.toString())) {
+        commentIdsRef.current.add(newComment._id.toString())
+        setComments((prev) => [...prev, newComment])
+        setIsCommentOpen(true)
+      }
+    }
+  })
 
   const [showEmojis, setShowEmojis] = useState(false)
   const timeoutRef = useRef<number | null>(null)
@@ -87,18 +114,16 @@ const Post = ({ post }: Props) => {
   const [height, setHeight] = useState<string>('0px')
 
   useEffect(() => {
-    if (isOpenComment) {
-      setHeight(`${content.current?.scrollHeight}px`)
-    }
-
-    if (!isOpenComment) {
+    if (isCommentOpen && content.current) {
+      setHeight(`${content.current.scrollHeight}px`)
+    } else {
       setHeight('0px')
     }
-  }, [isOpenComment])
+  }, [isCommentOpen, post.comments])
 
   const toggleComment = () => {
-    setIsOpenComment((prev) => !prev)
-    setHeight(isOpenComment ? `${content.current?.scrollHeight}px` : '0px')
+    setIsCommentOpen((prev) => !prev)
+    setHeight(isCommentOpen ? `${content.current?.scrollHeight}px` : '0px')
   }
 
   const handleHoverStart = () => {
@@ -148,6 +173,55 @@ const Post = ({ post }: Props) => {
       console.error('Error adding reaction:', error)
     }
   }
+
+  const handleCommentSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!comment.trim()) return
+
+    try {
+      const response = await axios.post(`/api/posts/${post._id}/comment`, {
+        content: comment
+      })
+
+      // Only add the comment if we haven't seen it before
+      const newComment = response.data
+      if (!commentIdsRef.current.has(newComment._id.toString())) {
+        commentIdsRef.current.add(newComment._id.toString())
+        setComments((prev) => [...prev, newComment])
+        setComment('')
+        setIsCommentOpen(true)
+      }
+
+      // Try to publish to Ably if available, but don't break core functionality
+      try {
+        if (channel && channel.publish) {
+          await channel.publish({
+            name: 'comment',
+            data: newComment
+          })
+        }
+      } catch (error) {
+        console.warn('Failed to publish comment to Ably:', error)
+      }
+    } catch (error) {
+      console.error('Error posting comment:', error)
+      toast.error('Failed to post comment')
+    }
+  }
+
+  const isCommentDocument = (
+    comment: IComment | string
+  ): comment is IComment => {
+    return (
+      typeof comment === 'object' &&
+      comment !== null &&
+      '_id' in comment &&
+      'content' in comment &&
+      'author' in comment
+    )
+  }
+
+  const content = useRef<HTMLDivElement | null>(null)
 
   return (
     <div className="flex w-full">
@@ -286,26 +360,43 @@ const Post = ({ post }: Props) => {
           </div>
 
           <div
-            style={{ maxHeight: `${height}` }}
+            style={{ maxHeight: isCommentOpen ? 'none' : '0px' }}
             ref={content}
             className={`${
-              isOpenComment ? 'border-t border-solid border-[#E7ECF0]' : '-mt-6'
-            } flex w-full flex-col gap-4 overflow-hidden pt-2 transition-all duration-300 ease-in-out`}
+              isCommentOpen
+                ? 'border-t border-solid border-[#E7ECF0] pt-4'
+                : 'hidden'
+            } flex w-full flex-col gap-4 overflow-hidden transition-all duration-300 ease-in-out`}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-2">
+              {Array.isArray(comments) &&
+                comments.map((comment) => {
+                  if (!isCommentDocument(comment)) return null
+                  return (
+                    <Comment key={comment._id.toString()} comment={comment} />
+                  )
+                })}
+            </div>
+
+            <form
+              onSubmit={handleCommentSubmit}
+              className="flex items-center gap-2 border-t border-solid border-[#E7ECF0] pt-4"
+            >
               <Avatar
                 gender={user?.gender}
                 size="h-6 w-6"
-                src={user?.profilePicture?.url!}
+                src={user?.profilePicture?.url || null}
               />
               <div className="flex-1">
                 <input
                   type="text"
-                  className="h-[30px] w-full rounded-full bg-[#E7ECF0] px-3 text-xs outline-hidden"
-                  placeholder="Comment something..."
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  className="h-[30px] w-full rounded-full bg-[#E7ECF0] px-3 text-xs outline-none"
+                  placeholder="Write a comment..."
                 />
               </div>
-            </div>
+            </form>
           </div>
         </div>
         <Button type="button" className="flex items-center gap-0.5">

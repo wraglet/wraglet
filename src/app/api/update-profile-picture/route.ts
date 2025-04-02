@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
-import User, { UserDocument } from '@/models/User'
+import client from '@/lib/db'
+import User, { IUserDocument } from '@/models/User'
 import { ObjectCannedACL, S3 } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
 import { v4 as uuidv4 } from 'uuid'
-import client from '@/lib/db'
 
 export const PATCH = async (request: Request) => {
   const s3 = new S3({
@@ -67,14 +67,17 @@ export const PATCH = async (request: Request) => {
     }).done()
     console.log('AWS UPLOAD RES DATA FOR PROFILE PICTURE: ', data)
 
-    // Update user's profilePicture in MongoDB
+    // Update user's profilePicture in MongoDB - use IUserDocument for DB operations
     const updatedUser = (await User.findByIdAndUpdate(
       currentUser?._id,
       { $set: { profilePicture: { url: data.Location, key } } },
       { new: true }
-    )) as UserDocument
+    )) as IUserDocument
 
-    return NextResponse.json(updatedUser)
+    // Return IUser (without hashedPassword) for the response
+    return NextResponse.json(
+      updatedUser.toObject ? updatedUser.toObject() : updatedUser
+    )
   } catch (err) {
     console.log('Update profile picture error: ', err)
     console.error(

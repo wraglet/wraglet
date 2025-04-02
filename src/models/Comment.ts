@@ -1,21 +1,52 @@
-import mongoose, { Document, Schema } from 'mongoose'
+'use server'
 
-export interface CommentDocument extends Document {
+import { Document, model, models, Schema, Types } from 'mongoose'
+
+// Base interface for Comment data (for UI consumption)
+export interface IComment {
+  _id: string
   content: string
-  authorId: mongoose.Types.ObjectId
-  postId: mongoose.Types.ObjectId
-  reactions: string[]
+  author: {
+    _id: string
+    firstName: string
+    lastName: string
+    username: string
+    gender: string
+    pronoun: string
+    profilePicture?: {
+      url: string
+      key: string
+    }
+  }
+  post: string
+  createdAt?: string
+  updatedAt?: string
 }
 
-const CommentSchema = new Schema<CommentDocument>(
+// Document interface with Mongoose types (for database operations)
+export interface ICommentDocument
+  extends Omit<IComment, '_id' | 'author' | 'post' | 'createdAt' | 'updatedAt'>,
+    Document {
+  author: Types.ObjectId
+  post: Types.ObjectId
+  createdAt?: Date
+  updatedAt?: Date
+}
+
+const CommentSchema = new Schema<ICommentDocument>(
   {
-    content: String,
-    authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    postId: { type: mongoose.Schema.Types.ObjectId, ref: 'Post' },
-    reactions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Reaction' }]
+    content: { type: String, required: true },
+    author: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    post: { type: Schema.Types.ObjectId, ref: 'Post', required: true }
   },
   { timestamps: true }
 )
 
-export default mongoose.models.Comment ||
-  mongoose.model<CommentDocument>('Comment', CommentSchema)
+const Comment =
+  models?.Comment || model<ICommentDocument>('Comment', CommentSchema)
+
+export default Comment

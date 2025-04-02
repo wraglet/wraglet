@@ -9,12 +9,24 @@ export interface PostInterface {
   }
   audience: string
   author: AuthorInterface
-  reactions?: PostReactionInterface[]
-  upvotes: number
-  downvotes: number
+  reactions: {
+    userId: {
+      _id: string
+    }
+    type: string
+  }[]
   votes: PostVoteInterface[]
-  createdAt: Date
-  updatedAt?: Date
+  comments?: {
+    _id: string
+    content: string
+    author: AuthorInterface
+    post: string
+    createdAt?: string
+    updatedAt?: string
+  }[]
+  createdAt: string | Date
+  updatedAt?: string | Date
+  __v?: number // Mongoose version key
 }
 
 export interface PostReactionInterface {

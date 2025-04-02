@@ -27,12 +27,14 @@ const Page = async () => {
   const initialPosts = deJSONify(jsonInitialPosts)
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-7xl items-start px-4 pt-14">
+    <main className="mx-auto flex min-h-screen w-full max-w-7xl items-start px-4">
       <LeftNav />
-      <div className="mx-auto flex-1 px-4 md:px-8">
-        <Suspense fallback={<Loading />}>
-          <FeedClientWrapper initialPosts={initialPosts} />
-        </Suspense>
+      <div className="mx-auto flex h-[calc(100vh-3.5rem)] flex-1 px-4 md:px-8">
+        <div className="w-full overflow-y-auto pt-14">
+          <Suspense fallback={<Loading />}>
+            <FeedClientWrapper initialPosts={initialPosts} />
+          </Suspense>
+        </div>
       </div>
       <RightNav otherUsers={otherUsers} />
     </main>

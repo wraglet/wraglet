@@ -1,6 +1,6 @@
 'use client'
 
-import { PostDocument } from '@/models/Post'
+import { IPost } from '@/models/Post'
 import * as Ably from 'ably'
 import { AblyProvider, ChannelProvider } from 'ably/react'
 
@@ -11,7 +11,7 @@ const ProfilePostsAbly = ({
   initialPosts
 }: {
   username: string
-  initialPosts: PostDocument[]
+  initialPosts: IPost[]
 }) => {
   const client = new Ably.Realtime({ authUrl: '/api/token' })
   return (

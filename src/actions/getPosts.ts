@@ -1,29 +1,47 @@
 'use server'
 
 import client from '@/lib/db'
-import Post, { PostDocument } from '@/models/Post'
+import { initModels } from '@/lib/models'
+import Post from '@/models/Post'
 
-// Import PostDocument for type safety
-
-const getPosts = async (): Promise<PostDocument[]> => {
+// Return document-like objects that will be deJSONified by the client
+const getPosts = async () => {
   try {
     // Connect to the database
     await client()
 
-    // Fetch posts with audience 'public', sorted by creation date
-    const posts = await Post.find({ audience: 'public' })
-      .sort({ createdAt: 'desc' })
+    // Ensure models are registered
+    initModels()
+
+    // Query posts with populated fields
+    const posts = await Post.find({})
+      .sort({ createdAt: -1 })
       .populate({
         path: 'author',
-        select:
-          'firstName lastName username gender pronoun profilePicture coverPhoto'
+        select: 'firstName lastName username gender pronoun profilePicture'
       })
-      .exec()
+      .populate({
+        path: 'reactions',
+        populate: {
+          path: 'userId',
+          select: 'firstName lastName username profilePicture'
+        }
+      })
+      .populate({
+        path: 'comments',
+        populate: {
+          path: 'author',
+          select: 'firstName lastName username gender pronoun profilePicture'
+        }
+      })
+      .lean()
 
-    return posts // Return the fetched posts
+    // Return the queried posts - they will be automatically serialized to JSON
+    // when crossing the server/client boundary
+    return posts
   } catch (error) {
-    console.error('Error at getPosts() while fetching posts: ', error)
-    return [] // Return an empty array on error
+    console.error('Error getting posts:', error)
+    return []
   }
 }
 

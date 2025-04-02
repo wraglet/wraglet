@@ -1,13 +1,13 @@
 'use server'
 
-import mongoose, { Document, Schema } from 'mongoose'
+import { Document, model, models, Schema, Types } from 'mongoose'
 
-export interface UserDocument extends Document {
+// Base User interface without MongoDB document properties
+export interface IUser {
   firstName: string
   lastName: string
   suffix?: string
   email: string
-  hashedPassword: string
   username: string
   dob: Date
   gender: string
@@ -23,29 +23,30 @@ export interface UserDocument extends Document {
   }
   publicProfileVisible: boolean
   friendRequests: string
-  followers: [
-    {
-      userId: string
-      createdAt: Date
-    }
-  ]
-  following: [
-    {
-      userId: string
-
-      createdAt: Date
-    }
-  ]
-  friends: [
-    {
-      userId: string
-      relationship: string
-      createdAt: Date
-    }
-  ]
+  followers: Array<{
+    userId: Types.ObjectId | string
+    createdAt?: Date
+  }>
+  following: Array<{
+    userId: Types.ObjectId | string
+    createdAt?: Date
+  }>
+  friends: Array<{
+    userId: Types.ObjectId | string
+    relationship: string
+    createdAt?: Date
+  }>
+  createdAt?: Date
+  updatedAt?: Date
 }
 
-const UserSchema = new Schema<UserDocument>(
+// Interface for User document with authentication needs
+export interface IUserDocument extends IUser, Document {
+  hashedPassword: string
+}
+
+// Schema includes all fields including hashedPassword
+const UserSchema = new Schema<IUserDocument>(
   {
     firstName: String,
     lastName: String,
@@ -63,17 +64,17 @@ const UserSchema = new Schema<UserDocument>(
     friendRequests: String,
     followers: [
       {
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+        userId: { type: Schema.Types.ObjectId, ref: 'User' }
       }
     ],
     following: [
       {
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+        userId: { type: Schema.Types.ObjectId, ref: 'User' }
       }
     ],
     friends: [
       {
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        userId: { type: Schema.Types.ObjectId, ref: 'User' },
         relationship: String
       }
     ]
@@ -81,8 +82,6 @@ const UserSchema = new Schema<UserDocument>(
   { timestamps: true }
 )
 
-const User =
-  (mongoose.models.User as mongoose.Model<UserDocument>) ||
-  mongoose.model<UserDocument>('User', UserSchema)
+const User = models?.User || model<IUserDocument>('User', UserSchema)
 
 export default User

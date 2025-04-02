@@ -1,16 +1,18 @@
 'use client'
 
-import React from 'react'
 import dynamic from 'next/dynamic'
-import { PostDocument } from '@/models/Post'
+import { IPost } from '@/models/Post'
 
-const FeedAbly = dynamic(() => import('./FeedAbly'), { ssr: false })
+const FeedAbly = dynamic(
+  () => import('@/app/(authenticated)/feed/_components/Feed/FeedAbly'),
+  { ssr: false }
+)
 
-const FeedClientWrapper = ({
-  initialPosts
-}: {
-  initialPosts: PostDocument[]
-}) => {
+interface FeedClientWrapperProps {
+  initialPosts: IPost[]
+}
+
+const FeedClientWrapper = ({ initialPosts }: FeedClientWrapperProps) => {
   return <FeedAbly initialPosts={initialPosts} />
 }
 

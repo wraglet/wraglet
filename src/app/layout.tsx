@@ -5,7 +5,6 @@ import '@/app/globals.css'
 
 import ToasterContext from '@/context/ToasterContext'
 import Providers from '@/providers'
-import { AblyProvider } from '@/providers/AblyProvider'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,16 +51,14 @@ export const metadata: Metadata = {
 
 const Layout = async ({ children }: { children: React.ReactNode }) => {
   return (
-    <html suppressHydrationWarning lang="en" className="scroll-smooth">
+    <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
-        <AblyProvider>
-          <Providers>
-            <ToasterContext />
-            {children}
-          </Providers>
-        </AblyProvider>
+        <Providers>
+          <ToasterContext />
+          {children}
+        </Providers>
       </body>
     </html>
   )

@@ -1,8 +1,14 @@
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import client from '@/lib/db'
-import User from '@/models/User'
+import User, { IUserDocument } from '@/models/User'
 import bcrypt from 'bcryptjs'
+import { Types } from 'mongoose'
+
+// Define a type for the user with _id field for lean() queries
+type UserWithId = IUserDocument & {
+  _id: Types.ObjectId
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -16,9 +22,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           await client()
           console.log('Connected to MongoDB')
 
-          const user = await User.findOne({
+          // Use explicit typing for the Mongoose lean result
+          const user = (await User.findOne({
             email: (credentials?.email as string).toLowerCase()
-          }).lean()
+          }).lean()) as UserWithId | null
 
           if (user) {
             console.log('User found:', user)

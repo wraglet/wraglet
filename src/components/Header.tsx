@@ -1,11 +1,11 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { Quicksand } from 'next/font/google'
 import Image from 'next/image'
 import Link from 'next/link'
 import { UserInterface } from '@/interfaces'
-import { UserDocument } from '@/models/User'
+import { IUser } from '@/models/User'
 import useGlobalStore from '@/store/global'
 import useUserStore from '@/store/user'
 
@@ -19,7 +19,7 @@ const quicksand = Quicksand({
   preload: true
 })
 
-const Header = ({ currentUser }: { currentUser: UserDocument }) => {
+const Header = ({ currentUser }: { currentUser: IUser }) => {
   const { justLoggedIn, userInitialized, setJustLoggedIn, setUserInitialized } =
     useGlobalStore()
   const { setUser } = useUserStore()
@@ -32,9 +32,7 @@ const Header = ({ currentUser }: { currentUser: UserDocument }) => {
     if (justLoggedIn && !userInitialized) {
       const transformedUser = {
         ...currentUser,
-        friends: currentUser?.friends.map(
-          (friend: { userId: string }) => friend.userId
-        )
+        friends: currentUser?.friends.map((friend) => friend.userId.toString())
       } as unknown as UserInterface
       setUser(transformedUser)
       setUserInitialized(true)
