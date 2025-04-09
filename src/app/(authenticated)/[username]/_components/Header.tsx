@@ -2,10 +2,8 @@ import Image from 'next/image'
 import getUserByUsername from '@/actions/getUserByUsername'
 import { FaPencil, FaUserPen } from 'react-icons/fa6'
 
-import Avatar from '@/components/Avatar'
-
 import CoverPhotoHover from '@/app/(authenticated)/[username]/_components/CoverPhotoHover'
-import ProfilePictureHover from '@/app/(authenticated)/[username]/_components/ProfilePictureHover'
+import ProfilePicture from '@/app/(authenticated)/[username]/_components/ProfilePicture'
 
 const ProfileHeader = async ({ username }: { username: string }) => {
   const user = await getUserByUsername(username)
@@ -41,21 +39,16 @@ const ProfileHeader = async ({ username }: { username: string }) => {
           </div>
 
           <div className="absolute -bottom-[50px] left-4 z-10 overflow-hidden md:-bottom-[80px] lg:-bottom-[90px] lg:left-16">
-            <div className="group relative block">
-              <Avatar
-                src={finalProfilePictureUrl}
-                gender={user?.gender}
-                alt={`${user?.firstName}'s avatar`}
-                size="shadow-md h-[100px] w-[100px] md:h-[160px] md:w-[160px]"
-              />
-              {isCurrentUser && (
-                <ProfilePictureHover profilePicture={finalProfilePictureUrl} />
-              )}
-            </div>
+            <ProfilePicture
+              username={username}
+              userGender={user?.gender}
+              userProfilePictureUrl={user?.profilePicture?.url}
+              isCurrentUser={isCurrentUser}
+            />
           </div>
         </div>
         <div className="relative flex h-[90px] w-full flex-col justify-between md:h-[120px] lg:h-[140px]">
-          <div className="ml-[132px] mr-4 mt-1 flex items-center justify-between md:ml-[180px] md:mt-5 lg:ml-[242px] lg:mt-10">
+          <div className="mt-1 mr-4 ml-[132px] flex items-center justify-between md:mt-5 md:ml-[180px] lg:mt-10 lg:ml-[242px]">
             <div className="flex flex-col">
               <h1 className="text-xl font-semibold -tracking-[0.4px] text-black">
                 {user?.firstName} {user?.lastName}
@@ -71,7 +64,7 @@ const ProfileHeader = async ({ username }: { username: string }) => {
           </div>
           <div className="ml-[35px] pb-4 md:ml-[180px] md:pb-7 lg:ml-[242px] lg:pb-[30px]">
             <div className="flex gap-x-4">
-              <p className="text-xs font-medium italic text-slate-700">
+              <p className="text-xs font-medium text-slate-700 italic">
                 &quot;{user?.bio ?? 'Set your bio here'}&quot;
               </p>
               <FaPencil className="text-slate-600" size={10} />

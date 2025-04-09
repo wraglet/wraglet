@@ -1,6 +1,8 @@
 'use client'
 
 import { Fragment, useReducer } from 'react'
+import axios from 'axios'
+import toast from 'react-hot-toast'
 import { FaCamera } from 'react-icons/fa'
 
 import UploadProfilePicture from '@/app/(authenticated)/[username]/_components/UploadProfilePicture'
@@ -21,8 +23,20 @@ const ProfilePictureHover = ({ profilePicture }: ProfilePictureHoverProps) => {
     initialState
   )
 
-  const handleUpdateProfilePicture = (e: any, profilePicture: string) => {
-    console.log(e, profilePicture)
+  const handleUpdateProfilePicture = async (e: any, profilePicture: string) => {
+    try {
+      const response = await axios.patch('/api/update-profile-picture', {
+        profilePicture
+      })
+
+      if (response.status === 200) {
+        toast.success('Profile picture updated successfully')
+        // Update the UI or state if needed
+      }
+    } catch (error) {
+      console.error('Error updating profile picture:', error)
+      toast.error('Failed to update profile picture')
+    }
   }
 
   return (
@@ -38,7 +52,7 @@ const ProfilePictureHover = ({ profilePicture }: ProfilePictureHoverProps) => {
 
       <button
         onClick={() => dispatchState({ openUploadProfilePictureModal: true })}
-        className="absolute bottom-2.5 right-2.5 hidden h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-[#D9D9D9] shadow-md group-hover:flex md:h-9 md:w-9"
+        className="absolute right-2.5 bottom-2.5 hidden h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-[#D9D9D9] shadow-md group-hover:flex md:h-9 md:w-9"
       >
         <FaCamera className="text-[8px] text-black md:text-sm" />
       </button>

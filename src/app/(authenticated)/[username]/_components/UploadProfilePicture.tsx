@@ -143,7 +143,7 @@ const UploadProfilePicture: FC<Props> = ({
   }, [])
 
   const { getRootProps, getInputProps, isFocused, isDragAccept, isDragReject } =
-    useDropzone({ onDrop, accept: { 'image/*': [] } })
+    useDropzone({ onDrop, accept: { 'image/*': [] }, noClick: true })
 
   const style = useMemo(
     () => ({
@@ -199,7 +199,7 @@ const UploadProfilePicture: FC<Props> = ({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-25"></div>
+          <div className="bg-opacity-25 fixed inset-0 bg-black"></div>
         </TransitionChild>
 
         <TransitionChild
@@ -216,7 +216,7 @@ const UploadProfilePicture: FC<Props> = ({
               <button
                 type="button"
                 onClick={handleClose}
-                className="absolute right-6 top-6 rounded-md p-1 hover:bg-slate-100"
+                className="absolute top-6 right-6 rounded-md p-1 hover:bg-slate-100"
               >
                 <CrossWhite fill="#374151" />
               </button>
@@ -298,7 +298,7 @@ const UploadProfilePicture: FC<Props> = ({
                         Zoom
                       </span>
                       <span className="text-xl font-bold text-gray-900">
-                        {(((zoom - 1) / 2) * 100).toFixed(0)}
+                        {Math.round(zoom * 100)}%
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -317,7 +317,7 @@ const UploadProfilePicture: FC<Props> = ({
                         Rotation
                       </span>
                       <span className="text-xl font-bold text-gray-900">
-                        {rotation}
+                        {rotation}°
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -381,7 +381,7 @@ const UploadProfilePicture: FC<Props> = ({
                     className={`${
                       isValid
                         ? 'border-sky-500 bg-sky-500 text-white hover:bg-sky-600 active:bg-sky-700'
-                        : 'pointer-events-none cursor-default select-none border-gray-200 bg-slate-200 text-slate-400'
+                        : 'pointer-events-none cursor-default border-gray-200 bg-slate-200 text-slate-400 select-none'
                     } rounded-md border border-solid px-3 py-1 text-base font-medium shadow-sm transition-all`}
                   >
                     Crop
@@ -394,7 +394,7 @@ const UploadProfilePicture: FC<Props> = ({
                     className={`${
                       isValid
                         ? 'border-sky-500 bg-sky-500 text-white hover:bg-sky-600 active:bg-sky-700'
-                        : 'pointer-events-none cursor-default select-none border-gray-200 bg-slate-200 text-slate-400'
+                        : 'pointer-events-none cursor-default border-gray-200 bg-slate-200 text-slate-400 select-none'
                     } rounded-md border border-solid px-3 py-1 text-base font-medium shadow-sm transition-all`}
                   >
                     Confirm
