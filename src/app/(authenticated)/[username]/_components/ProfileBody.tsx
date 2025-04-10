@@ -13,7 +13,7 @@ import toast from 'react-hot-toast'
 import CreatePost from '@/components/CreatePost'
 import PostClientWrapper from '@/components/PostClientWrapper'
 
-import PhotoCollection from './PhotoCollection'
+import PhotoCollection from '@/app/(authenticated)/[username]/_components/PhotoCollection'
 
 type ProfileBodyProps = {
   username: string

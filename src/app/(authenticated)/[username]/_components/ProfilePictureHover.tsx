@@ -1,6 +1,8 @@
 'use client'
 
 import { Fragment, useReducer } from 'react'
+import useUserStore from '@/store/user'
+import { useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { FaCamera } from 'react-icons/fa'
@@ -13,6 +15,8 @@ type ProfilePictureHoverProps = {
 
 const ProfilePictureHover = ({ profilePicture }: ProfilePictureHoverProps) => {
   const reducer = (state: any, action: any) => ({ ...state, ...action })
+  const setUser = useUserStore((state) => state.setUser)
+  const queryClient = useQueryClient()
 
   const initialState = {
     openUploadProfilePictureModal: false
@@ -30,8 +34,15 @@ const ProfilePictureHover = ({ profilePicture }: ProfilePictureHoverProps) => {
       })
 
       if (response.status === 200) {
+        // Update the user state in Zustand store
+        setUser(response.data)
+
+        // Invalidate and refetch user and posts queries
+        await queryClient.invalidateQueries({ queryKey: ['user'] })
+        await queryClient.invalidateQueries({ queryKey: ['posts'] })
+
         toast.success('Profile picture updated successfully')
-        // Update the UI or state if needed
+        dispatchState({ openUploadProfilePictureModal: false })
       }
     } catch (error) {
       console.error('Error updating profile picture:', error)

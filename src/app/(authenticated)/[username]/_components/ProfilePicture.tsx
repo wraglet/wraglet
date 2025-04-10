@@ -1,6 +1,8 @@
 'use client'
 
+import getUserByUsername from '@/actions/getUserByUsername'
 import useUserStore from '@/store/user'
+import { useQuery } from '@tanstack/react-query'
 
 import Avatar from '@/components/Avatar'
 
@@ -19,6 +21,17 @@ const ProfilePicture = ({
   userProfilePictureUrl,
   isCurrentUser
 }: ProfilePictureProps) => {
+  // Get latest user data from React Query
+  const { data: userData } = useQuery({
+    queryKey: ['user', username],
+    queryFn: () => getUserByUsername(username),
+    initialData: {
+      profilePicture: { url: userProfilePictureUrl },
+      gender: userGender
+    }
+  })
+
+  // Get profile picture from Zustand store
   const storeProfilePictureUrl = useUserStore(
     (state: any) => state.user?.profilePicture?.url
   )
@@ -28,8 +41,12 @@ const ProfilePicture = ({
       ? `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/male-placeholder.png`
       : `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/female-placeholder.png`
 
+  // Prioritize React Query data, then Zustand store, then props, then default
   const finalProfilePictureUrl =
-    userProfilePictureUrl ?? storeProfilePictureUrl ?? defaultProfilePictureUrl
+    userData?.profilePicture?.url ??
+    storeProfilePictureUrl ??
+    userProfilePictureUrl ??
+    defaultProfilePictureUrl
 
   return (
     <div className="group relative block">
