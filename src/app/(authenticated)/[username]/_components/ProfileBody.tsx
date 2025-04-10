@@ -13,6 +13,8 @@ import toast from 'react-hot-toast'
 import CreatePost from '@/components/CreatePost'
 import PostClientWrapper from '@/components/PostClientWrapper'
 
+import PhotoCollection from './PhotoCollection'
+
 type ProfileBodyProps = {
   username: string
   initialPosts: IPost[]
@@ -100,7 +102,33 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
 
   return (
     <div className="tablet:px-5 mb-6 flex w-full items-start gap-x-10 lg:px-10 xl:w-[1250px] xl:px-0">
-      <div className="tablet:flex tablet:w-2/5 hidden h-[500px] flex-col rounded-lg border border-solid border-neutral-200 bg-white drop-shadow-md" />
+      <div className="tablet:flex tablet:w-2/5 hidden h-[500px] flex-col rounded-lg border border-solid border-neutral-200 bg-white drop-shadow-md">
+        <PhotoCollection
+          photos={[]}
+          existingPhotos={[
+            ...(userPosts
+              ?.filter((post) => post.content.images?.[0])
+              .map((post) => ({
+                url: post.content.images![0].url,
+                type: 'post' as const,
+                createdAt: post.createdAt || new Date().toISOString()
+              })) || []),
+            ...(user?.profilePicture?.url
+              ? [
+                  {
+                    url: user.profilePicture.url,
+                    type: 'avatar' as const,
+                    createdAt: user.updatedAt || new Date().toISOString()
+                  }
+                ]
+              : [])
+          ]}
+          onUpdatePhotos={(photos) => {
+            // TODO: Implement photo collection update
+            console.log('Updated photos:', photos)
+          }}
+        />
+      </div>
       <div className="tablet:grow flex w-full flex-col gap-y-4 sm:mx-10 md:mx-auto md:w-[680px]">
         {user?.isCurrentUser && (
           <Suspense fallback={<div>Loading...</div>}>
