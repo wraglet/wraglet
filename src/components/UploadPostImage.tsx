@@ -1,4 +1,4 @@
-import React, {
+import {
   CSSProperties,
   FC,
   Fragment,
@@ -72,6 +72,7 @@ const UploadPostImage: FC<Props> = ({
   setPostImage
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [image, setImage] = useState<string>(postImage)
   const isValid = image !== '' && image !== postImage
 
@@ -168,6 +169,10 @@ const UploadPostImage: FC<Props> = ({
     setZoom(1)
     setRotation(0)
     setCroppedAreaPixels(null)
+    setLimitErr(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
     close()
   }
 
@@ -188,7 +193,7 @@ const UploadPostImage: FC<Props> = ({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-25"></div>
+          <div className="bg-opacity-25 fixed inset-0 bg-black"></div>
         </TransitionChild>
 
         <TransitionChild
@@ -205,7 +210,7 @@ const UploadPostImage: FC<Props> = ({
               <button
                 type="button"
                 onClick={handleClose}
-                className="absolute right-6 top-6 rounded-md p-1 hover:bg-slate-100"
+                className="absolute top-6 right-6 rounded-md p-1 hover:bg-slate-100"
               >
                 <CrossWhite fill="#374151" />
               </button>
@@ -333,6 +338,7 @@ const UploadPostImage: FC<Props> = ({
                       >
                         <input
                           {...getInputProps()}
+                          ref={fileInputRef}
                           type="file"
                           name="file"
                           accept="image/png, image/jpeg"
@@ -368,7 +374,7 @@ const UploadPostImage: FC<Props> = ({
                     className={`${
                       isValid
                         ? 'border-sky-500 bg-sky-500 text-white hover:bg-sky-600 active:bg-sky-700'
-                        : 'pointer-events-none cursor-default select-none border-gray-200 bg-slate-200 text-slate-400'
+                        : 'pointer-events-none cursor-default border-gray-200 bg-slate-200 text-slate-400 select-none'
                     } rounded-md border border-solid px-3 py-1 text-base font-medium shadow-sm transition-all`}
                   >
                     Crop
@@ -381,7 +387,7 @@ const UploadPostImage: FC<Props> = ({
                     className={`${
                       isValid
                         ? 'border-sky-500 bg-sky-500 text-white hover:bg-sky-600 active:bg-sky-700'
-                        : 'pointer-events-none cursor-default select-none border-gray-200 bg-slate-200 text-slate-400'
+                        : 'pointer-events-none cursor-default border-gray-200 bg-slate-200 text-slate-400 select-none'
                     } rounded-md border border-solid px-3 py-1 text-base font-medium shadow-sm transition-all`}
                   >
                     Confirm

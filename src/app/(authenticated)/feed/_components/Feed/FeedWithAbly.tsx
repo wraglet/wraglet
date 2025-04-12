@@ -49,7 +49,11 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({ initialPosts }) => {
   // Use Ably channel for real-time updates
   const { publish } = useChannel('post-channel', (post) => {
     try {
-      setFeedPosts([post.data, ...posts])
+      // Check if the post already exists in the feed
+      const postExists = posts.some((p) => p._id === post.data._id)
+      if (!postExists) {
+        setFeedPosts([post.data, ...posts])
+      }
     } catch (error) {
       console.error('Error handling post update:', error)
     }
@@ -62,18 +66,15 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({ initialPosts }) => {
     try {
       const res = await axios.post('/api/posts', { text, image })
 
-      // Update local state
-      setFeedPosts([res.data, ...posts])
+      // Update local state first
+      const newPost = res.data
+      setFeedPosts([newPost, ...posts])
 
       // Publish to Ably channel
       try {
-        await publish({
-          name: 'post',
-          data: res.data
-        })
+        await publish('post', newPost)
       } catch (err) {
         console.warn('Failed to publish post to Ably:', err)
-        // Continue even if Ably publishing fails
       }
 
       dispatchState({ text: '', image: null })
@@ -97,7 +98,10 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({ initialPosts }) => {
           setPostImage={(image) => dispatchState({ image: image })}
         />
         {posts.map((post: PostInterface) => (
-          <PostClientWrapper key={post._id} post={post as unknown as IPost} />
+          <PostClientWrapper
+            key={`${post._id}-${post.createdAt}`}
+            post={post as unknown as IPost}
+          />
         ))}
       </div>
     </div>
