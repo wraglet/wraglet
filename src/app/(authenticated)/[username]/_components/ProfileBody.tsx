@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, Suspense, useEffect, useReducer, useState } from 'react'
+import { FormEvent, Suspense, useReducer, useState } from 'react'
 import getPostsByUsername from '@/actions/getPostsByUsername'
 import getUserByUsername from '@/actions/getUserByUsername'
 import { IPost } from '@/models/Post'
@@ -8,6 +8,7 @@ import useFeedPostsStore from '@/store/feedPosts'
 import { useQuery } from '@tanstack/react-query'
 import { useChannel } from 'ably/react'
 import axios from 'axios'
+import { Types } from 'mongoose'
 import toast from 'react-hot-toast'
 
 import CreatePost from '@/components/CreatePost'
@@ -25,7 +26,6 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
 
   const [userPosts, setUserPosts] = useState<IPost[]>(initialPosts)
 
-  // this is used to update the feed posts
   const { posts: feedPosts, setFeedPosts } = useFeedPostsStore()
 
   const { data: user } = useQuery({
@@ -57,7 +57,7 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
     initialState
   )
 
-  const { channel, publish } = useChannel('post-channel', (post) => {
+  const { publish } = useChannel('post-channel', (post) => {
     try {
       if (post.data.author.username === username) {
         setUserPosts([post.data, ...userPosts])
@@ -69,21 +69,8 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
     }
   })
 
-  useEffect(() => {
-    if (channel) {
-      channel.on('failed', () => {
-        toast.error('Connection to posts failed')
-      })
-      channel.on('suspended', () => {
-        toast.error('Posts connection suspended')
-      })
-      channel.on('attached', () => {
-        console.log('Connected to posts channel')
-      })
-    }
-  }, [channel])
-
   const submitPost = async (e: FormEvent) => {
+    GainNode
     e.preventDefault()
 
     dispatchState({ isLoading: true })
@@ -102,32 +89,8 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
 
   return (
     <div className="tablet:px-5 mb-6 flex w-full items-start gap-x-10 lg:px-10 xl:w-[1250px] xl:px-0">
-      <div className="tablet:flex tablet:w-2/5 hidden h-[500px] flex-col rounded-lg border border-solid border-neutral-200 bg-white drop-shadow-md">
-        <PhotoCollection
-          photos={[]}
-          existingPhotos={[
-            ...(userPosts
-              ?.filter((post) => post.content.images?.[0])
-              .map((post) => ({
-                url: post.content.images![0].url,
-                type: 'post' as const,
-                createdAt: post.createdAt || new Date().toISOString()
-              })) || []),
-            ...(user?.profilePicture?.url
-              ? [
-                  {
-                    url: user.profilePicture.url,
-                    type: 'avatar' as const,
-                    createdAt: user.updatedAt || new Date().toISOString()
-                  }
-                ]
-              : [])
-          ]}
-          onUpdatePhotos={(photos) => {
-            // TODO: Implement photo collection update
-            console.log('Updated photos:', photos)
-          }}
-        />
+      <div className="tablet:flex tablet:w-2/5 hidden h-auto flex-col rounded-lg border border-solid border-neutral-200 bg-white drop-shadow-md">
+        <PhotoCollection username={username} />
       </div>
       <div className="tablet:grow flex w-full flex-col gap-y-4 sm:mx-10 md:mx-auto md:w-[680px]">
         {user?.isCurrentUser && (
@@ -146,7 +109,10 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
         {userPosts &&
           !isPending &&
           userPosts.map((post: IPost) => (
-            <PostClientWrapper key={post._id} post={post} />
+            <PostClientWrapper
+              key={(post._id as string | Types.ObjectId)?.toString()}
+              post={post}
+            />
           ))}
       </div>
     </div>

@@ -1,16 +1,40 @@
-import { create } from 'zustand';
-import { UserInterface } from '@/interfaces';
+import { create } from 'zustand'
 
-type UserProps = {
-  user: UserInterface | null;
-  setUser: (user: UserInterface) => void;
-  clearUser: () => void;
-};
+interface Photo {
+  url: string
+  key: string
+  type: 'post' | 'avatar'
+  createdAt: string
+}
 
-const useUserStore = create<UserProps>((set) => ({
+interface User {
+  _id: string
+  firstName: string
+  lastName: string
+  email: string
+  username: string
+  gender: string
+  profilePicture?: {
+    url: string
+  }
+  photoCollection: Photo[]
+  updatedAt: string
+  // ... other user fields
+}
+
+interface UserStore {
+  user: User | null
+  setUser: (user: User | null) => void
+  updatePhotoCollection: (photos: Photo[]) => void
+}
+
+const useUserStore = create<UserStore>((set) => ({
   user: null,
   setUser: (user) => set({ user }),
-  clearUser: () => set({ user: null }),
-}));
+  updatePhotoCollection: (photos) =>
+    set((state) => ({
+      user: state.user ? { ...state.user, photoCollection: photos } : null
+    }))
+}))
 
-export default useUserStore;
+export default useUserStore

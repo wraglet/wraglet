@@ -1,56 +1,119 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import Image from 'next/image'
+import getUserByUsername from '@/actions/getUserByUsername'
+import useUserStore from '@/store/user'
+import { useQuery } from '@tanstack/react-query'
+import axios from 'axios'
+import toast from 'react-hot-toast'
 import { FaPlus } from 'react-icons/fa6'
 
-import AddPhotoModal from './AddPhotoModal'
+import AddPhotoModal from '@/app/(authenticated)/[username]/_components/AddPhotoModal'
 
-interface PhotoCollectionProps {
-  photos: {
-    url: string
-    type: 'post' | 'avatar'
-    createdAt: string
-  }[]
-  existingPhotos: {
-    url: string
-    type: 'post' | 'avatar'
-    createdAt: string
-  }[]
-  onUpdatePhotos: (
-    photos: {
-      url: string
-      type: 'post' | 'avatar'
-      createdAt: string
-    }[]
-  ) => void
+interface PhotoData {
+  url: string
+  type: 'post' | 'avatar'
+  createdAt?: string
 }
 
-const PhotoCollection = ({
-  photos = [],
-  existingPhotos = [],
-  onUpdatePhotos
-}: PhotoCollectionProps) => {
+interface Photo {
+  url: string
+  key: string
+  type: 'post' | 'avatar'
+  createdAt: string
+}
+
+interface PhotoForServer {
+  url: string
+  type: 'post' | 'avatar'
+  createdAt: string
+}
+
+interface PhotoCollectionProps {
+  username: string
+}
+
+const PhotoCollection = ({ username }: PhotoCollectionProps) => {
   const [showAddPhoto, setShowAddPhoto] = useState(false)
   const maxPhotos = 9
 
-  const handlePhotoSelect = (selectedUrls: string[]) => {
-    const newPhotos = [
-      ...photos,
-      ...selectedUrls.map((url) => {
-        const existingPhoto = existingPhotos.find((photo) => photo.url === url)
-        return (
-          existingPhoto || {
-            url,
-            type: 'post' as const,
-            createdAt: new Date().toISOString()
-          }
-        )
-      })
-    ].slice(0, maxPhotos)
+  const { data: userData, refetch } = useQuery({
+    queryKey: ['user', username],
+    queryFn: async () => await getUserByUsername(username)
+  })
 
-    onUpdatePhotos(newPhotos)
+  const updatePhotoCollection = useUserStore(
+    useCallback((state) => state.updatePhotoCollection, [])
+  )
+
+  const { photoCollection = [] } = userData || {}
+  const photos = photoCollection
+    .filter((photo: PhotoData) => photo && photo.url)
+    .map((photo: PhotoData) => ({
+      url: photo.url,
+      key: `${photo.type}-${photo.url}`,
+      type: photo.type,
+      createdAt: photo.createdAt?.toString() || new Date().toISOString()
+    }))
+
+  // Get existing photos including profile picture
+  const existingPhotos: Photo[] = []
+  if (userData) {
+    // Add photoCollection photos
+    photoCollection?.forEach((photo: PhotoData) => {
+      if (photo && photo.url) {
+        existingPhotos.push({
+          url: photo.url,
+          key: `${photo.type}-${photo.url}`,
+          type: photo.type,
+          createdAt: photo.createdAt?.toString() || new Date().toISOString()
+        })
+      }
+    })
+
+    // Add profile picture if it exists
+    if (userData.profilePicture?.url) {
+      existingPhotos.push({
+        url: userData.profilePicture.url,
+        key: `profile-${userData.profilePicture.url}`,
+        type: 'avatar' as const,
+        createdAt: userData.updatedAt?.toString() || new Date().toISOString()
+      })
+    }
   }
+
+  const handleUpdatePhotos = async (newPhotos: Photo[]) => {
+    try {
+      // Combine existing photos with new photos
+      const allPhotos = [...photos, ...newPhotos].map((photo) => ({
+        url: photo.url,
+        type: photo.type,
+        createdAt: photo.createdAt?.toString() || new Date().toISOString()
+      }))
+
+      const response = await axios.patch('/api/update-photo-collection', {
+        action: 'update',
+        photos: allPhotos
+      })
+
+      if (response.status === 200) {
+        const photosWithKeys = allPhotos.map((photo: PhotoForServer) => ({
+          ...photo,
+          key: `${photo.type}-${photo.url}`
+        }))
+        updatePhotoCollection(photosWithKeys)
+        refetch()
+        toast.success('Photo collection updated successfully')
+        setShowAddPhoto(false)
+      }
+    } catch (error) {
+      console.error('Error updating photo collection:', error)
+      toast.error('Failed to update photo collection')
+    }
+  }
+
+  console.log('photos: ', photos)
 
   return (
     <div className="flex h-full w-full flex-col gap-y-4 p-6">
@@ -64,18 +127,19 @@ const PhotoCollection = ({
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        {photos.map((photo, index) => (
+        {photos.map((photo: Photo) => (
           <div
-            key={index}
+            key={photo.key}
             className="group relative aspect-square w-full overflow-hidden rounded-lg"
           >
             <Image
               src={photo.url}
-              alt={`Collection photo ${index + 1}`}
+              alt={`Collection photo`}
               fill
+              sizes="(max-width: 768px) 33vw, (max-width: 1200px) 25vw, 20vw"
               className="object-cover transition-transform duration-300 group-hover:scale-110"
+              priority
             />
-            <div className="bg-opacity-0 group-hover:bg-opacity-20 absolute inset-0 bg-black transition-opacity duration-300"></div>
           </div>
         ))}
         {photos.length < maxPhotos && (
@@ -94,11 +158,11 @@ const PhotoCollection = ({
       </div>
 
       <AddPhotoModal
-        show={showAddPhoto}
+        isOpen={showAddPhoto}
         onClose={() => setShowAddPhoto(false)}
-        onSelect={handlePhotoSelect}
+        onUpdatePhotos={handleUpdatePhotos}
         existingPhotos={existingPhotos.filter(
-          (photo) => !photos.some((p) => p.url === photo.url)
+          (photo: Photo) => !photos.some((p: Photo) => p.url === photo.url)
         )}
       />
     </div>

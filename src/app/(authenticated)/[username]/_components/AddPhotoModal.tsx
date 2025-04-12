@@ -2,51 +2,139 @@
 
 import { Fragment, useState } from 'react'
 import Image from 'next/image'
+import { cn } from '@/lib/utils'
 import {
   Dialog,
   DialogPanel,
+  Tab,
+  TabGroup,
+  TabList,
+  TabPanel,
+  TabPanels,
   Transition,
   TransitionChild
 } from '@headlessui/react'
-import { FaImage, FaUpload } from 'react-icons/fa6'
+import { Loader2 } from 'lucide-react'
+import { useDropzone } from 'react-dropzone'
+import { toast } from 'react-hot-toast'
 
 import CrossWhite from '@/components/CrossWhite'
 
 interface AddPhotoModalProps {
-  show: boolean
+  isOpen: boolean
   onClose: () => void
-  onSelect: (photos: string[]) => void
-  existingPhotos: {
+  existingPhotos: Array<{
     url: string
+    key: string
     type: 'post' | 'avatar'
     createdAt: string
-  }[]
+  }>
+  onUpdatePhotos: (photos: any[]) => void
 }
 
-const AddPhotoModal = ({
-  show,
+export default function AddPhotoModal({
+  isOpen,
   onClose,
-  onSelect,
-  existingPhotos
-}: AddPhotoModalProps) => {
+  existingPhotos,
+  onUpdatePhotos
+}: AddPhotoModalProps) {
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([])
-  const [activeTab, setActiveTab] = useState<'existing' | 'upload'>('existing')
+  const [isLoading, setIsLoading] = useState(false)
+  const [selectedTab, setSelectedTab] = useState(0)
 
-  const handleSelect = (url: string) => {
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: {
+      'image/*': ['.png', '.jpg', '.jpeg', '.gif']
+    },
+    maxFiles: 1,
+    onDrop: async (acceptedFiles) => {
+      if (acceptedFiles.length === 0) return
+
+      setIsLoading(true)
+      try {
+        const file = acceptedFiles[0]
+        const reader = new FileReader()
+
+        reader.onloadend = async () => {
+          const base64Data = reader.result as string
+
+          const response = await fetch('/api/update-photo-collection', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              action: 'upload',
+              image: base64Data
+            })
+          })
+
+          if (!response.ok) {
+            throw new Error('Failed to upload photo')
+          }
+
+          const newPhoto = await response.json()
+          onUpdatePhotos([...existingPhotos, newPhoto])
+          toast.success('Photo uploaded successfully')
+          onClose()
+        }
+
+        reader.readAsDataURL(file)
+      } catch (error) {
+        console.error('Error uploading photo:', error)
+        toast.error('Failed to upload photo')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+  })
+
+  const handleExistingPhotoSelect = (url: string) => {
     if (selectedPhotos.includes(url)) {
-      setSelectedPhotos(selectedPhotos.filter((photo) => photo !== url))
-    } else if (selectedPhotos.length < 9) {
+      setSelectedPhotos(selectedPhotos.filter((p) => p !== url))
+    } else {
       setSelectedPhotos([...selectedPhotos, url])
     }
   }
 
-  const handleConfirm = () => {
-    onSelect(selectedPhotos)
-    onClose()
+  const handleAddSelected = async () => {
+    if (selectedPhotos.length === 0) return
+
+    setIsLoading(true)
+    try {
+      const selectedPhotoObjects = existingPhotos.filter((photo) =>
+        selectedPhotos.includes(photo.url)
+      )
+
+      const response = await fetch('/api/update-photo-collection', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'update',
+          photos: selectedPhotoObjects
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update photo collection')
+      }
+
+      const updatedUser = await response.json()
+      onUpdatePhotos(updatedUser.photoCollection)
+      toast.success('Photos added to collection')
+      onClose()
+    } catch (error) {
+      console.error('Error updating photo collection:', error)
+      toast.error('Failed to update photo collection')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
-    <Transition appear show={show} as={Fragment}>
+    <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
         <TransitionChild
           as={Fragment}
@@ -57,7 +145,7 @@ const AddPhotoModal = ({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="bg-opacity-25 fixed inset-0 bg-black" />
+          <div className="fixed inset-0 bg-black/40" />
         </TransitionChild>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -74,7 +162,7 @@ const AddPhotoModal = ({
               <DialogPanel className="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white p-6 shadow-xl transition-all">
                 <div className="relative mb-6">
                   <h2 className="text-lg font-semibold text-gray-900">
-                    Add Photos to Collection
+                    Add Photos
                   </h2>
                   <button
                     onClick={onClose}
@@ -84,101 +172,110 @@ const AddPhotoModal = ({
                   </button>
                 </div>
 
-                <div className="mb-6 flex gap-x-4 border-b border-gray-200">
-                  <button
-                    className={`relative pb-4 text-sm font-medium ${
-                      activeTab === 'existing'
-                        ? 'text-sky-600'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                    onClick={() => setActiveTab('existing')}
-                  >
-                    <div className="flex items-center gap-x-2">
-                      <FaImage />
-                      <span>Your Photos</span>
-                    </div>
-                    {activeTab === 'existing' && (
-                      <div className="absolute bottom-0 left-0 h-0.5 w-full bg-sky-600"></div>
-                    )}
-                  </button>
-                  <button
-                    className={`relative pb-4 text-sm font-medium ${
-                      activeTab === 'upload'
-                        ? 'text-sky-600'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                    onClick={() => setActiveTab('upload')}
-                  >
-                    <div className="flex items-center gap-x-2">
-                      <FaUpload />
-                      <span>Upload New</span>
-                    </div>
-                    {activeTab === 'upload' && (
-                      <div className="absolute bottom-0 left-0 h-0.5 w-full bg-sky-600"></div>
-                    )}
-                  </button>
-                </div>
-
-                {activeTab === 'existing' ? (
-                  <div className="grid max-h-[400px] grid-cols-4 gap-4 overflow-y-auto p-2">
-                    {existingPhotos.map((photo, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleSelect(photo.url)}
-                        className={`group relative aspect-square overflow-hidden rounded-lg ${
-                          selectedPhotos.includes(photo.url)
-                            ? 'ring-2 ring-sky-500'
-                            : ''
-                        }`}
+                <TabGroup selectedIndex={selectedTab} onChange={setSelectedTab}>
+                  <TabList className="mb-6 flex gap-x-4 border-b border-gray-200">
+                    <Tab
+                      className={({ selected }) =>
+                        cn(
+                          'relative pb-4 text-sm font-medium outline-none',
+                          selected
+                            ? 'text-sky-600'
+                            : 'text-gray-500 hover:text-gray-700'
+                        )
+                      }
+                    >
+                      {({ selected }) => (
+                        <>
+                          <span>Upload New</span>
+                          {selected && (
+                            <div className="absolute bottom-0 left-0 h-0.5 w-full bg-sky-600" />
+                          )}
+                        </>
+                      )}
+                    </Tab>
+                    <Tab
+                      className={({ selected }) =>
+                        cn(
+                          'relative pb-4 text-sm font-medium outline-none',
+                          selected
+                            ? 'text-sky-600'
+                            : 'text-gray-500 hover:text-gray-700'
+                        )
+                      }
+                    >
+                      {({ selected }) => (
+                        <>
+                          <span>From Existing</span>
+                          {selected && (
+                            <div className="absolute bottom-0 left-0 h-0.5 w-full bg-sky-600" />
+                          )}
+                        </>
+                      )}
+                    </Tab>
+                  </TabList>
+                  <TabPanels>
+                    <TabPanel>
+                      <div
+                        {...getRootProps()}
+                        className="cursor-pointer rounded-lg border-2 border-dashed border-sky-500 p-8 text-center transition hover:border-sky-600"
                       >
-                        <Image
-                          src={photo.url}
-                          alt={`Photo ${index + 1}`}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-110"
-                        />
-                        <div
-                          className={`absolute inset-0 ${
-                            selectedPhotos.includes(photo.url)
-                              ? 'bg-opacity-20 bg-sky-500'
-                              : 'bg-opacity-0 group-hover:bg-opacity-10 bg-black'
-                          }`}
-                        ></div>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex h-[400px] items-center justify-center">
-                    {/* TODO: Implement upload functionality */}
-                    <div className="text-center">
-                      <FaUpload className="mx-auto mb-4 text-4xl text-gray-400" />
-                      <p className="text-sm text-gray-500">
-                        Upload functionality coming soon
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="mt-6 flex justify-between">
-                  <span className="text-sm text-gray-500">
-                    {selectedPhotos.length} selected
-                  </span>
-                  <div className="flex gap-x-3">
-                    <button
-                      onClick={onClose}
-                      className="rounded-md border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleConfirm}
-                      disabled={selectedPhotos.length === 0}
-                      className="rounded-md bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-gray-300"
-                    >
-                      Add Selected
-                    </button>
-                  </div>
-                </div>
+                        <input {...getInputProps()} />
+                        {isLoading ? (
+                          <div className="flex items-center justify-center">
+                            <Loader2 className="h-6 w-6 animate-spin" />
+                            <span className="ml-2">Uploading...</span>
+                          </div>
+                        ) : (
+                          <p>Drag and drop a photo here, or click to select</p>
+                        )}
+                      </div>
+                    </TabPanel>
+                    <TabPanel>
+                      <div className="grid grid-cols-3 gap-4">
+                        {existingPhotos.map((photo) => (
+                          <div
+                            key={photo.url}
+                            className={cn(
+                              'relative aspect-square cursor-pointer overflow-hidden rounded-lg',
+                              'transition hover:ring-2 hover:ring-sky-500',
+                              selectedPhotos.includes(photo.url) &&
+                                'ring-2 ring-sky-500'
+                            )}
+                            onClick={() => handleExistingPhotoSelect(photo.url)}
+                          >
+                            <Image
+                              src={photo.url}
+                              alt="Existing photo"
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-4 flex justify-end">
+                        <button
+                          onClick={handleAddSelected}
+                          disabled={selectedPhotos.length === 0 || isLoading}
+                          className={cn(
+                            'rounded-md px-4 py-2 text-sm font-medium',
+                            selectedPhotos.length === 0 || isLoading
+                              ? 'cursor-not-allowed bg-gray-200 text-gray-500'
+                              : 'bg-sky-500 text-white hover:bg-sky-600'
+                          )}
+                        >
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
+                              Adding...
+                            </>
+                          ) : (
+                            'Add Selected'
+                          )}
+                        </button>
+                      </div>
+                    </TabPanel>
+                  </TabPanels>
+                </TabGroup>
               </DialogPanel>
             </TransitionChild>
           </div>
@@ -187,5 +284,3 @@ const AddPhotoModal = ({
     </Transition>
   )
 }
-
-export default AddPhotoModal

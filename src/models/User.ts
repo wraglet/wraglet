@@ -36,6 +36,12 @@ export interface IUser {
     relationship: string
     createdAt?: Date
   }>
+  photoCollection: Array<{
+    url: string
+    key: string
+    type: 'post' | 'avatar'
+    createdAt: Date
+  }>
   createdAt?: Date
   updatedAt?: Date
 }
@@ -76,6 +82,18 @@ const UserSchema = new Schema<IUserDocument>(
       {
         userId: { type: Schema.Types.ObjectId, ref: 'User' },
         relationship: String
+      }
+    ],
+    photoCollection: [
+      {
+        url: String,
+        key: String,
+        type: {
+          type: String,
+          enum: ['post', 'avatar'],
+          required: true
+        },
+        createdAt: { type: Date, default: Date.now }
       }
     ]
   },
