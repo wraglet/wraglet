@@ -7,6 +7,14 @@ import { IComment } from '@/models/Comment'
 import { IPost } from '@/models/Post'
 import useUserStore from '@/store/user'
 import arrGenerator from '@/utils/arrGenerator'
+import {
+  arrow,
+  flip,
+  FloatingArrow,
+  offset,
+  shift,
+  useFloating
+} from '@floating-ui/react'
 import { useChannel } from 'ably/react'
 import axios from 'axios'
 import { formatDistanceToNow } from 'date-fns'
@@ -36,20 +44,6 @@ interface ReactionGroup {
   users: User[]
 }
 
-interface PostVote {
-  _id: string
-  postId: string
-  userId: string
-  voteType: 'upvote' | 'downvote'
-  createdAt: Date
-  updatedAt: Date
-}
-
-interface PostInterface {
-  // ... existing interface properties ...
-  votes: PostVote[]
-}
-
 interface PostProps {
   post: IPost
 }
@@ -63,10 +57,6 @@ const Post = ({ post: initialPost }: PostProps) => {
   const [post, setPost] = useState<IPost>(initialPost)
   const [showCommentInput, setShowCommentInput] = useState(false)
   const [comment, setComment] = useState('')
-  const [showReactionPicker, setShowReactionPicker] = useState(false)
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
-  const [isHovering, setIsHovering] = useState(false)
-  const [isEmojiHovering, setIsEmojiHovering] = useState(false)
   const [postComments, setPostComments] = useState<IComment[]>(
     (initialPost.comments || []).filter(
       (comment): comment is IComment =>
@@ -97,8 +87,18 @@ const Post = ({ post: initialPost }: PostProps) => {
   })
 
   const [showEmojis, setShowEmojis] = useState(false)
-  const emojisTimeout = useRef<number | null>(null)
-  const emojisRef = useRef<HTMLDivElement | null>(null)
+  const arrowRef = useRef(null)
+  const { refs, floatingStyles, context } = useFloating({
+    open: showEmojis,
+    onOpenChange: setShowEmojis,
+    middleware: [
+      offset(10),
+      flip({ padding: 10 }),
+      shift(),
+      arrow({ element: arrowRef })
+    ],
+    placement: 'top'
+  })
 
   const reactions = [
     {
@@ -142,30 +142,8 @@ const Post = ({ post: initialPost }: PostProps) => {
     setHeight(showCommentInput ? `${content.current?.scrollHeight}px` : '0px')
   }
 
-  const handleHoverStart = () => {
-    emojisTimeout.current = window.setTimeout(() => {
-      setShowEmojis(true)
-    }, 200) // Delay for showing emojis on hover
-  }
-
-  const handleHoverEnd = () => {
-    if (emojisTimeout.current) {
-      clearTimeout(emojisTimeout.current)
-      emojisTimeout.current = null
-    }
-    setShowEmojis(false)
-  }
-
-  const handleEmojiHoverStart = () => {
-    if (emojisTimeout.current) {
-      clearTimeout(emojisTimeout.current)
-      emojisTimeout.current = null
-    }
-    setShowEmojis(true)
-  }
-
-  const handleEmojiHoverEnd = () => {
-    setShowEmojis(false)
+  const handleReactionClick = () => {
+    setShowEmojis(!showEmojis)
   }
 
   const handleReaction = async (type: string) => {
@@ -493,59 +471,57 @@ const Post = ({ post: initialPost }: PostProps) => {
               </div>
             </div>
 
-            <div
-              role="button"
-              tabIndex={0}
-              className="group relative flex items-center gap-1 rounded-full border border-solid border-gray-400 px-2 py-0.5"
-              onMouseEnter={handleHoverStart}
-              onMouseLeave={handleHoverEnd}
-            >
-              {userReaction ? (
-                <ReactionIcon
-                  type={userReaction.type}
-                  onClick={() => removeReaction()}
-                />
-              ) : (
-                <FaRegHeart
-                  className="cursor-pointer text-xs text-gray-600"
-                  onClick={() => handleReaction('heart')}
-                />
-              )}
+            <div className="group relative">
+              <div
+                ref={refs.setReference}
+                role="button"
+                tabIndex={0}
+                className="flex items-center gap-1 rounded-full border border-solid border-gray-400 px-2 py-0.5"
+                onClick={handleReactionClick}
+              >
+                {userReaction ? (
+                  <ReactionIcon
+                    type={userReaction.type}
+                    onClick={() => removeReaction()}
+                  />
+                ) : (
+                  <FaRegHeart className="cursor-pointer text-xs text-gray-600" />
+                )}
+              </div>
 
               {showEmojis && (
-                <>
-                  {/* Bridge element to maintain hover */}
-                  <div
-                    className="absolute -top-3 left-0 h-3 w-full"
-                    onMouseEnter={handleEmojiHoverStart}
-                    onMouseLeave={handleEmojiHoverEnd}
+                <div
+                  ref={refs.setFloating}
+                  style={floatingStyles}
+                  className="z-50 flex w-fit gap-1 rounded-lg border border-solid border-gray-200 bg-white p-2 shadow-lg"
+                >
+                  <FloatingArrow
+                    ref={arrowRef}
+                    context={context}
+                    className="fill-white"
                   />
-                  <div
-                    onMouseEnter={handleEmojiHoverStart}
-                    onMouseLeave={handleEmojiHoverEnd}
-                    ref={emojisRef}
-                    className="absolute -top-14 left-1/2 flex w-fit -translate-x-1/2 gap-1 rounded-full border border-solid border-gray-400 bg-white p-2 shadow-md"
-                  >
-                    {reactions.map((reaction) => (
-                      <button
-                        key={reaction.name}
-                        className="cursor-pointer transition-transform hover:scale-125"
-                        onClick={() => handleReaction(reaction.name)}
-                      >
-                        {/* @ts-ignore */}
-                        <lottie-player
-                          id={reaction.name}
-                          ref={reaction.ref}
-                          autoplay
-                          loop
-                          mode="normal"
-                          src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/lottie/${reaction.name}.json`}
-                          style={{ width: '24px', height: '24px' }}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </>
+                  {reactions.map((reaction) => (
+                    <button
+                      key={reaction.name}
+                      className="cursor-pointer transition-transform hover:scale-125"
+                      onClick={() => {
+                        handleReaction(reaction.name)
+                        setShowEmojis(false)
+                      }}
+                    >
+                      {/* @ts-ignore */}
+                      <lottie-player
+                        id={reaction.name}
+                        ref={reaction.ref}
+                        autoplay
+                        loop
+                        mode="normal"
+                        src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/lottie/${reaction.name}.json`}
+                        style={{ width: '24px', height: '24px' }}
+                      />
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
 
