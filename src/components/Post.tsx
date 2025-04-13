@@ -36,6 +36,20 @@ interface ReactionGroup {
   users: User[]
 }
 
+interface PostVote {
+  _id: string
+  postId: string
+  userId: string
+  voteType: 'upvote' | 'downvote'
+  createdAt: Date
+  updatedAt: Date
+}
+
+interface PostInterface {
+  // ... existing interface properties ...
+  votes: PostVote[]
+}
+
 interface PostProps {
   post: IPost
 }
@@ -46,9 +60,13 @@ const Post = ({ post: initialPost }: PostProps) => {
   })
 
   const { user } = useUserStore()
-  const [currentPost, setCurrentPost] = useState<IPost>(initialPost)
-  const [isCommentOpen, setIsCommentOpen] = useState(false)
-  const [commentText, setCommentText] = useState('')
+  const [post, setPost] = useState<IPost>(initialPost)
+  const [showCommentInput, setShowCommentInput] = useState(false)
+  const [comment, setComment] = useState('')
+  const [showReactionPicker, setShowReactionPicker] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [isHovering, setIsHovering] = useState(false)
+  const [isEmojiHovering, setIsEmojiHovering] = useState(false)
   const [postComments, setPostComments] = useState<IComment[]>(
     (initialPost.comments || []).filter(
       (comment): comment is IComment =>
@@ -61,18 +79,20 @@ const Post = ({ post: initialPost }: PostProps) => {
   )
 
   // Try to use Ably channel for both comments and reactions
-  const channel = useChannel(`post-${currentPost._id}`, (message) => {
+  const channel = useChannel(`post-${post._id}`, (message) => {
     if (message.name === 'comment') {
       const newComment = message.data
       // Only add the comment if we haven't seen it before
       if (!commentIdsRef.current.has(newComment._id.toString())) {
-        commentIdsRef.current.add(newComment._id.toString())
+        commentIdsRef.current.add(newComment._id._id.toString())
         setPostComments((prev) => [...prev, newComment])
-        setIsCommentOpen(true)
+        setShowCommentInput(true)
       }
     } else if (message.name === 'reaction') {
       // Update the post with new reaction data
-      setCurrentPost(message.data)
+      setPost(message.data)
+    } else if (message.name === 'vote') {
+      setPost(message.data)
     }
   })
 
@@ -110,16 +130,16 @@ const Post = ({ post: initialPost }: PostProps) => {
   const [height, setHeight] = useState<string>('0px')
 
   useEffect(() => {
-    if (isCommentOpen && content.current) {
+    if (showCommentInput && content.current) {
       setHeight(`${content.current.scrollHeight}px`)
     } else {
       setHeight('0px')
     }
-  }, [isCommentOpen, currentPost.comments])
+  }, [showCommentInput, post.comments])
 
   const toggleComment = () => {
-    setIsCommentOpen((prev) => !prev)
-    setHeight(isCommentOpen ? `${content.current?.scrollHeight}px` : '0px')
+    setShowCommentInput((prev) => !prev)
+    setHeight(showCommentInput ? `${content.current?.scrollHeight}px` : '0px')
   }
 
   const handleHoverStart = () => {
@@ -153,7 +173,7 @@ const Post = ({ post: initialPost }: PostProps) => {
 
     try {
       // Check if user has already reacted with this type
-      const existingReaction = currentPost.reactions.find(
+      const existingReaction = post.reactions.find(
         (reaction) => reaction.userId._id === user._id && reaction.type === type
       )
 
@@ -162,19 +182,16 @@ const Post = ({ post: initialPost }: PostProps) => {
         await removeReaction()
       } else {
         // Either add new reaction or update existing one
-        const response = await axios.patch(
-          `/api/posts/${currentPost._id}/react`,
-          {
-            type
-          }
-        )
+        const response = await axios.patch(`/api/posts/${post._id}/react`, {
+          type
+        })
 
         if (response.status !== 200) {
           throw new Error('Failed to update reaction')
         }
 
         const updatedPost = response.data
-        setCurrentPost(updatedPost)
+        setPost(updatedPost)
 
         if (channel && channel.publish) {
           await channel.publish({
@@ -191,14 +208,14 @@ const Post = ({ post: initialPost }: PostProps) => {
 
   const removeReaction = async () => {
     try {
-      const response = await axios.delete(`/api/posts/${currentPost._id}/react`)
+      const response = await axios.delete(`/api/posts/${post._id}/react`)
 
       if (response.status !== 200) {
         throw new Error('Failed to remove reaction')
       }
 
       const updatedPost = response.data
-      setCurrentPost(updatedPost)
+      setPost(updatedPost)
 
       if (channel && channel.publish) {
         await channel.publish({
@@ -214,7 +231,7 @@ const Post = ({ post: initialPost }: PostProps) => {
 
   // Get reaction counts by type
   const reactionCounts =
-    currentPost.reactions?.reduce(
+    post.reactions?.reduce(
       (acc, reaction) => {
         acc[reaction.type] = (acc[reaction.type] || 0) + 1
         return acc
@@ -224,28 +241,24 @@ const Post = ({ post: initialPost }: PostProps) => {
 
   // Get user's reaction if any
   const userReaction =
-    user &&
-    currentPost.reactions?.find((reaction) => reaction.userId._id === user._id)
+    user && post.reactions?.find((reaction) => reaction.userId._id === user._id)
 
   const handleCommentSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!commentText.trim()) return
+    if (!comment.trim()) return
 
     try {
-      const response = await axios.post(
-        `/api/posts/${currentPost._id}/comment`,
-        {
-          content: commentText
-        }
-      )
+      const response = await axios.post(`/api/posts/${post._id}/comment`, {
+        content: comment
+      })
 
       // Only add the comment if we haven't seen it before
       const newComment = response.data
       if (!commentIdsRef.current.has(newComment._id.toString())) {
         commentIdsRef.current.add(newComment._id.toString())
         setPostComments((prev) => [...prev, newComment])
-        setCommentText('')
-        setIsCommentOpen(true)
+        setComment('')
+        setShowCommentInput(true)
       }
 
       // Try to publish to Ably if available, but don't break core functionality
@@ -282,12 +295,12 @@ const Post = ({ post: initialPost }: PostProps) => {
   const [reactionGroups, setReactionGroups] = useState<ReactionGroup[]>([])
 
   useEffect(() => {
-    if (!currentPost.reactions) return
+    if (!post.reactions) return
 
     const groups: Record<string, ReactionGroup> = {}
 
     // Initialize groups
-    currentPost.reactions.forEach((reaction) => {
+    post.reactions.forEach((reaction) => {
       if (!groups[reaction.type]) {
         groups[reaction.type] = {
           type: reaction.type,
@@ -305,22 +318,69 @@ const Post = ({ post: initialPost }: PostProps) => {
     })
 
     setReactionGroups(Object.values(groups))
-  }, [currentPost.reactions, user])
+  }, [post.reactions, user])
+
+  // Get current user's vote
+  const userVote = post.votes?.find(
+    (vote) => vote.userId === user?._id
+  )?.voteType
+
+  // Calculate upvotes and downvotes
+  const upvotes =
+    post.votes?.filter((vote) => vote.voteType === 'upvote').length || 0
+  const downvotes =
+    post.votes?.filter((vote) => vote.voteType === 'downvote').length || 0
+  const voteDisplay = (
+    <span>
+      <span className="text-green-600">+{upvotes}</span>
+      {' | '}
+      <span className="text-red-600">-{downvotes}</span>
+    </span>
+  )
+
+  const handleVote = async (voteType: 'upvote' | 'downvote') => {
+    try {
+      const response = await fetch(`/api/posts/${post._id}/vote`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ voteType })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to vote')
+      }
+
+      const updatedPost = await response.json()
+      setPost(updatedPost)
+
+      // Publish vote update to Ably
+      try {
+        await channel.publish('vote', updatedPost)
+      } catch (err) {
+        console.warn('Failed to publish vote to Ably:', err)
+      }
+    } catch (error) {
+      console.error('Error voting:', error)
+      toast.error('Failed to vote')
+    }
+  }
 
   return (
     <div className="flex w-full">
       <div className="flex w-full items-start justify-between gap-x-2 border border-solid border-neutral-200 bg-white px-4 py-3 drop-shadow-md sm:rounded-lg">
         <div className="relative block">
           <Avatar
-            gender={currentPost.author?.gender}
-            src={currentPost.author.profilePicture?.url!}
+            gender={post.author?.gender}
+            src={post.author.profilePicture?.url!}
           />
         </div>
         <div className="flex grow flex-col justify-start gap-y-5">
           <div className="flex flex-col gap-y-1">
             <div className="flex items-baseline space-x-1">
               <h3 className={`text-sm leading-none font-bold`}>
-                {currentPost.author.firstName} {currentPost.author.lastName}
+                {post.author.firstName} {post.author.lastName}
               </h3>
               <svg
                 className="self-center"
@@ -332,25 +392,20 @@ const Post = ({ post: initialPost }: PostProps) => {
               >
                 <circle cx="1" cy="1.85547" r="1" fill="#4B5563" />
               </svg>
-              {currentPost.createdAt && (
+              {post.createdAt && (
                 <h4 className="text-xs text-zinc-500">
-                  {formatDistanceToNow(
-                    new Date(currentPost.createdAt.toString()),
-                    {
-                      addSuffix: true
-                    }
-                  )}
+                  {formatDistanceToNow(new Date(post.createdAt.toString()), {
+                    addSuffix: true
+                  })}
                 </h4>
               )}
             </div>
-            {currentPost.content.text && (
-              <p className="text-xs text-gray-600">
-                {currentPost.content.text}
-              </p>
+            {post.content.text && (
+              <p className="text-xs text-gray-600">{post.content.text}</p>
             )}
 
-            {currentPost.content.images
-              ? currentPost.content.images.map(
+            {post.content.images
+              ? post.content.images.map(
                   (image: {
                     key: Key | null | undefined
                     url: string | StaticImport
@@ -409,7 +464,7 @@ const Post = ({ post: initialPost }: PostProps) => {
               {postComments.length > 0 && (
                 <span>{postComments.length} comments</span>
               )}
-              <span>12 votes</span>
+              {voteDisplay}
               <span>2 shares</span>
             </div>
           </div>
@@ -417,9 +472,15 @@ const Post = ({ post: initialPost }: PostProps) => {
           <div className="z-10 flex items-center justify-between bg-white">
             <div className="group relative">
               <div className="flex items-center gap-1 rounded-full border border-solid border-gray-400 px-2 py-0.5">
-                <LuArrowBigUp className="cursor-pointer text-xs text-gray-600" />
-                <span className="cursor-pointer text-xs text-gray-600">12</span>
-                <LuArrowBigDown className="cursor-pointer text-xs text-gray-600" />
+                <LuArrowBigUp
+                  className={`cursor-pointer text-xs ${userVote === 'upvote' ? 'text-green-600' : 'text-gray-600'}`}
+                  onClick={() => handleVote('upvote')}
+                />
+                <div className="h-3 w-[1px] bg-gray-300" />
+                <LuArrowBigDown
+                  className={`cursor-pointer text-xs ${userVote === 'downvote' ? 'text-red-600' : 'text-gray-600'}`}
+                  onClick={() => handleVote('downvote')}
+                />
               </div>
             </div>
 
@@ -496,10 +557,10 @@ const Post = ({ post: initialPost }: PostProps) => {
           </div>
 
           <div
-            style={{ maxHeight: isCommentOpen ? 'none' : '0px' }}
+            style={{ maxHeight: showCommentInput ? 'none' : '0px' }}
             ref={content}
             className={`${
-              isCommentOpen
+              showCommentInput
                 ? 'border-t border-solid border-[#E7ECF0] pt-4'
                 : 'hidden'
             } flex w-full flex-col gap-4 overflow-hidden transition-all duration-300 ease-in-out`}
@@ -529,8 +590,8 @@ const Post = ({ post: initialPost }: PostProps) => {
               <div className="flex-1">
                 <input
                   type="text"
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
                   className="h-[30px] w-full rounded-full bg-[#E7ECF0] px-3 text-xs outline-none"
                   placeholder="Write a comment..."
                 />
