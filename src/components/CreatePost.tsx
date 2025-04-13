@@ -1,6 +1,6 @@
 'use client'
 
-import React, { ChangeEvent, FormEvent, useReducer } from 'react'
+import { ChangeEvent, FormEvent, useReducer } from 'react'
 import Image from 'next/image'
 import useUserStore from '@/store/user'
 import { BsSend } from 'react-icons/bs'
@@ -98,16 +98,14 @@ const CreatePost = ({
               <Button
                 type="submit"
                 disabled={text === '' && postImage === null}
-                className="flex items-center justify-center gap-1 rounded-lg bg-sky-500 px-2 py-1 drop-shadow-md disabled:bg-gray-500"
+                className="flex items-center gap-x-1.5 rounded-full bg-sky-500 px-4 py-1.5 text-white shadow-sm transition-all duration-200 hover:bg-sky-600 active:bg-sky-700 disabled:bg-gray-200 disabled:text-gray-400"
               >
                 {isLoading ? (
-                  <span className="text-xs font-medium text-white">
-                    Submitting...
-                  </span>
+                  <span className="text-xs font-medium">Submitting...</span>
                 ) : (
                   <>
-                    <BsSend className="text-base text-white" />
-                    <h4 className="text-xs font-medium text-white">Post</h4>
+                    <BsSend className="text-sm" />
+                    <span className="text-xs font-medium">Post</span>
                   </>
                 )}
               </Button>

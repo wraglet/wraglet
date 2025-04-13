@@ -1,12 +1,11 @@
 'use client'
 
-import { FormEvent, Key, useEffect, useRef, useState } from 'react'
+import { FormEvent, Fragment, Key, useEffect, useRef, useState } from 'react'
 import { StaticImport } from 'next/dist/shared/lib/get-img-props'
 import Image from 'next/image'
 import { IComment } from '@/models/Comment'
 import { IPost } from '@/models/Post'
 import useUserStore from '@/store/user'
-import arrGenerator from '@/utils/arrGenerator'
 import {
   arrow,
   flip,
@@ -15,18 +14,25 @@ import {
   shift,
   useFloating
 } from '@floating-ui/react'
+import {
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Transition
+} from '@headlessui/react'
 import { useChannel } from 'ably/react'
 import axios from 'axios'
 import { formatDistanceToNow } from 'date-fns'
 import toast from 'react-hot-toast'
 import { FaRegComment, FaRegHeart } from 'react-icons/fa6'
+import { HiOutlineEllipsisHorizontal } from 'react-icons/hi2'
 import { LuArrowBigDown, LuArrowBigUp } from 'react-icons/lu'
 
 import Avatar from '@/components/Avatar'
 import CommentComponent from '@/components/Comment'
 import { ShareIcon } from '@/components/Icons'
 import ReactionIcon from '@/components/ReactionIcon'
-import { Button } from '@/components/ui/button'
 
 interface User {
   _id: string
@@ -575,11 +581,62 @@ const Post = ({ post: initialPost }: PostProps) => {
             </form>
           </div>
         </div>
-        <Button type="button" className="flex items-center gap-0.5">
-          {arrGenerator(3).map((i: number) => (
-            <span className="h-0.5 w-0.5 rounded-full bg-gray-700" key={i} />
-          ))}
-        </Button>
+        <Menu as="div" className="relative z-50">
+          <MenuButton className="flex h-8 w-8 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-gray-100">
+            <HiOutlineEllipsisHorizontal className="h-5 w-5" />
+          </MenuButton>
+          <Transition
+            as={Fragment}
+            enter="transition ease-out duration-100"
+            enterFrom="transform opacity-0 scale-95"
+            enterTo="transform opacity-100 scale-100"
+            leave="transition ease-in duration-75"
+            leaveFrom="transform opacity-100 scale-100"
+            leaveTo="transform opacity-0 scale-95"
+          >
+            <MenuItems className="absolute right-0 mt-2 w-48 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
+              <div className="px-1 py-1">
+                <MenuItem>
+                  {({ active }) => (
+                    <button
+                      className={`${
+                        active ? 'bg-sky-500 text-white' : 'text-gray-900'
+                      } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                    >
+                      Save post
+                    </button>
+                  )}
+                </MenuItem>
+                <MenuItem>
+                  {({ active }) => (
+                    <button
+                      className={`${
+                        active ? 'bg-sky-500 text-white' : 'text-gray-900'
+                      } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                    >
+                      Copy link
+                    </button>
+                  )}
+                </MenuItem>
+              </div>
+              {user?._id === post.author._id && (
+                <div className="px-1 py-1">
+                  <MenuItem>
+                    {({ active }) => (
+                      <button
+                        className={`${
+                          active ? 'bg-red-500 text-white' : 'text-red-500'
+                        } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                      >
+                        Delete post
+                      </button>
+                    )}
+                  </MenuItem>
+                </div>
+              )}
+            </MenuItems>
+          </Transition>
+        </Menu>
       </div>
     </div>
   )
