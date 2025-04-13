@@ -1081,6 +1081,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@heroicons/react@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "@heroicons/react@npm:2.2.0"
+  peerDependencies:
+    react: ">= 16 || ^19.0.0-rc"
+  checksum: 10c0/f8d3cf689b56716339c91df3542f3948115042d1e70e6bc940a3f3e347c0bc78b56aa563917fbd7ce097fe2f38ebb21bffb0db39be914cbc545a754bddae9ab4
+  languageName: node
+  linkType: hard
+
 "@hookform/resolvers@npm:^3.9.0":
   version: 3.9.1
   resolution: "@hookform/resolvers@npm:3.9.1"
@@ -7001,6 +7010,7 @@ __metadata:
     "@aws-sdk/client-s3": "npm:^3.674.0"
     "@aws-sdk/lib-storage": "npm:^3.686.0"
     "@headlessui/react": "npm:^2.1.8"
+    "@heroicons/react": "npm:^2.2.0"
     "@hookform/resolvers": "npm:^3.9.0"
     "@ianvs/prettier-plugin-sort-imports": "npm:^4.3.1"
     "@lottiefiles/lottie-player": "npm:^2.0.4"

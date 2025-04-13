@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
+import client from '@/lib/db'
 import Post from '@/models/Post'
 import PostReaction from '@/models/PostReaction'
-import client from '@/lib/db'
 
 export const PATCH = async (
   request: Request,
@@ -30,42 +30,123 @@ export const PATCH = async (
       userId: currentUser._id
     })
 
+    let reaction
     if (existingReaction) {
-      console.error('User has already reacted to this post')
-      return new NextResponse('User has already reacted to this post', {
-        status: 400
+      // Update existing reaction
+      reaction = await PostReaction.findByIdAndUpdate(
+        existingReaction._id,
+        { type, updatedAt: new Date() },
+        { new: true }
+      )
+    } else {
+      // Create new reaction
+      reaction = new PostReaction({
+        postId: postId,
+        type,
+        userId: currentUser._id,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      await reaction.save()
+
+      // Add reaction to post if it's new
+      await Post.findByIdAndUpdate(postId, {
+        $push: { reactions: reaction._id }
       })
     }
 
-    const reaction = new PostReaction({
-      postId: postId,
-      type,
-      userId: currentUser._id,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    })
-
-    await reaction.save()
-
-    const updatedPost = await Post.findByIdAndUpdate(
-      postId,
-      { $push: { reactions: reaction._id } },
-      { new: true }
-    )
+    const updatedPost = await Post.findById(postId)
+      .populate({
+        path: 'author',
+        select: 'firstName lastName username gender pronoun profilePicture'
+      })
+      .populate({
+        path: 'reactions',
+        populate: {
+          path: 'userId',
+          select: 'firstName lastName username profilePicture'
+        }
+      })
+      .populate({
+        path: 'comments',
+        populate: {
+          path: 'author',
+          select: 'firstName lastName username gender pronoun profilePicture'
+        }
+      })
 
     if (!updatedPost) {
       return new NextResponse('Post not found', { status: 404 })
     }
 
-    console.log(`Reaction '${type}' added successfully`)
-
-    return new NextResponse('Reaction added successfully', { status: 200 })
+    return NextResponse.json(updatedPost)
   } catch (err: any) {
-    console.log('Error while processing PATCH request: ', err)
-    console.error(
-      'Error happened while doing PATCH for /api/posts/[postId]/react at route.ts: ',
-      err
-    )
-    return new NextResponse('Internal Error: ', { status: 500 })
+    console.error('Error processing PATCH request:', err)
+    return new NextResponse('Internal Error', { status: 500 })
+  }
+}
+
+export const DELETE = async (
+  request: Request,
+  {
+    params
+  }: {
+    params: Promise<{ postId: string }>
+  }
+) => {
+  try {
+    await client()
+
+    const currentUser = await getCurrentUser()
+    const postId = (await params).postId
+
+    if (!currentUser?._id || !currentUser?.email) {
+      return new NextResponse('Unauthorized', { status: 401 })
+    }
+
+    // Find and delete the reaction
+    const deletedReaction = await PostReaction.findOneAndDelete({
+      postId: postId,
+      userId: currentUser._id
+    })
+
+    if (!deletedReaction) {
+      return new NextResponse('Reaction not found', { status: 404 })
+    }
+
+    // Remove reaction from post
+    await Post.findByIdAndUpdate(postId, {
+      $pull: { reactions: deletedReaction._id }
+    })
+
+    // Get updated post
+    const updatedPost = await Post.findById(postId)
+      .populate({
+        path: 'author',
+        select: 'firstName lastName username gender pronoun profilePicture'
+      })
+      .populate({
+        path: 'reactions',
+        populate: {
+          path: 'userId',
+          select: 'firstName lastName username profilePicture'
+        }
+      })
+      .populate({
+        path: 'comments',
+        populate: {
+          path: 'author',
+          select: 'firstName lastName username gender pronoun profilePicture'
+        }
+      })
+
+    if (!updatedPost) {
+      return new NextResponse('Post not found', { status: 404 })
+    }
+
+    return NextResponse.json(updatedPost)
+  } catch (err: any) {
+    console.error('Error processing DELETE request:', err)
+    return new NextResponse('Internal Error', { status: 500 })
   }
 }
