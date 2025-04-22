@@ -61,8 +61,10 @@ export interface UserInterface {
   createdAt: Date
   updatedAt?: Date
   publicProfileVisible: boolean
-  friendRequests?: string | null
-  friends: string[]
+  followers: string[]
+  following: string[]
+  // Optionally, for UI convenience:
+  // mutuals?: string[]
 }
 
 export interface AuthorInterface {

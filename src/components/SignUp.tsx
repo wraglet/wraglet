@@ -48,7 +48,6 @@ const signUpSchema = z.object({
   dob: z.date({ required_error: 'Date of birth is required' }),
   gender: z.enum(genderOptions as [string, ...string[]]),
   pronoun: z.enum(pronounOptions as [string, ...string[]]),
-  friendRequestsVal: z.object({ val: z.string(), name: z.string() }),
   publicProfileVisible: z.boolean(),
   agreeToTerms: z.boolean().refine((val) => val, 'You must agree to the terms')
 })
@@ -66,7 +65,6 @@ const SignUp: FC = () => {
       dob: new Date(),
       gender: genderOptions[0],
       pronoun: pronounOptions[0],
-      friendRequestsVal: friendRequestsOptions[0],
       publicProfileVisible: true,
       agreeToTerms: false
     }
@@ -81,11 +79,10 @@ const SignUp: FC = () => {
 
   const mutation = useMutation({
     mutationFn: async (data: SignUpFormData) => {
-      const { friendRequestsVal, email, ...rest } = data
+      const { email, ...rest } = data
       const formData = {
         ...rest,
-        email: email.toLowerCase(),
-        friendRequests: friendRequestsVal.val
+        email: email.toLowerCase()
       }
 
       try {
@@ -293,36 +290,6 @@ const SignUp: FC = () => {
                   )}
                 />
               </div>
-            </div>
-            <div className="flex flex-1 flex-col">
-              <FormField
-                control={control}
-                name="friendRequestsVal"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <ListBox
-                        label="Friend Requests"
-                        options={friendRequestsOptions}
-                        setSelected={(name) => {
-                          const selectedOption = friendRequestsOptions.find(
-                            (option) => option.name === name
-                          )
-                          if (selectedOption) {
-                            field.onChange(selectedOption)
-                          }
-                        }}
-                        selected={field.value.name}
-                      />
-                    </FormControl>
-                    {errors.friendRequestsVal && (
-                      <FormMessage>
-                        {errors.friendRequestsVal.message}
-                      </FormMessage>
-                    )}
-                  </FormItem>
-                )}
-              />
             </div>
           </div>
 

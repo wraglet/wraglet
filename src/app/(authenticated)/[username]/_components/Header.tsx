@@ -54,7 +54,6 @@ const ProfileHeader = async ({ username }: { username: string }) => {
                 {user?.firstName} {user?.lastName}
               </h1>
               <div className="flex items-center gap-x-2 text-[10px] font-semibold -tracking-[0.2px] text-zinc-500">
-                <span>{user?.friends?.length} friends</span>{' '}
                 <span>{user?.following?.length} following</span>
               </div>
             </div>

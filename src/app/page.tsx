@@ -24,10 +24,10 @@ const Page = async () => {
               </div>
               <div className="flex items-center gap-5">
                 <HiOutlineUsers />
-                <h2 className="text-base font-medium">Make new friends.</h2>
+                <h2 className="text-base font-medium">Discover new people.</h2>
               </div>
             </div>
-            <div className="absolute bottom-[-244px] right-[-65px] -z-0">
+            <div className="absolute right-[-65px] bottom-[-244px] -z-0">
               <div className="relative">
                 <div className="block h-[535px] w-[552px]">
                   <Image

@@ -22,18 +22,12 @@ export interface IUser {
     key: string
   }
   publicProfileVisible: boolean
-  friendRequests: string
   followers: Array<{
     userId: Types.ObjectId | string
     createdAt?: Date
   }>
   following: Array<{
     userId: Types.ObjectId | string
-    createdAt?: Date
-  }>
-  friends: Array<{
-    userId: Types.ObjectId | string
-    relationship: string
     createdAt?: Date
   }>
   photoCollection: Array<{
@@ -67,7 +61,6 @@ const UserSchema = new Schema<IUserDocument>(
     profilePicture: { type: Object, url: String, key: String },
     coverPhoto: { type: Object, url: String, key: String },
     publicProfileVisible: { type: Boolean, default: true },
-    friendRequests: String,
     followers: [
       {
         userId: { type: Schema.Types.ObjectId, ref: 'User' }
@@ -76,12 +69,6 @@ const UserSchema = new Schema<IUserDocument>(
     following: [
       {
         userId: { type: Schema.Types.ObjectId, ref: 'User' }
-      }
-    ],
-    friends: [
-      {
-        userId: { type: Schema.Types.ObjectId, ref: 'User' },
-        relationship: String
       }
     ],
     photoCollection: [

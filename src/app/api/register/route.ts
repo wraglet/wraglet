@@ -17,7 +17,6 @@ export const POST = async (request: Request) => {
       dob,
       gender,
       pronoun,
-      friendRequests,
       publicProfileVisible
     } = body
 
@@ -28,7 +27,6 @@ export const POST = async (request: Request) => {
       !dob ||
       !gender ||
       !pronoun ||
-      !friendRequests ||
       !publicProfileVisible ||
       !password
     ) {
@@ -47,7 +45,6 @@ export const POST = async (request: Request) => {
       dob,
       gender,
       pronoun,
-      friendRequests,
       publicProfileVisible
     })
 
