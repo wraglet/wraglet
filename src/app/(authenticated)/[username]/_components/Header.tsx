@@ -1,22 +1,35 @@
+'use client'
+
+import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import getUserByUsername from '@/actions/getUserByUsername'
+import { useFollow } from '@/lib/hooks/useFollow'
+import { useQuery } from '@tanstack/react-query'
 import { FaPencil, FaUserPen } from 'react-icons/fa6'
 
 import CoverPhotoHover from '@/app/(authenticated)/[username]/_components/CoverPhotoHover'
 import ProfilePicture from '@/app/(authenticated)/[username]/_components/ProfilePicture'
 
-const ProfileHeader = async ({ username }: { username: string }) => {
-  const user = await getUserByUsername(username)
+const ProfileHeader = ({ username }: { username: string }) => {
+  const { data: session } = useSession()
+  const currentUserId = session?.user?.id
+
+  const { data: user, isLoading } = useQuery({
+    queryKey: ['profileUser', username],
+    queryFn: () => getUserByUsername(username)
+  })
 
   const isCurrentUser = user?.isCurrentUser
+  const {
+    isFollowing,
+    followersCount,
+    followingCount,
+    follow,
+    unfollow,
+    loading
+  } = useFollow(user?._id, currentUserId)
 
-  const profilePictureUrl = user?.profilePicture?.url
-  const defaultProfilePictureUrl =
-    user?.gender === 'Male'
-      ? `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/male-placeholder.png`
-      : `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/female-placeholder.png`
-
-  const finalProfilePictureUrl = profilePictureUrl ?? defaultProfilePictureUrl
+  if (isLoading || !user) return null
 
   return (
     <>
@@ -54,10 +67,29 @@ const ProfileHeader = async ({ username }: { username: string }) => {
                 {user?.firstName} {user?.lastName}
               </h1>
               <div className="flex items-center gap-x-2 text-[10px] font-semibold -tracking-[0.2px] text-zinc-500">
-                <span>{user?.friends?.length} friends</span>{' '}
-                <span>{user?.following?.length} following</span>
+                <span>{followersCount} followers</span>
+                <span>·</span>
+                <span>{followingCount} following</span>
               </div>
             </div>
+            {!isCurrentUser &&
+              (isFollowing ? (
+                <button
+                  className="rounded-full bg-gray-200 px-4 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-300"
+                  onClick={() => unfollow()}
+                  disabled={loading}
+                >
+                  Unfollow
+                </button>
+              ) : (
+                <button
+                  className="rounded-full bg-sky-100 px-4 py-1 text-xs font-semibold text-sky-600 hover:bg-sky-500 hover:text-white"
+                  onClick={() => follow()}
+                  disabled={loading}
+                >
+                  Follow
+                </button>
+              ))}
             {isCurrentUser && (
               <span className="self-end text-xl text-slate-700">
                 <FaUserPen />

@@ -1,8 +1,10 @@
 'use client'
 
 import { FormEvent, Fragment, Key, useEffect, useRef, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { StaticImport } from 'next/dist/shared/lib/get-img-props'
 import Image from 'next/image'
+import { useFollow } from '@/lib/hooks/useFollow'
 import { IComment } from '@/models/Comment'
 import { IPost } from '@/models/Post'
 import useUserStore from '@/store/user'
@@ -351,6 +353,14 @@ const Post = ({ post: initialPost }: PostProps) => {
     }
   }
 
+  const { data: session } = useSession()
+  const currentUserId = session?.user?.id
+  const isAuthor = user?._id === post.author._id
+  const { isFollowing, follow, loading } = useFollow(
+    post.author._id,
+    currentUserId
+  )
+
   return (
     <div className="flex w-full">
       <div className="flex w-full items-start justify-between gap-x-2 border border-solid border-neutral-200 bg-white px-4 py-3 drop-shadow-md sm:rounded-lg">
@@ -366,6 +376,20 @@ const Post = ({ post: initialPost }: PostProps) => {
               <h3 className={`text-sm leading-none font-bold`}>
                 {post.author.firstName} {post.author.lastName}
               </h3>
+              {!isAuthor &&
+                (isFollowing ? (
+                  <span className="ml-2 text-xs font-semibold text-sky-600">
+                    Following
+                  </span>
+                ) : (
+                  <button
+                    className="ml-2 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-600 hover:bg-sky-500 hover:text-white disabled:opacity-60"
+                    onClick={() => follow()}
+                    disabled={loading}
+                  >
+                    Follow
+                  </button>
+                ))}
               <svg
                 className="self-center"
                 width="2"

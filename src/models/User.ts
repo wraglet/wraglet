@@ -1,6 +1,6 @@
 'use server'
 
-import { Document, model, models, Schema, Types } from 'mongoose'
+import { Document, model, models, Schema } from 'mongoose'
 
 // Base User interface without MongoDB document properties
 export interface IUser {
@@ -22,14 +22,6 @@ export interface IUser {
     key: string
   }
   publicProfileVisible: boolean
-  followers: Array<{
-    userId: Types.ObjectId | string
-    createdAt?: Date
-  }>
-  following: Array<{
-    userId: Types.ObjectId | string
-    createdAt?: Date
-  }>
   photoCollection: Array<{
     url: string
     key: string
@@ -61,16 +53,6 @@ const UserSchema = new Schema<IUserDocument>(
     profilePicture: { type: Object, url: String, key: String },
     coverPhoto: { type: Object, url: String, key: String },
     publicProfileVisible: { type: Boolean, default: true },
-    followers: [
-      {
-        userId: { type: Schema.Types.ObjectId, ref: 'User' }
-      }
-    ],
-    following: [
-      {
-        userId: { type: Schema.Types.ObjectId, ref: 'User' }
-      }
-    ],
     photoCollection: [
       {
         url: String,

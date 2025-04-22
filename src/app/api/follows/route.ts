@@ -9,6 +9,41 @@ const getCurrentUserId = async (): Promise<string | null> => {
   return currentUser?._id?.toString() || null
 }
 
+export const GET = async (request: Request) => {
+  try {
+    const currentUserId = await getCurrentUserId()
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId')
+
+    if (!userId || !Types.ObjectId.isValid(userId)) {
+      // Default: return current user's followingIds
+      if (!currentUserId) {
+        return NextResponse.json({ followingIds: [] }, { status: 401 })
+      }
+      const follows = await Follow.find({ followerId: currentUserId })
+      const followingIds = follows.map((f) => f.followingId.toString())
+      return NextResponse.json({ followingIds })
+    }
+
+    // Fetch followers and following counts for the given userId
+    const followersCount = await Follow.countDocuments({ followingId: userId })
+    const followingCount = await Follow.countDocuments({ followerId: userId })
+    let isFollowing = false
+    if (currentUserId) {
+      isFollowing = !!(await Follow.findOne({
+        followerId: currentUserId,
+        followingId: userId
+      }))
+    }
+    return NextResponse.json({ followersCount, followingCount, isFollowing })
+  } catch (error) {
+    return NextResponse.json(
+      { followersCount: 0, followingCount: 0, isFollowing: false },
+      { status: 500 }
+    )
+  }
+}
+
 export const POST = async (request: Request) => {
   try {
     const currentUserId = await getCurrentUserId()

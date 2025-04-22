@@ -30,10 +30,10 @@ export interface PostInterface {
 }
 
 export interface PostReactionInterface {
-  _id: string // Assuming _id is also a string
+  _id: string
   type: string
-  postId: string // Adjust the type to string if it's supposed to be a string
-  userId: AuthorInterface // Adjust the type to string if it's supposed to be a string
+  postId: string
+  userId: AuthorInterface
   createdAt: Date
   updatedAt: Date
 }
@@ -61,10 +61,7 @@ export interface UserInterface {
   createdAt: Date
   updatedAt?: Date
   publicProfileVisible: boolean
-  followers: string[]
-  following: string[]
-  // Optionally, for UI convenience:
-  // mutuals?: string[]
+  followingIds: string[]
 }
 
 export interface AuthorInterface {
