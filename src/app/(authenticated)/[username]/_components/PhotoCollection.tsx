@@ -142,7 +142,7 @@ const PhotoCollection = ({ username }: PhotoCollectionProps) => {
             />
           </div>
         ))}
-        {photos.length < maxPhotos && (
+        {userData?.isCurrentUser && photos.length < maxPhotos && (
           <button
             onClick={() => setShowAddPhoto(true)}
             className="group relative aspect-square w-full rounded-lg border-2 border-dashed border-sky-300 bg-sky-50 transition-colors duration-300 hover:border-sky-400 hover:bg-sky-100"
@@ -157,14 +157,16 @@ const PhotoCollection = ({ username }: PhotoCollectionProps) => {
         )}
       </div>
 
-      <AddPhotoModal
-        isOpen={showAddPhoto}
-        onClose={() => setShowAddPhoto(false)}
-        onUpdatePhotos={handleUpdatePhotos}
-        existingPhotos={existingPhotos.filter(
-          (photo: Photo) => !photos.some((p: Photo) => p.url === photo.url)
-        )}
-      />
+      {userData?.isCurrentUser && (
+        <AddPhotoModal
+          isOpen={showAddPhoto}
+          onClose={() => setShowAddPhoto(false)}
+          onUpdatePhotos={handleUpdatePhotos}
+          existingPhotos={existingPhotos.filter(
+            (photo: Photo) => !photos.some((p: Photo) => p.url === photo.url)
+          )}
+        />
+      )}
     </div>
   )
 }

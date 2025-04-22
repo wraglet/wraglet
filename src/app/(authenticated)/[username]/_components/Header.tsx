@@ -54,19 +54,24 @@ const ProfileHeader = async ({ username }: { username: string }) => {
                 {user?.firstName} {user?.lastName}
               </h1>
               <div className="flex items-center gap-x-2 text-[10px] font-semibold -tracking-[0.2px] text-zinc-500">
+                <span>{user?.friends?.length} friends</span>{' '}
                 <span>{user?.following?.length} following</span>
               </div>
             </div>
-            <span className="self-end text-xl text-slate-700">
-              <FaUserPen />
-            </span>
+            {isCurrentUser && (
+              <span className="self-end text-xl text-slate-700">
+                <FaUserPen />
+              </span>
+            )}
           </div>
           <div className="ml-[35px] pb-4 md:ml-[180px] md:pb-7 lg:ml-[242px] lg:pb-[30px]">
             <div className="flex gap-x-4">
               <p className="text-xs font-medium text-slate-700 italic">
                 &quot;{user?.bio ?? 'Set your bio here'}&quot;
               </p>
-              <FaPencil className="text-slate-600" size={10} />
+              {isCurrentUser && (
+                <FaPencil className="text-slate-600" size={10} />
+              )}
             </div>
           </div>
         </div>
