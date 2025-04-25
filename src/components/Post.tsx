@@ -82,7 +82,7 @@ const Post = ({ post: initialPost }: PostProps) => {
       const newComment = message.data
       // Only add the comment if we haven't seen it before
       if (!commentIdsRef.current.has(newComment._id.toString())) {
-        commentIdsRef.current.add(newComment._id._id.toString())
+        commentIdsRef.current.add(newComment._id.toString())
         setPostComments((prev) => [...prev, newComment])
         setShowCommentInput(true)
       }
@@ -238,25 +238,18 @@ const Post = ({ post: initialPost }: PostProps) => {
         content: comment
       })
 
-      // Only add the comment if we haven't seen it before
       const newComment = response.data
-      if (!commentIdsRef.current.has(newComment._id.toString())) {
-        commentIdsRef.current.add(newComment._id.toString())
-        setPostComments((prev) => [...prev, newComment])
-        setComment('')
-        setShowCommentInput(true)
-      }
 
-      // Try to publish to Ably if available, but don't break core functionality
-      try {
-        if (channel && channel.publish) {
-          await channel.publish({
-            name: 'comment',
-            data: newComment
-          })
-        }
-      } catch (error) {
-        console.warn('Failed to publish comment to Ably:', error)
+      // Add the comment to local state
+      setPostComments((prev) => [...prev, newComment])
+      // Add the comment ID to the set to prevent Ably double-add
+      commentIdsRef.current.add(newComment._id.toString())
+      setComment('')
+      setShowCommentInput(true)
+
+      // Publish to Ably channel
+      if (channel && channel.publish) {
+        await channel.publish('comment', newComment)
       }
     } catch (error) {
       console.error('Error posting comment:', error)
