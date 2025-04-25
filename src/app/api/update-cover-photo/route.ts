@@ -22,27 +22,26 @@ export const PATCH = async (request: Request) => {
 
     const body = await request.json()
     const currentUser = await getCurrentUser()
-    const { profilePicture } = body
+    const { coverPhoto } = body
 
     // Decode base64 image data
     const base64Data = Buffer.from(
-      profilePicture.replace(/^data:image\/\w+;base64,/, ''),
+      coverPhoto.replace(/^data:image\/\w+;base64,/, ''),
       'base64'
     )
-    const type = profilePicture.split(';')[0].split('/')[1]
+    const type = coverPhoto.split(';')[0].split('/')[1]
 
-    // Remove the existing profile picture from R2 before uploading the new/updated image
-    if (currentUser?.profilePicture?.key) {
+    // Remove the existing cover photo from R2 before uploading the new/updated image
+    if (currentUser?.coverPhoto?.key) {
       const deleteParams = {
         Bucket: process.env.CLOUDFLARE_R2_USERS_BUCKET_NAME ?? '',
-        Key: `user/${currentUser.profilePicture.key}`
+        Key: `coverPhotos/${currentUser.coverPhoto.key}`
       }
-
       await s3Client.send(new DeleteObjectCommand(deleteParams))
     }
 
-    // Upload the new profile picture to R2
-    const key = `avatars/${uuidv4()}.${type}`
+    // Upload the new cover photo to R2
+    const key = `coverPhotos/${uuidv4()}.${type}`
     const uploadFile = async (
       key: string,
       body: Buffer,
@@ -57,21 +56,19 @@ export const PATCH = async (request: Request) => {
           ContentType: contentType
         }
       })
-
       upload.on('httpUploadProgress', (progress) => {
         console.log(progress)
       })
-
       await upload.done()
     }
 
     await uploadFile(key, base64Data, `image/${type}`)
     const url = `${process.env.NEXT_PUBLIC_R2_USERS_URL}/${key}`
 
-    // Update user's profilePicture in MongoDB - use IUserDocument for DB operations
+    // Update user's coverPhoto in MongoDB
     const updatedUser = (await User.findByIdAndUpdate(
       currentUser?._id,
-      { $set: { profilePicture: { url, key } } },
+      { $set: { coverPhoto: { url, key } } },
       { new: true }
     )) as IUserDocument
 
@@ -104,11 +101,7 @@ export const PATCH = async (request: Request) => {
     revalidatePath(`/${currentUser?.username}`)
     return NextResponse.json(userObj)
   } catch (err) {
-    console.log('Update profile picture error: ', err)
-    console.error(
-      'Error happened while doing PATCH for /api/update-avatar at route.ts: ',
-      err
-    )
+    console.log('Update cover photo error: ', err)
     return new NextResponse('Internal Error: ', { status: 500 })
   }
 }

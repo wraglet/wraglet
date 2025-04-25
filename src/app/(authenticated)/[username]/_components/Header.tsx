@@ -48,7 +48,9 @@ const ProfileHeader = ({ username }: { username: string }) => {
                   : `User's default cover photo`
               }
             />
-            {isCurrentUser && <CoverPhotoHover />}
+            {isCurrentUser && (
+              <CoverPhotoHover coverPhoto={user?.coverPhoto?.url} />
+            )}
           </div>
 
           <div className="absolute -bottom-[50px] left-4 z-10 overflow-hidden md:-bottom-[80px] lg:-bottom-[90px] lg:left-16">

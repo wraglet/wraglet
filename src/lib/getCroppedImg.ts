@@ -14,48 +14,55 @@ const getRadianAngle = (degreeValue: number) => (degreeValue * Math.PI) / 180
 export default async function getCroppedImg(
   imageSrc: string,
   pixelCrop: Area,
-  rotation = 0
+  rotation = 0,
+  outputWidth?: number,
+  outputHeight?: number
 ): Promise<string> {
   const image = await createImage(imageSrc)
+
+  // Create a canvas that will fit the rotated image
   const canvas = document.createElement('canvas')
   const ctx = canvas.getContext('2d')
+  if (!ctx) return ''
 
-  if (!ctx) {
-    return ''
-  }
+  // Calculate bounding box of the rotated image
+  const radians = getRadianAngle(rotation)
+  const sin = Math.abs(Math.sin(radians))
+  const cos = Math.abs(Math.cos(radians))
+  const bBoxWidth = image.width * cos + image.height * sin
+  const bBoxHeight = image.width * sin + image.height * cos
 
-  const maxSize = Math.max(image.width, image.height)
-  const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2))
+  // Draw the rotated image onto a temp canvas
+  const tempCanvas = document.createElement('canvas')
+  tempCanvas.width = bBoxWidth
+  tempCanvas.height = bBoxHeight
+  const tempCtx = tempCanvas.getContext('2d')
+  if (!tempCtx) return ''
 
-  canvas.width = safeArea
-  canvas.height = safeArea
+  // Move to center, rotate, then draw
+  tempCtx.save()
+  tempCtx.translate(bBoxWidth / 2, bBoxHeight / 2)
+  tempCtx.rotate(radians)
+  tempCtx.drawImage(image, -image.width / 2, -image.height / 2)
+  tempCtx.restore()
 
-  ctx.translate(safeArea / 2, safeArea / 2)
-  ctx.rotate(getRadianAngle(rotation))
-  ctx.translate(-safeArea / 2, -safeArea / 2)
+  // Now crop the desired area from the rotated image
+  const finalWidth = outputWidth || pixelCrop.width
+  const finalHeight = outputHeight || pixelCrop.height
+  canvas.width = finalWidth
+  canvas.height = finalHeight
 
   ctx.drawImage(
-    image,
-    safeArea / 2 - image.width * 0.5,
-    safeArea / 2 - image.height * 0.5
+    tempCanvas,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    finalWidth,
+    finalHeight
   )
 
-  const data = ctx.getImageData(0, 0, safeArea, safeArea)
-
-  canvas.width = pixelCrop.width
-  canvas.height = pixelCrop.height
-
-  ctx.putImageData(
-    data,
-    0 - safeArea / 2 + image.width * 0.5 - pixelCrop.x,
-    0 - safeArea / 2 + image.height * 0.5 - pixelCrop.y
-  )
-  return new Promise((resolve, reject) => {
-    const dataUrl = canvas.toDataURL('image/jpeg')
-    if (dataUrl) {
-      resolve(dataUrl)
-    } else {
-      reject(new Error('Canvas toDataURL returned null'))
-    }
-  })
+  return canvas.toDataURL('image/jpeg')
 }

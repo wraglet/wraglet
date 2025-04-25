@@ -2,6 +2,7 @@
 
 import { Fragment, useReducer } from 'react'
 import useUserStore from '@/store/user'
+import deJSONify from '@/utils/deJSONify'
 import { useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import toast from 'react-hot-toast'
@@ -29,16 +30,27 @@ const ProfilePictureHover = ({ profilePicture }: ProfilePictureHoverProps) => {
 
   const handleUpdateProfilePicture = async (e: any, profilePicture: string) => {
     try {
-      const response = await axios.patch('/api/update-profile-picture', {
-        profilePicture
-      })
+      const { status, data } = await axios.patch(
+        '/api/update-profile-picture',
+        {
+          profilePicture
+        }
+      )
 
-      if (response.status === 200) {
+      if (status === 200) {
         // Update the user state in Zustand store
-        setUser(response.data)
+        setUser(deJSONify(data))
 
         // Invalidate and refetch user and posts queries
         await queryClient.invalidateQueries({ queryKey: ['user'] })
+        const username =
+          data?.username || useUserStore.getState().user?.username
+        if (username) {
+          await queryClient.invalidateQueries({ queryKey: ['user', username] })
+          await queryClient.invalidateQueries({
+            queryKey: ['profileUser', username]
+          })
+        }
         await queryClient.invalidateQueries({ queryKey: ['posts'] })
 
         toast.success('Profile picture updated successfully')
