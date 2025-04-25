@@ -18,7 +18,19 @@ const FeedWithAbly = dynamic(
   { ssr: false }
 )
 
-const FeedAbly = ({ initialPosts }: { initialPosts: IPost[] }) => {
+const FeedAbly = ({
+  initialPosts,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+  status
+}: {
+  initialPosts: IPost[]
+  fetchNextPage: () => void
+  hasNextPage: boolean
+  isFetchingNextPage: boolean
+  status: string
+}) => {
   const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
   const [ablyError, setAblyError] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -70,13 +82,27 @@ const FeedAbly = ({ initialPosts }: { initialPosts: IPost[] }) => {
 
   // If Ably initialization failed, render without real-time features
   if (ablyError || !ablyClient) {
-    return <FeedNoAbly initialPosts={initialPosts} />
+    return (
+      <FeedNoAbly
+        initialPosts={initialPosts}
+        fetchNextPage={fetchNextPage}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        status={status}
+      />
+    )
   }
 
   // If Ably is ready, render with real-time features
   return (
     <AblyProvider client={ablyClient}>
-      <FeedWithAbly initialPosts={initialPosts} />
+      <FeedWithAbly
+        initialPosts={initialPosts}
+        fetchNextPage={fetchNextPage}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        status={status}
+      />
     </AblyProvider>
   )
 }

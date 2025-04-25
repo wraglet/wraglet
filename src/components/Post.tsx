@@ -611,43 +611,25 @@ const Post = ({ post: initialPost }: PostProps) => {
             leaveFrom="transform opacity-100 scale-100"
             leaveTo="transform opacity-0 scale-95"
           >
-            <MenuItems className="absolute right-0 mt-2 w-48 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
-              <div className="px-1 py-1">
+            <MenuItems className="absolute right-0 mt-1 w-30 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
+              <div className="px-1">
                 <MenuItem>
-                  {({ active }) => (
-                    <button
-                      className={`${
-                        active ? 'bg-sky-500 text-white' : 'text-gray-900'
-                      } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                    >
-                      Save post
-                    </button>
-                  )}
+                  <button className="group flex w-full items-center rounded-md px-2 py-2 text-xs text-gray-900 data-[focus]:bg-sky-500 data-[focus]:text-white">
+                    Save post
+                  </button>
                 </MenuItem>
                 <MenuItem>
-                  {({ active }) => (
-                    <button
-                      className={`${
-                        active ? 'bg-sky-500 text-white' : 'text-gray-900'
-                      } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                    >
-                      Copy link
-                    </button>
-                  )}
+                  <button className="group flex w-full items-center rounded-md px-2 py-2 text-xs text-gray-900 data-[focus]:bg-sky-500 data-[focus]:text-white">
+                    Copy link
+                  </button>
                 </MenuItem>
               </div>
               {user?._id === post.author._id && (
-                <div className="px-1 py-1">
+                <div className="px-1">
                   <MenuItem>
-                    {({ active }) => (
-                      <button
-                        className={`${
-                          active ? 'bg-red-500 text-white' : 'text-red-500'
-                        } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                      >
-                        Delete post
-                      </button>
-                    )}
+                    <button className="group flex w-full items-center rounded-md px-2 py-2 text-xs text-red-500 data-[focus]:bg-red-500 data-[focus]:text-white">
+                      Delete post
+                    </button>
                   </MenuItem>
                 </div>
               )}

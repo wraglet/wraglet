@@ -12,9 +12,19 @@ import PostClientWrapper from '@/components/PostClientWrapper'
 
 interface FeedNoAblyProps {
   initialPosts: IPost[]
+  fetchNextPage: () => void
+  hasNextPage: boolean
+  isFetchingNextPage: boolean
+  status: string
 }
 
-const FeedNoAbly: FC<FeedNoAblyProps> = ({ initialPosts }) => {
+const FeedNoAbly: FC<FeedNoAblyProps> = ({
+  initialPosts,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+  status
+}) => {
   const {
     posts,
     setFeedPosts,
@@ -76,8 +86,21 @@ const FeedNoAbly: FC<FeedNoAblyProps> = ({ initialPosts }) => {
           setPostImage={(image) => dispatchState({ image: image })}
         />
         {posts.map((post: PostInterface) => (
-          <PostClientWrapper key={post._id} post={post as unknown as IPost} />
+          <PostClientWrapper
+            key={`${post._id}-${post.createdAt}`}
+            post={post as unknown as IPost}
+          />
         ))}
+        {hasNextPage && (
+          <button
+            className="w-full py-2 text-center text-blue-600 hover:underline"
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+          >
+            {isFetchingNextPage ? 'Loading more...' : 'Load more'}
+          </button>
+        )}
+        {status === 'pending' && <div>Loading...</div>}
       </div>
     </div>
   )

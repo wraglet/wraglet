@@ -13,9 +13,19 @@ import PostClientWrapper from '@/components/PostClientWrapper'
 
 interface FeedWithAblyProps {
   initialPosts: IPost[]
+  fetchNextPage: () => void
+  hasNextPage: boolean
+  isFetchingNextPage: boolean
+  status: string
 }
 
-const FeedWithAblyContent: FC<FeedWithAblyProps> = ({ initialPosts }) => {
+const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
+  initialPosts,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+  status
+}) => {
   const {
     posts,
     setFeedPosts,
@@ -103,16 +113,26 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({ initialPosts }) => {
             post={post as unknown as IPost}
           />
         ))}
+        {hasNextPage && (
+          <button
+            className="w-full py-2 text-center text-blue-600 hover:underline"
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+          >
+            {isFetchingNextPage ? 'Loading more...' : 'Load more'}
+          </button>
+        )}
+        {status === 'pending' && <div>Loading...</div>}
       </div>
     </div>
   )
 }
 
 // Wrap the component with ChannelProvider
-const FeedWithAbly: FC<FeedWithAblyProps> = ({ initialPosts }) => {
+const FeedWithAbly: FC<FeedWithAblyProps> = (props) => {
   return (
     <ChannelProvider channelName="post-channel">
-      <FeedWithAblyContent initialPosts={initialPosts} />
+      <FeedWithAblyContent {...props} />
     </ChannelProvider>
   )
 }

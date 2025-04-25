@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import client from '@/lib/db'
 import Post from '@/models/Post'
+import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { Types } from 'mongoose'
 import { v4 as uuidv4 } from 'uuid'
 
 export const POST = async (request: Request) => {
@@ -85,5 +87,55 @@ export const POST = async (request: Request) => {
       err
     )
     return new NextResponse('Internal Error: ', { status: 500 })
+  }
+}
+
+export const GET = async (request: Request) => {
+  const { searchParams } = new URL(request.url)
+  const limit = parseInt(searchParams.get('limit') || '10', 10)
+  const cursor = searchParams.get('cursor')
+
+  try {
+    await client()
+    const query: any = {}
+    if (cursor) {
+      query._id = { $lt: new Types.ObjectId(cursor) }
+    }
+    const posts = await Post.find(query)
+      .sort({ _id: -1 })
+      .limit(limit + 1)
+      .populate({
+        path: 'author',
+        select: 'firstName lastName username gender pronoun profilePicture'
+      })
+      .populate({
+        path: 'reactions',
+        populate: {
+          path: 'userId',
+          select: 'firstName lastName username profilePicture'
+        }
+      })
+      .populate({
+        path: 'comments',
+        populate: {
+          path: 'author',
+          select: 'firstName lastName username gender pronoun profilePicture'
+        }
+      })
+      .lean()
+
+    const hasMore = posts.length > limit
+    const postsToReturn = hasMore ? posts.slice(0, limit) : posts
+    const nextCursor = hasMore
+      ? postsToReturn[postsToReturn.length - 1]._id
+      : null
+
+    return NextResponse.json({
+      posts: convertObjectIdsToStrings(postsToReturn),
+      nextCursor: nextCursor ? nextCursor.toString() : null
+    })
+  } catch (error) {
+    console.error('Error fetching posts:', error)
+    return NextResponse.json({ posts: [], nextCursor: null }, { status: 500 })
   }
 }
