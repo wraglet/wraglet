@@ -1,7 +1,6 @@
 'use client'
 
 import { FormEvent, Fragment, Key, useEffect, useRef, useState } from 'react'
-import { useSession } from 'next-auth/react'
 import { StaticImport } from 'next/dist/shared/lib/get-img-props'
 import Image from 'next/image'
 import { useFollow } from '@/lib/hooks/useFollow'
@@ -345,14 +344,8 @@ const Post = ({ post: initialPost }: PostProps) => {
       toast.error('Failed to vote')
     }
   }
-
-  const { data: session } = useSession()
-  const currentUserId = session?.user?.id
   const isAuthor = user?._id === post.author._id
-  const { isFollowing, follow, loading } = useFollow(
-    post.author._id,
-    currentUserId
-  )
+  const { isFollowing, follow, loading } = useFollow(post.author._id)
 
   return (
     <div className="flex w-full">

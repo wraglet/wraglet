@@ -1,10 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-export const useFollow = (
-  targetUserId: string | null,
-  currentUserId?: string
-) => {
+export const useFollow = (targetUserId: string | null) => {
   const queryClient = useQueryClient()
   const [loading, setLoading] = useState(false)
 
@@ -22,7 +19,8 @@ export const useFollow = (
       if (!res.ok) throw new Error('Failed to fetch follow state')
       return res.json()
     },
-    enabled: !!targetUserId
+    enabled: !!targetUserId,
+    staleTime: 5 * 60 * 1000 // 5 minutes
   })
 
   // Mutation for following

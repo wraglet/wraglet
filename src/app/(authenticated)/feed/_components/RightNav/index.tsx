@@ -7,15 +7,9 @@ import { IoPersonAddSharp } from 'react-icons/io5'
 
 import Avatar from '@/components/Avatar'
 
-const UserSuggestion = ({
-  user,
-  currentUserId
-}: {
-  user: UserInterface
-  currentUserId: string
-}) => {
+const UserSuggestion = ({ user }: { user: UserInterface }) => {
   const { isFollowing, follow, loading, followersCount, followingCount } =
-    useFollow(user._id, currentUserId)
+    useFollow(user._id)
   return (
     <div
       key={user._id}
@@ -74,11 +68,7 @@ const RightNav = ({
 
           <div className="flex flex-col gap-4">
             {otherUsers.map((user) => (
-              <UserSuggestion
-                key={user._id}
-                user={user}
-                currentUserId={currentUserId}
-              />
+              <UserSuggestion key={user._id} user={user} />
             ))}
           </div>
         </div>

@@ -27,7 +27,7 @@ const ProfileHeader = ({ username }: { username: string }) => {
     follow,
     unfollow,
     loading
-  } = useFollow(user?._id, currentUserId)
+  } = useFollow(user?._id)
 
   if (isLoading || !user) return null
 
