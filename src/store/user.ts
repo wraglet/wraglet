@@ -7,7 +7,7 @@ interface Photo {
   createdAt: string
 }
 
-interface User {
+export interface User {
   _id: string
   firstName: string
   lastName: string
@@ -26,6 +26,7 @@ interface UserStore {
   user: User | null
   setUser: (user: User | null) => void
   updatePhotoCollection: (photos: Photo[]) => void
+  clearUser: () => void
 }
 
 const useUserStore = create<UserStore>((set) => ({
@@ -34,7 +35,8 @@ const useUserStore = create<UserStore>((set) => ({
   updatePhotoCollection: (photos) =>
     set((state) => ({
       user: state.user ? { ...state.user, photoCollection: photos } : null
-    }))
+    })),
+  clearUser: () => set({ user: null })
 }))
 
 export default useUserStore

@@ -4,6 +4,7 @@ import client from '@/lib/db'
 import { initModels } from '@/lib/models'
 import Post from '@/models/Post'
 import User from '@/models/User'
+import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 import { Types } from 'mongoose'
 
 // Type definition for the lean user object
@@ -52,7 +53,7 @@ const getPostsByUsername = async (username: string) => {
 
     // Return the queried posts - they will be automatically serialized to JSON
     // when crossing the server/client boundary
-    return posts
+    return convertObjectIdsToStrings(posts)
   } catch (error) {
     console.error('Error getting posts by username:', error)
     return [] // Return an empty array on error

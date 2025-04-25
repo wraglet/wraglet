@@ -3,6 +3,7 @@
 import client from '@/lib/db'
 import { initModels } from '@/lib/models'
 import Post from '@/models/Post'
+import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 
 // Return document-like objects that will be deJSONified by the client
 const getPosts = async () => {
@@ -38,7 +39,7 @@ const getPosts = async () => {
 
     // Return the queried posts - they will be automatically serialized to JSON
     // when crossing the server/client boundary
-    return posts
+    return convertObjectIdsToStrings(posts)
   } catch (error) {
     console.error('Error getting posts:', error)
     return []

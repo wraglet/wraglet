@@ -3,7 +3,7 @@
 import getSession from '@/actions/getSession'
 import client from '@/lib/db'
 import User from '@/models/User'
-import mongoose from 'mongoose'
+import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 
 const getUserByUsername = async (username: string) => {
   try {
@@ -28,35 +28,8 @@ const getUserByUsername = async (username: string) => {
     // Convert the user document to a plain object and handle ObjectId
     if (user) {
       const userObject = user.toObject()
-
-      // Convert main _id to string
-      if (userObject._id instanceof mongoose.Types.ObjectId) {
-        userObject._id = userObject._id.toString()
-      }
-
-      // Convert ObjectIds in photoCollection
-      if (userObject.photoCollection) {
-        userObject.photoCollection = userObject.photoCollection.map(
-          (photo: any) => {
-            const photoObj = { ...photo }
-            if (photoObj._id instanceof mongoose.Types.ObjectId) {
-              photoObj._id = photoObj._id.toString()
-            }
-            return photoObj
-          }
-        )
-      }
-
-      // Convert ObjectIds in profilePicture
-      if (userObject.profilePicture) {
-        const profilePictureObj = { ...userObject.profilePicture }
-        if (profilePictureObj._id instanceof mongoose.Types.ObjectId) {
-          profilePictureObj._id = profilePictureObj._id.toString()
-        }
-        userObject.profilePicture = profilePictureObj
-      }
-
-      return { ...userObject, isCurrentUser }
+      // Convert all ObjectIds to strings recursively
+      return convertObjectIdsToStrings({ ...userObject, isCurrentUser })
     }
 
     return null // Return null if the user is not found

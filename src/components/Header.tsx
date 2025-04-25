@@ -4,10 +4,9 @@ import { useEffect } from 'react'
 import { Quicksand } from 'next/font/google'
 import Image from 'next/image'
 import Link from 'next/link'
-import { UserInterface } from '@/interfaces'
 import { IUser } from '@/models/User'
 import useGlobalStore from '@/store/global'
-import useUserStore from '@/store/user'
+import useUserStore, { User } from '@/store/user'
 
 import AvatarMenu from '@/components/AvatarMenu'
 import { BellIcon, ChatIcon, HomeIcon, PeopleIcon } from '@/components/NavIcons'
@@ -30,11 +29,7 @@ const Header = ({ currentUser }: { currentUser: IUser }) => {
     }
 
     if (justLoggedIn && !userInitialized) {
-      const transformedUser = {
-        ...currentUser,
-        friends: currentUser?.friends.map((friend) => friend.userId.toString())
-      } as unknown as UserInterface
-      setUser(transformedUser)
+      setUser(currentUser as unknown as User)
       setUserInitialized(true)
       setJustLoggedIn(false)
     }

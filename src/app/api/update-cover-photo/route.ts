@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import client from '@/lib/db'
 import User, { IUserDocument } from '@/models/User'
+import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
 import { v4 as uuidv4 } from 'uuid'
@@ -72,30 +73,6 @@ export const PATCH = async (request: Request) => {
       { new: true }
     )) as IUserDocument
 
-    // Convert all ObjectIds to strings recursively
-    function convertObjectIdsToStrings(obj: any): any {
-      if (Array.isArray(obj)) {
-        return obj.map(convertObjectIdsToStrings)
-      } else if (obj && typeof obj === 'object') {
-        const newObj: any = {}
-        for (const key in obj) {
-          if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            if (
-              (key === '_id' || key.endsWith('Id')) &&
-              obj[key] &&
-              typeof obj[key] === 'object' &&
-              obj[key].toString
-            ) {
-              newObj[key] = obj[key].toString()
-            } else {
-              newObj[key] = convertObjectIdsToStrings(obj[key])
-            }
-          }
-        }
-        return newObj
-      }
-      return obj
-    }
     let userObj = updatedUser.toObject ? updatedUser.toObject() : updatedUser
     userObj = convertObjectIdsToStrings(userObj)
     revalidatePath(`/${currentUser?.username}`)

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { Fragment } from 'react'
+import { Fragment } from 'react'
 import { signOut } from 'next-auth/react'
 import Link from 'next/link'
 import useFeedPostsStore from '@/store/feedPosts'

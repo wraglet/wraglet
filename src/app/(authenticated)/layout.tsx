@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import getCurrentUser from '@/actions/getCurrentUser'
 import getSession from '@/actions/getSession'
-import deJSONify from '@/utils/deJSONify'
 
 import Header from '@/components/Header'
 
@@ -13,9 +12,7 @@ const AuthenticatedLayout = async ({
   children: React.ReactNode
 }) => {
   const session = await getSession()
-  const jsonUser = await getCurrentUser()
-
-  const currentUser = deJSONify(jsonUser)
+  const currentUser = await getCurrentUser()
 
   if (!session) {
     redirect('/')

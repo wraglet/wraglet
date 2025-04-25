@@ -3,7 +3,7 @@
 import getSession from '@/actions/getSession'
 import client from '@/lib/db'
 import User from '@/models/User'
-import mongoose from 'mongoose'
+import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 
 const getOtherUsers = async () => {
   const session = await getSession().catch((err) => {
@@ -28,15 +28,8 @@ const getOtherUsers = async () => {
       .exec()
 
     // Convert each user document to a plain object and convert ObjectId to string
-    const plainUsers = users.map((user) => {
-      const userObject = user.toObject()
-      if (userObject._id instanceof mongoose.Types.ObjectId) {
-        userObject._id = userObject._id.toString()
-      }
-      return userObject
-    })
-
-    return plainUsers
+    const plainUsers = users.map((user) => user.toObject())
+    return convertObjectIdsToStrings(plainUsers)
   } catch (error: any) {
     console.error('Some error happened while getting getOtherUsers(): ', error)
     return []

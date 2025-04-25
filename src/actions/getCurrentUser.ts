@@ -3,7 +3,7 @@
 import getSession from '@/actions/getSession'
 import client from '@/lib/db'
 import User from '@/models/User'
-import mongoose from 'mongoose'
+import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 
 const getCurrentUser = async () => {
   try {
@@ -26,11 +26,8 @@ const getCurrentUser = async () => {
     // Convert the Mongoose document to a plain object
     if (currentUser) {
       const userObject = currentUser.toObject()
-      // Convert ObjectId to string
-      if (userObject._id instanceof mongoose.Types.ObjectId) {
-        userObject._id = userObject._id.toString()
-      }
-      return userObject
+      // Convert all ObjectIds and Dates to strings recursively
+      return convertObjectIdsToStrings(userObject)
     }
 
     return null // Return null if the user is not found

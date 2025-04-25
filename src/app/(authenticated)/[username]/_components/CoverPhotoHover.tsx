@@ -2,7 +2,6 @@
 
 import { Fragment, useReducer } from 'react'
 import useUserStore from '@/store/user'
-import deJSONify from '@/utils/deJSONify'
 import { useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import toast from 'react-hot-toast'
@@ -37,7 +36,7 @@ const CoverPhotoHover = ({ coverPhoto }: CoverPhotoHoverProps) => {
       })
 
       if (status === 200) {
-        setUser(deJSONify(data))
+        setUser(data)
         await queryClient.invalidateQueries({ queryKey: ['user'] })
         const username =
           data?.username || useUserStore.getState().user?.username

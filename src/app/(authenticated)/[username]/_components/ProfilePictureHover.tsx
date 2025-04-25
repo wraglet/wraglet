@@ -2,7 +2,6 @@
 
 import { Fragment, useReducer } from 'react'
 import useUserStore from '@/store/user'
-import deJSONify from '@/utils/deJSONify'
 import { useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import toast from 'react-hot-toast'
@@ -39,7 +38,7 @@ const ProfilePictureHover = ({ profilePicture }: ProfilePictureHoverProps) => {
 
       if (status === 200) {
         // Update the user state in Zustand store
-        setUser(deJSONify(data))
+        setUser(data)
 
         // Invalidate and refetch user and posts queries
         await queryClient.invalidateQueries({ queryKey: ['user'] })
