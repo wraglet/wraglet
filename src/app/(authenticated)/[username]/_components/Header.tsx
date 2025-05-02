@@ -1,11 +1,23 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import getUserByUsername from '@/actions/getUserByUsername'
 import { useFollow } from '@/lib/hooks/useFollow'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import axios from 'axios'
+import { useForm } from 'react-hook-form'
+import toast from 'react-hot-toast'
 import { FaPencil, FaUserPen } from 'react-icons/fa6'
+
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage
+} from '@/components/ui/form'
 
 import CoverPhotoHover from '@/app/(authenticated)/[username]/_components/CoverPhotoHover'
 import ProfilePicture from '@/app/(authenticated)/[username]/_components/ProfilePicture'
@@ -28,6 +40,31 @@ const ProfileHeader = ({ username }: { username: string }) => {
     unfollow,
     loading
   } = useFollow(user?._id)
+
+  const queryClient = useQueryClient()
+  const [editingBio, setEditingBio] = useState(false)
+  const form = useForm({
+    defaultValues: { bio: user?.bio ?? '' }
+  })
+
+  useEffect(() => {
+    form.reset({ bio: user?.bio ?? '' })
+  }, [user?.bio])
+
+  const { mutate: updateBio, isPending: updatingBio } = useMutation({
+    mutationFn: async (data: { bio: string }) => {
+      const res = await axios.patch('/api/users', { bio: data.bio })
+      return res.data.user
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profileUser', username] })
+      toast.success('Bio updated!')
+      setEditingBio(false)
+    },
+    onError: () => {
+      toast.error('Failed to update bio')
+    }
+  })
 
   if (isLoading || !user) return null
 
@@ -100,11 +137,72 @@ const ProfileHeader = ({ username }: { username: string }) => {
           </div>
           <div className="ml-[35px] pb-4 md:ml-[180px] md:pb-7 lg:ml-[242px] lg:pb-[30px]">
             <div className="flex gap-x-4">
-              <p className="text-xs font-medium text-slate-700 italic">
-                &quot;{user?.bio ?? 'Set your bio here'}&quot;
-              </p>
-              {isCurrentUser && (
-                <FaPencil className="text-slate-600" size={10} />
+              {editingBio ? (
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit((data) => updateBio(data))}
+                    className="flex items-center gap-x-2"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="bio"
+                      render={({ field }) => (
+                        <FormItem className="w-60">
+                          <FormControl>
+                            <input
+                              className="h-7 w-60 border-b border-slate-400 bg-transparent px-2 py-1 text-xs focus:outline-none"
+                              maxLength={300}
+                              disabled={updatingBio}
+                              {...field}
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                  setEditingBio(false)
+                                  form.reset({ bio: user?.bio ?? '' })
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <button
+                      type="submit"
+                      className="rounded px-1 py-0.5 text-xs text-sky-600 hover:underline disabled:opacity-50"
+                      disabled={updatingBio}
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded px-1 py-0.5 text-xs text-gray-500 hover:underline"
+                      onClick={() => {
+                        setEditingBio(false)
+                        form.reset({ bio: user?.bio ?? '' })
+                      }}
+                      disabled={updatingBio}
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                </Form>
+              ) : (
+                <>
+                  <p className="text-xs font-medium text-slate-700 italic">
+                    &quot;{user?.bio ?? 'Set your bio here'}&quot;
+                  </p>
+                  {isCurrentUser && (
+                    <button
+                      type="button"
+                      aria-label="Edit bio"
+                      onClick={() => setEditingBio(true)}
+                      className="ml-1 h-6 w-6 p-1 text-slate-600 hover:text-sky-600"
+                    >
+                      <FaPencil size={10} />
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
