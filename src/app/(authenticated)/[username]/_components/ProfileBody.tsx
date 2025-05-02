@@ -14,6 +14,7 @@ import toast from 'react-hot-toast'
 import CreatePost from '@/components/CreatePost'
 import PostClientWrapper from '@/components/PostClientWrapper'
 
+import AchievementsBadges from '@/app/(authenticated)/[username]/_components/AchievementsBadges'
 import PhotoCollection from '@/app/(authenticated)/[username]/_components/PhotoCollection'
 
 type ProfileBodyProps = {
@@ -91,6 +92,7 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
     <div className="tablet:px-5 mb-6 flex w-full items-start gap-x-10 lg:px-10 xl:w-[1250px] xl:px-0">
       <div className="tablet:flex tablet:w-2/5 hidden h-auto flex-col rounded-lg border border-solid border-neutral-200 bg-white drop-shadow-md">
         <PhotoCollection username={username} />
+        <AchievementsBadges />
       </div>
       <div className="tablet:grow flex w-full flex-col gap-y-4 sm:mx-10 md:mx-auto md:w-[680px]">
         {user?.isCurrentUser && (
