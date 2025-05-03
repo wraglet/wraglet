@@ -64,20 +64,20 @@ const AvatarMenu = () => {
               </Link>
             </MenuItem>
             <MenuItem>
-              <button
-                type="button"
-                className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 data-focus:bg-[#1B87EA] data-focus:text-white"
+              <Link
+                href="/settings/account"
+                className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 transition-colors hover:bg-blue-50 focus:bg-blue-100 focus:text-blue-700"
               >
                 <HiOutlineCog
-                  className="mr-2 h-5 w-5 group-data-focus:hidden"
+                  className="mr-2 h-5 w-5 group-hover:hidden group-focus:hidden"
                   aria-hidden="true"
                 />
                 <HiCog
-                  className="mr-2 hidden h-5 w-5 group-data-focus:inline"
+                  className="mr-2 hidden h-5 w-5 group-hover:inline group-focus:inline"
                   aria-hidden="true"
                 />
                 Account Settings
-              </button>
+              </Link>
             </MenuItem>
           </div>
           <div className="px-1 py-1">

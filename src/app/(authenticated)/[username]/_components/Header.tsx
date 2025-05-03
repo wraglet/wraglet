@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
+import Link from 'next/link'
 import getUserByUsername from '@/actions/getUserByUsername'
 import { useFollow } from '@/lib/hooks/useFollow'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -130,9 +131,14 @@ const ProfileHeader = ({ username }: { username: string }) => {
                 </button>
               ))}
             {isCurrentUser && (
-              <span className="self-end text-xl text-slate-700">
-                <FaUserPen />
-              </span>
+              <Link href="/settings/profile" passHref legacyBehavior>
+                <a
+                  className="self-end text-xl text-slate-700 hover:text-blue-600 focus:text-blue-700 focus:outline-none"
+                  aria-label="Edit Profile Settings"
+                >
+                  <FaUserPen />
+                </a>
+              </Link>
             )}
           </div>
           <div className="ml-[35px] pb-4 md:ml-[180px] md:pb-7 lg:ml-[242px] lg:pb-[30px]">
