@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     "Wraglet is more than a social platform; it's a movement towards profound connections. Embrace a future where impactful brevity takes center stage, and every voice resonates. Join Wraglet today and be part of the evolution of meaningful online interaction.",
   twitter: {
     images: {
-      url: 'https://pub-c5365d46e2924ca2be4f4198d5b3d377.r2.dev/images/logo/logo.png',
+      url: 'https://cdn.wraglet.com/images/logo/logo.png',
       alt: 'Wraglet - Redefining Social Connection',
       type: 'image/png',
       width: 300,
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: title,
     images: {
-      url: 'https://pub-c5365d46e2924ca2be4f4198d5b3d377.r2.dev/images/logo/logo.png',
+      url: 'https://cdn.wraglet.com/images/logo/logo.png',
       alt: 'Wraglet - Redefining Social Connection',
       type: 'image/png',
       width: 300,

@@ -6,7 +6,7 @@ export const metadata: Metadata = {
     'Explore the Wraglet Feed, where impactful connections unfold. Join us for brevity, resonance, and a future where every voice matters.',
   twitter: {
     images: {
-      url: 'https://wraglet.com/images/logo/logo.png',
+      url: 'https://cdn.wraglet.com/images/logo/logo.png',
       alt: 'Wraglet - Redefining Social Connection',
       type: 'image/png',
       width: 300,
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Wraglet Feed - Explore Impactful Connections',
     images: {
-      url: 'https://wraglet.com/images/logo/logo.png',
+      url: 'https://cdn.wraglet.com/images/logo/logo.png',
       alt: 'Wraglet - Redefining Social Connection',
       type: 'image/png',
       width: 300,
