@@ -47,3 +47,23 @@ export const PATCH = async (req: Request) => {
     )
   }
 }
+
+export const GET = async (req: Request) => {
+  try {
+    await client()
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    // Exclude current user
+    const users = await User.find({ _id: { $ne: currentUser._id } })
+      .select('firstName lastName username profilePicture')
+      .lean()
+    return NextResponse.json({ success: true, users })
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message || 'Failed to fetch users' },
+      { status: 500 }
+    )
+  }
+}

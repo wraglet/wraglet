@@ -12,7 +12,7 @@ type Props = {
 function ChatFloaterServer({ currentUser }: Props) {
   return (
     <Suspense fallback={null}>
-      <ChatFloaterClientWrapper userId={currentUser.username} />
+      <ChatFloaterClientWrapper userId={(currentUser as any)._id} />
     </Suspense>
   )
 }

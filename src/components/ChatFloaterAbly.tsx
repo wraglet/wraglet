@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import * as Ably from 'ably'
-import { AblyProvider, ChannelProvider } from 'ably/react'
+import { AblyProvider } from 'ably/react'
 
 import ChatFloater from '@/components/ChatFloater'
 
@@ -47,9 +47,7 @@ const ChatFloaterAbly = ({ userId }: ChatFloaterAblyProps) => {
 
   return (
     <AblyProvider client={ablyClient}>
-      <ChannelProvider channelName={`user-${userId}-messages`}>
-        <ChatFloater userId={userId} />
-      </ChannelProvider>
+      <ChatFloater userId={userId} />
     </AblyProvider>
   )
 }

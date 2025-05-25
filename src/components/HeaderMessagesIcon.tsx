@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import useChatFloaterStore from '@/store/chatFloater'
 import useUserStore from '@/store/user'
 import { useQuery } from '@tanstack/react-query'
 import { useChannel } from 'ably/react'
@@ -83,6 +84,8 @@ const HeaderMessagesIcon = ({
       refetch()
       setUnreadCount((prev) => (prev > 0 ? prev - 1 : 0))
     } catch {}
+    // Open chat floater
+    useChatFloaterStore.getState().openChat(conversationId)
     setDropdownOpen(false)
   }
 
