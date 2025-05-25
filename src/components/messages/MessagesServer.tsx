@@ -1,8 +1,6 @@
 'use client'
 
-import { Suspense } from 'react'
-
-import MessagesClientWrapper from '@/components/messages/MessagesClientWrapper'
+import MessagesWithAbly from '@/components/messages/MessagesWithAbly'
 
 type Props = {
   userId: string
@@ -11,9 +9,12 @@ type Props = {
 const MessagesServer = ({ userId }: Props) => {
   return (
     <div className="mx-auto w-full max-w-2xl">
-      <Suspense fallback={<div>Loading messages...</div>}>
-        <MessagesClientWrapper userId={userId} />
-      </Suspense>
+      <MessagesWithAbly
+        fetchNextPage={() => {}}
+        hasNextPage={false}
+        isFetchingNextPage={false}
+        status="success"
+      />
     </div>
   )
 }

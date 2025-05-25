@@ -50,7 +50,7 @@ const ProfileHeader = ({ username }: { username: string }) => {
 
   useEffect(() => {
     form.reset({ bio: user?.bio ?? '' })
-  }, [user?.bio])
+  }, [user?.bio, form])
 
   const { mutate: updateBio, isPending: updatingBio } = useMutation({
     mutationFn: async (data: { bio: string }) => {
