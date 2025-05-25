@@ -4,6 +4,7 @@ import { useCallback } from 'react'
 import Link from 'next/link'
 import { UserInterface } from '@/interfaces'
 import { useFollow } from '@/lib/hooks/useFollow'
+import useChatFloaterStore from '@/store/chatFloater'
 import toast from 'react-hot-toast'
 import { IoPersonAddSharp } from 'react-icons/io5'
 
@@ -12,6 +13,7 @@ import Avatar from '@/components/Avatar'
 const UserSuggestion = ({ user }: { user: UserInterface }) => {
   const { isFollowing, follow, loading, followersCount, followingCount } =
     useFollow(user._id)
+  const openChat = useChatFloaterStore((s) => s.openChat)
   const handleMessage = useCallback(async () => {
     try {
       const res = await fetch('/api/conversations', {
@@ -21,14 +23,14 @@ const UserSuggestion = ({ user }: { user: UserInterface }) => {
       })
       const json = await res.json()
       if (json.success && json.data?._id) {
-        window.location.href = `/messages/${json.data._id}`
+        openChat(json.data._id)
       } else {
         toast.error('Failed to start chat')
       }
     } catch {
       toast.error('Failed to start chat')
     }
-  }, [user._id])
+  }, [user._id, openChat])
   return (
     <div
       key={user._id}
