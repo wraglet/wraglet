@@ -8,6 +8,7 @@ export interface IConversation {
   lastMessage?: Types.ObjectId
   createdAt?: Date
   updatedAt?: Date
+  lastRead?: { user: Types.ObjectId; at: Date }[]
 }
 
 export interface IConversationDocument
@@ -20,7 +21,16 @@ export interface IConversationDocument
   lastMessage?: Types.ObjectId
   createdAt?: Date
   updatedAt?: Date
+  lastRead?: { user: Types.ObjectId; at: Date }[]
 }
+
+const LastReadSchema = new Schema(
+  {
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    at: { type: Date, default: Date.now }
+  },
+  { _id: false }
+)
 
 const ConversationSchema = new Schema<IConversationDocument>(
   {
@@ -29,7 +39,8 @@ const ConversationSchema = new Schema<IConversationDocument>(
     ],
     isGroup: { type: Boolean, default: false },
     name: { type: String },
-    lastMessage: { type: Schema.Types.ObjectId, ref: 'Message' }
+    lastMessage: { type: Schema.Types.ObjectId, ref: 'Message' },
+    lastRead: [LastReadSchema]
   },
   { timestamps: true }
 )

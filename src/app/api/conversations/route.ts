@@ -5,6 +5,7 @@ import getCurrentUser from '@/actions/getCurrentUser'
 import { getAblyInstance } from '@/lib/ably'
 import client from '@/lib/db'
 import Conversation from '@/models/Conversation'
+import Message from '@/models/Message'
 
 // GET: List all conversations for the authenticated user
 export const GET = async (req: Request) => {
@@ -21,7 +22,25 @@ export const GET = async (req: Request) => {
       .sort({ updatedAt: -1 })
       .lean()
 
-    return NextResponse.json({ success: true, data: conversations })
+    // For each conversation, calculate unreadCount
+    const data = await Promise.all(
+      conversations.map(async (c: any) => {
+        const lastRead = (c.lastRead || []).find(
+          (lr: any) => lr.user.toString() === userId.toString()
+        )
+        const lastReadAt = lastRead?.at || new Date(0)
+        const unreadCount = await Message.countDocuments({
+          conversation: c._id,
+          createdAt: { $gt: lastReadAt }
+        })
+        return {
+          ...c,
+          unreadCount
+        }
+      })
+    )
+
+    return NextResponse.json({ success: true, data })
   } catch (error) {
     return NextResponse.json(
       { success: false, error: 'Failed to fetch conversations' },
@@ -72,6 +91,7 @@ export const POST = async (req: Request) => {
       }
     }
 
+    // No unreadCounts, just create conversation
     const conversation = await Conversation.create({
       participants,
       isGroup: !!isGroup,
@@ -92,6 +112,55 @@ export const POST = async (req: Request) => {
   } catch (error) {
     return NextResponse.json(
       { success: false, error: 'Failed to create conversation' },
+      { status: 500 }
+    )
+  }
+}
+
+// PATCH: Mark a conversation as read for the current user
+export const PATCH = async (req: Request) => {
+  try {
+    await client()
+    const currentUser = await getCurrentUser()
+    const userId = currentUser?._id
+    if (!userId)
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const body = await req.json()
+    const { conversationId } = body
+    if (!conversationId)
+      return NextResponse.json(
+        { error: 'Conversation ID required' },
+        { status: 400 }
+      )
+    // Get latest message timestamp
+    const lastMsg = (await Message.findOne({ conversation: conversationId })
+      .sort({ createdAt: -1 })
+      .lean()) as any
+    const lastReadAt = lastMsg?.createdAt || new Date()
+    // Update or add lastRead for this user
+    await Conversation.updateOne(
+      { _id: conversationId, 'lastRead.user': userId },
+      { $set: { 'lastRead.$.at': lastReadAt } }
+    )
+    await Conversation.updateOne(
+      { _id: conversationId, 'lastRead.user': { $ne: userId } },
+      { $push: { lastRead: { user: userId, at: lastReadAt } } }
+    )
+    // Optionally, notify via Ably
+    const ably = getAblyInstance()
+    ably.channels.get(`user-${userId}-messages`).publish('unread', {
+      conversationId,
+      unreadCount: 0
+    })
+    // Return updated conversation
+    const updated = await Conversation.findById(conversationId)
+      .populate('participants', 'firstName lastName username profilePicture')
+      .populate('lastMessage')
+      .lean()
+    return NextResponse.json({ success: true, data: updated })
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: 'Failed to mark as read' },
       { status: 500 }
     )
   }

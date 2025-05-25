@@ -2,6 +2,7 @@
 
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
+import { getAblyInstance } from '@/lib/ably'
 import client from '@/lib/db'
 import Conversation from '@/models/Conversation'
 import Message from '@/models/Message'
@@ -61,8 +62,22 @@ export const POST = async (req: Request) => {
     await Conversation.findByIdAndUpdate(conversationId, {
       lastMessage: message._id
     })
+    // Publish Ably event to update header badge for recipients
+    const convoAfter: any = await Conversation.findById(conversationId).lean()
+    const ably = getAblyInstance()
+    if (convoAfter && Array.isArray(convoAfter.participants)) {
+      for (const participant of convoAfter.participants) {
+        if (participant.toString() !== userId.toString()) {
+          ably.channels.get(`user-${participant}-messages`).publish('unread', {
+            conversationId
+            // Optionally, you can recalculate unreadCount here if needed
+          })
+        }
+      }
+    }
     return NextResponse.json({ success: true, data: populatedMessage })
   } catch (error) {
+    console.error('Send message error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to send message' },
       { status: 500 }

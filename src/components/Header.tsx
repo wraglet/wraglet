@@ -80,7 +80,9 @@ const Header = ({ currentUser }: { currentUser: IUser }) => {
         </li>
         <li className="relative cursor-pointer">
           <Suspense fallback={<ChatIcon className="text-white" />}>
-            <HeaderMessagesIconClientWrapper userId={currentUser.username} />
+            <HeaderMessagesIconClientWrapper
+              userId={(currentUser as any)._id}
+            />
           </Suspense>
         </li>
         <li className="cursor-pointer">

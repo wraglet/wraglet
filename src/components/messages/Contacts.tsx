@@ -117,10 +117,7 @@ const Contacts = ({
   })
 
   return (
-    <aside className="w-[320px] max-w-xs flex-shrink-0 overflow-y-auto border-r bg-white p-4 pr-6">
-      <div className="mb-4 flex items-center justify-between">
-        <span className="text-lg font-bold">Chats</span>
-      </div>
+    <aside className="max-w-xs flex-shrink-0 overflow-y-auto bg-white">
       {localConvos.length === 0 ? (
         <div className="text-gray-400">No conversations</div>
       ) : (

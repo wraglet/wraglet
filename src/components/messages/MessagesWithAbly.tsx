@@ -247,8 +247,8 @@ const MessagesWithAbly = ({
     <div className="flex h-full w-full grow overflow-hidden rounded-lg border bg-white">
       {/* Conversation List */}
       <aside className="w-[320px] max-w-xs flex-shrink-0 overflow-y-auto border-r bg-white p-4">
-        <div className="mb-4 flex items-center justify-between">
-          <span className="text-lg font-bold">Conversations</span>
+        <div className="mt-14 mb-4 flex items-center justify-between">
+          <span className="text-lg font-bold">Chats</span>
           <button
             className="rounded bg-blue-500 px-2 py-1 text-sm text-white hover:bg-blue-600"
             onClick={() => setShowNewChat(true)}
