@@ -15,6 +15,14 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'pub-c5365d46e2924ca2be4f4198d5b3d377.r2.dev'
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.wraglet.com'
+      },
+      {
+        protocol: 'https',
+        hostname: 'uploads.wraglet.com'
       }
     ]
   }
