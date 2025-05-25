@@ -3,6 +3,7 @@ import getCurrentUser from '@/actions/getCurrentUser'
 import getOtherUsers from '@/actions/getOtherUsers'
 
 import FeedClientWrapper from '@/app/(authenticated)/feed/_components/Feed/FeedClientWrapper'
+import FeedNewChatModalWrapper from '@/app/(authenticated)/feed/_components/FeedNewChatModalWrapper'
 import LeftNav from '@/app/(authenticated)/feed/_components/LeftNav'
 import RightNav from '@/app/(authenticated)/feed/_components/RightNav'
 import Loading from '@/app/loading'
@@ -28,8 +29,12 @@ const Page = async () => {
         </div>
       </div>
       <RightNav otherUsers={otherUsers} currentUserId={currentUser?._id} />
+      <FeedNewChatModalWrapper otherUsers={otherUsers} />
     </main>
   )
 }
+
+// Move FeedNewChatModalWrapper to its own file as a client component
+// Remove it from this file and import it instead
 
 export default Page

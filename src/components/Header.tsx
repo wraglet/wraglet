@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { Quicksand } from 'next/font/google'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -9,6 +9,7 @@ import useGlobalStore from '@/store/global'
 import useUserStore, { User } from '@/store/user'
 
 import AvatarMenu from '@/components/AvatarMenu'
+import HeaderMessagesIconClientWrapper from '@/components/HeaderMessagesIconClientWrapper'
 import { BellIcon, ChatIcon, HomeIcon, PeopleIcon } from '@/components/NavIcons'
 
 const quicksand = Quicksand({
@@ -77,8 +78,10 @@ const Header = ({ currentUser }: { currentUser: IUser }) => {
         <li className="cursor-pointer">
           <PeopleIcon className="text-white" />
         </li>
-        <li className="cursor-pointer">
-          <ChatIcon className="text-white" />
+        <li className="relative cursor-pointer">
+          <Suspense fallback={<ChatIcon className="text-white" />}>
+            <HeaderMessagesIconClientWrapper userId={currentUser.username} />
+          </Suspense>
         </li>
         <li className="cursor-pointer">
           <BellIcon className="text-white" />

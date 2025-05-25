@@ -1,0 +1,138 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Ably Real-Time Component Pattern
+
+This pattern standardizes how to add real-time (Ably) features to client components in the app, supporting both Ably-enabled and fallback (non-Ably) flows.
+
+---
+
+## 1. Page Usage (Suspense)
+
+Wrap your ClientWrapper in a Suspense boundary in your page:
+
+```tsx
+<Suspense fallback={<Loading />}>
+  <ComponentClientWrapper />
+</Suspense>
+```
+
+---
+
+## 2. Client Wrapper (Dynamic Import)
+
+The ClientWrapper dynamically imports the Ably wrapper (ssr: false) and passes all required props/state:
+
+```tsx
+const ComponentAbly = dynamic(
+  () => import('./ComponentAbly'),
+  { ssr: false }
+)
+
+const ComponentClientWrapper = () => {
+  // ...fetch/store/hydrate data as needed
+  return (
+    <ComponentAbly
+      /* pass props/state as needed */
+    />
+  )
+}
+```
+
+---
+
+## 3. Ably Wrapper (Client/Provider Instantiation)
+
+The Ably wrapper creates the Ably client, handles connection state, and conditionally renders the Ably-enabled or fallback component:
+
+```tsx
+import * as Ably from 'ably'
+import { AblyProvider } from 'ably/react'
+import ComponentWithAbly from './ComponentWithAbly'
+import ComponentNoAbly from './ComponentNoAbly'
+
+const ComponentAbly = (props) => {
+  const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
+  const [ablyError, setAblyError] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    let client: Ably.Realtime | null = null
+    const initAbly = async () => {
+      try {
+        client = new Ably.Realtime({ authUrl: '/api/token' })
+        client.connection.on('connected', () => {
+          setAblyClient(client)
+          setIsLoading(false)
+        })
+        client.connection.on('failed', () => {
+          setAblyError(true)
+          setIsLoading(false)
+        })
+        client.connection.on('suspended', () => {
+          setAblyError(true)
+          setIsLoading(false)
+        })
+      } catch (error) {
+        setAblyError(true)
+        setIsLoading(false)
+      }
+    }
+    initAbly()
+    return () => { if (client) client.close() }
+  }, [])
+
+  if (isLoading) return <Loading />
+  if (ablyError || !ablyClient) return <ComponentNoAbly {...props} />
+
+  return (
+    <AblyProvider client={ablyClient}>
+      <ComponentWithAbly {...props} />
+    </AblyProvider>
+  )
+}
+```
+
+---
+
+## 4. ChannelProvider and Real-Time Logic
+
+The Ably-enabled component is wrapped in a ChannelProvider and uses useChannel for real-time updates:
+
+```tsx
+import { ChannelProvider, useChannel } from 'ably/react'
+
+const ComponentWithAbly = (props) => {
+  // ...
+  useChannel('channel-name', (message) => {
+    // handle real-time updates
+  })
+  // ...
+  return <UIComponent {...props} />
+}
+
+// Usage:
+<ChannelProvider channelName="channel-name">
+  <ComponentWithAbly {...props} />
+</ChannelProvider>
+```
+
+---
+
+## 5. Fallback (No Ably)
+
+The fallback component (ComponentNoAbly) implements the same UI/logic but without real-time features.
+
+---
+
+## Summary
+- **Page:** Suspense wraps ClientWrapper
+- **ClientWrapper:** Dynamic import of Ably wrapper
+- **Ably Wrapper:** Instantiates Ably client, conditionally renders Ably or fallback
+- **WithAbly:** ChannelProvider + useChannel for real-time
+- **NoAbly:** Fallback UI/logic
+
+This pattern ensures all real-time features are modular, robust, and SSR-safe.
+

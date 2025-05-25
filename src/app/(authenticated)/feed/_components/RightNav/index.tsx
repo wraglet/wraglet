@@ -1,8 +1,10 @@
 'use client'
 
+import { useCallback } from 'react'
 import Link from 'next/link'
 import { UserInterface } from '@/interfaces'
 import { useFollow } from '@/lib/hooks/useFollow'
+import toast from 'react-hot-toast'
 import { IoPersonAddSharp } from 'react-icons/io5'
 
 import Avatar from '@/components/Avatar'
@@ -10,6 +12,23 @@ import Avatar from '@/components/Avatar'
 const UserSuggestion = ({ user }: { user: UserInterface }) => {
   const { isFollowing, follow, loading, followersCount, followingCount } =
     useFollow(user._id)
+  const handleMessage = useCallback(async () => {
+    try {
+      const res = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ participantIds: [user._id] })
+      })
+      const json = await res.json()
+      if (json.success && json.data?._id) {
+        window.location.href = `/messages/${json.data._id}`
+      } else {
+        toast.error('Failed to start chat')
+      }
+    } catch {
+      toast.error('Failed to start chat')
+    }
+  }, [user._id])
   return (
     <div
       key={user._id}
@@ -37,14 +56,22 @@ const UserSuggestion = ({ user }: { user: UserInterface }) => {
           <p className="text-xs font-medium text-gray-500">
             {followersCount} followers · {followingCount} following
           </p>
-          <button
-            className="mt-1 flex w-fit items-center gap-1 rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-600 transition-all duration-200 hover:bg-sky-500 hover:text-white disabled:opacity-60"
-            onClick={() => follow()}
-            disabled={isFollowing || loading}
-          >
-            <IoPersonAddSharp className="h-4 w-4" aria-hidden="true" />
-            {isFollowing ? 'Following' : loading ? 'Following...' : 'Follow'}
-          </button>
+          <div className="mt-1 flex gap-2">
+            <button
+              className="flex w-fit items-center gap-1 rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-600 transition-all duration-200 hover:bg-sky-500 hover:text-white disabled:opacity-60"
+              onClick={() => follow()}
+              disabled={isFollowing || loading}
+            >
+              <IoPersonAddSharp className="h-4 w-4" aria-hidden="true" />
+              {isFollowing ? 'Following' : loading ? 'Following...' : 'Follow'}
+            </button>
+            <button
+              className="flex w-fit items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-600 transition-all duration-200 hover:bg-blue-500 hover:text-white"
+              onClick={handleMessage}
+            >
+              💬 Message
+            </button>
+          </div>
         </div>
       </div>
     </div>

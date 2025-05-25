@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import getCurrentUser from '@/actions/getCurrentUser'
 import getSession from '@/actions/getSession'
 
-import Header from '@/components/Header'
+import AuthenticatedLayoutClientWrapper from '@/components/AuthenticatedLayoutClientWrapper'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,10 +18,9 @@ const AuthenticatedLayout = async ({
     redirect('/')
   } else
     return (
-      <div className="relative flex min-h-screen flex-col items-center overflow-hidden bg-[rgba(110,201,247,0.15)]">
-        <Header currentUser={currentUser} />
+      <AuthenticatedLayoutClientWrapper currentUser={currentUser}>
         {children}
-      </div>
+      </AuthenticatedLayoutClientWrapper>
     )
 }
 
