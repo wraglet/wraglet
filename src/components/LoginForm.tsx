@@ -1,6 +1,6 @@
 'use client'
 
-import React, { FC, useState } from 'react'
+import { FC } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -10,8 +10,6 @@ import toast from 'react-hot-toast'
 import { z } from 'zod'
 
 import Button from '@/components/Button'
-import Modal from '@/components/Modal'
-import SignUp from '@/components/SignUp'
 import { Input } from '@/components/ui/input'
 
 const loginSchema = z.object({
@@ -21,8 +19,11 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>
 
-const LoginForm: FC = () => {
-  const [isOpenSignUpModal, setIsOpenSignUpModal] = useState(false)
+interface LoginFormProps {
+  buttonIcon?: React.ReactNode
+}
+
+const LoginForm: FC<LoginFormProps> = ({ buttonIcon }) => {
   const { push } = useRouter()
   const formMethods = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -66,58 +67,59 @@ const LoginForm: FC = () => {
   }
 
   return (
-    <>
-      <Modal
-        onClose={() => formMethods.reset()}
-        isOpen={isOpenSignUpModal}
-        title="Create an account"
+    <FormProvider {...formMethods}>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex w-full flex-col gap-6"
       >
-        <SignUp />
-      </Modal>
-      <FormProvider {...formMethods}>
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col gap-7 px-10 py-7 shadow-md"
-        >
-          <Input
-            {...formMethods.register('email')}
-            placeholder="Email"
-            type="email"
-            autoFocus
-            error={errors.email?.message}
-          />
-          <div className="flex flex-col gap-1">
-            <Input
-              {...formMethods.register('password')}
-              type="password"
-              placeholder="Password"
-              autoComplete="false"
-              error={errors.password?.message}
-            />
-            <h4 className="ml-1 cursor-pointer text-xs font-medium text-[#1B87EA]">
-              Forgot Password?
-            </h4>
-          </div>
-          <Button
-            type="submit"
-            className="flex w-full items-center justify-center rounded bg-[#42BBFF] py-2 text-xs text-white"
-            disabled={!isValid || mutation.isPending}
+        <Input
+          {...formMethods.register('email')}
+          placeholder="Email"
+          type="email"
+          autoFocus
+          error={errors.email?.message}
+          aria-label="Email"
+          className="relative w-full cursor-default appearance-none rounded-lg border border-neutral-200 bg-white py-2 pr-3 pl-3 text-left shadow-md focus:outline-hidden focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm"
+        />
+        <Input
+          {...formMethods.register('password')}
+          type="password"
+          placeholder="Password"
+          autoComplete="current-password"
+          error={errors.password?.message}
+          aria-label="Password"
+          className="relative w-full cursor-default appearance-none rounded-lg border border-neutral-200 bg-white py-2 pr-10 pl-3 text-left shadow-md focus:outline-hidden focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm"
+        />
+        <div className="mt-1 mb-2 flex w-full items-center justify-between">
+          <button
+            type="button"
+            className="text-xs text-[#0EA5E9] transition-colors hover:underline focus:underline"
+            tabIndex={0}
+            aria-label="Forgot Password?"
+            onClick={() => toast('Password reset coming soon!')}
           >
+            Forgot Password?
+          </button>
+        </div>
+        <Button
+          type="submit"
+          className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-[#42BBFF] to-[#0EA5E9] py-3 text-base font-semibold text-white shadow-md transition-all hover:from-[#0EA5E9] hover:to-[#42BBFF] focus:ring-2 focus:ring-[#0EA5E9]"
+          disabled={!isValid || mutation.isPending}
+          aria-disabled={!isValid || mutation.isPending}
+        >
+          <span className="relative z-10 flex items-center justify-center">
             {mutation.isPending ? 'Logging in...' : 'Login'}
-          </Button>
-          <p className="text-xs font-medium text-black">
-            Don&apos;t have an account?{' '}
-            <button
-              type="button"
-              className="cursor-pointer text-[#1B87EA]"
-              onClick={() => setIsOpenSignUpModal(true)}
-            >
-              Sign up!
-            </button>
-          </p>
-        </form>
-      </FormProvider>
-    </>
+            {buttonIcon && (
+              <span className="animate-bounce-once group-hover:animate-bounce-once ml-2">
+                {buttonIcon}
+              </span>
+            )}
+          </span>
+          {/* Ripple effect */}
+          <span className="group-active:animate-ripple pointer-events-none absolute inset-0 rounded-xl bg-white/20" />
+        </Button>
+      </form>
+    </FormProvider>
   )
 }
 

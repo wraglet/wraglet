@@ -10,10 +10,6 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'wraglet-s3-local.s3.ap-southeast-1.amazonaws.com'
-      },
-      {
-        protocol: 'https',
         hostname: 'pub-c5365d46e2924ca2be4f4198d5b3d377.r2.dev'
       },
       {
