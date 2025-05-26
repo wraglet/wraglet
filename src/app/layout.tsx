@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
+import { Analytics } from '@vercel/analytics/react'
 
 import '@/app/globals.css'
 
@@ -58,6 +59,7 @@ const Layout = async ({ children }: { children: React.ReactNode }) => {
         <Providers>
           <ToasterContext />
           {children}
+          <Analytics />
         </Providers>
       </body>
     </html>
