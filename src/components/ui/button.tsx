@@ -4,18 +4,21 @@ import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-neutral-950 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        default: 'bg-white text-neutral-50 shadow-sm hover:bg-slate-50',
-        destructive: 'bg-red-500 text-neutral-50 shadow-xs hover:bg-red-500/90',
+        default:
+          'bg-neutral-900 text-neutral-50 shadow-sm hover:bg-neutral-800 focus:bg-neutral-800',
+        destructive:
+          'bg-red-500 text-neutral-50 shadow-xs hover:bg-red-600 focus:bg-red-600',
         outline:
-          'border border-neutral-200 bg-white shadow-xs hover:bg-neutral-100 hover:text-neutral-900',
+          'border border-neutral-200 bg-white shadow-xs hover:bg-neutral-100 hover:text-neutral-900 focus:bg-neutral-100 focus:text-neutral-900',
         secondary:
-          'bg-neutral-100 text-neutral-900 shadow-xs hover:bg-neutral-100/80',
-        ghost: 'hover:bg-neutral-100 hover:text-neutral-900',
-        link: 'text-neutral-900 underline-offset-4 hover:underline'
+          'bg-neutral-100 text-neutral-900 shadow-xs hover:bg-neutral-200 focus:bg-neutral-200',
+        ghost:
+          'hover:bg-neutral-100 hover:text-neutral-900 focus:bg-neutral-100 focus:text-neutral-900',
+        link: 'text-neutral-900 underline-offset-4 hover:underline focus:underline'
       },
       size: {
         default: 'h-9 px-4 py-2',
