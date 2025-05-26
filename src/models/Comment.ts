@@ -1,5 +1,3 @@
-'use server'
-
 import { Document, model, models, Schema, Types } from 'mongoose'
 
 // Base interface for Comment data (for UI consumption)

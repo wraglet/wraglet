@@ -1,5 +1,3 @@
-'use server'
-
 import { Document, model, models, Schema } from 'mongoose'
 
 // Base User interface without MongoDB document properties

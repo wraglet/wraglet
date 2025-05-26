@@ -1,5 +1,3 @@
-'use server'
-
 import { AuthorInterface, PostVoteInterface } from '@/interfaces'
 import { Document, model, models, Schema, Types } from 'mongoose'
 
