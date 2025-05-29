@@ -121,7 +121,7 @@ const SignUp: FC = () => {
     <FormProvider {...formMethods}>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex w-full flex-col gap-6"
+        className="flex w-full flex-col gap-4"
       >
         <div className="flex gap-2">
           <FormField
@@ -271,7 +271,7 @@ const SignUp: FC = () => {
             )}
           />
         </div>
-        <div className="my-4 border-t border-solid border-[#E3F1FA]/70" />
+        <div className="my-2 border-t border-solid border-[#E3F1FA]/70" />
         <div className="flex flex-col gap-2">
           <h3 className="font-geist-sans mb-1 text-sm text-slate-600">
             Privacy Settings
@@ -300,7 +300,7 @@ const SignUp: FC = () => {
             )}
           />
         </div>
-        <div className="my-4 border-t border-solid border-[#E3F1FA]/70" />
+        <div className="my-2 border-t border-solid border-[#E3F1FA]/70" />
         <div className="flex flex-col gap-2">
           <h3 className="font-geist-sans mb-1 text-sm text-slate-600">
             Terms of Service and Privacy Policy
@@ -327,7 +327,7 @@ const SignUp: FC = () => {
             )}
           />
         </div>
-        <div className="mt-6 flex w-full items-center justify-center border-t border-solid border-[#E3F1FA]/70 pt-6">
+        <div className="mt-4 flex w-full items-center justify-center border-t border-solid border-[#E3F1FA]/70 pt-4">
           <Button
             className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-[#42BBFF] to-[#0EA5E9] py-3 text-lg font-semibold text-white shadow-lg transition-all hover:from-[#0EA5E9] hover:to-[#42BBFF] focus:ring-2 focus:ring-[#0EA5E9]"
             type="submit"

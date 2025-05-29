@@ -9,7 +9,7 @@ const AuthCard: React.FC = () => {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
 
   return (
-    <div className="animate-fade-in-up mx-2 flex w-full max-w-md flex-col items-center gap-6 rounded-2xl border border-white/40 bg-white/70 px-4 py-8 shadow-2xl backdrop-blur-xl sm:px-6 sm:py-10">
+    <div className="flex flex-1 flex-col items-center gap-6 p-8">
       <div className="mb-2 flex w-full flex-col items-center gap-2">
         <h1 className="font-geist-sans text-center text-2xl font-semibold text-[#0EA5E9]">
           {mode === 'login' ? 'Welcome Back!' : 'Create an account'}
