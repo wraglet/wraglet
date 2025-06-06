@@ -74,7 +74,7 @@ const ProfilePictureHover = ({ profilePicture }: ProfilePictureHoverProps) => {
 
       <button
         onClick={() => dispatchState({ openUploadProfilePictureModal: true })}
-        className="absolute right-2.5 bottom-2.5 hidden h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-[#D9D9D9] shadow-md group-hover:flex md:h-9 md:w-9"
+        className="absolute right-2.5 bottom-2.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-[#D9D9D9] shadow-md md:hidden md:h-9 md:w-9 lg:hidden lg:group-hover:flex"
       >
         <FaCamera className="text-[8px] text-black md:text-sm" />
       </button>

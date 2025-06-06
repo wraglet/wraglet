@@ -74,6 +74,7 @@ export const useFollow = (targetUserId: string | null) => {
       isFollowLoading ||
       followMutation.isPending ||
       unfollowMutation.isPending,
+    isInitialLoading: isFollowLoading && !followData,
     refetch: refetchFollow
   }
 }

@@ -14,7 +14,7 @@ const ProfilePage = async ({
   const initialPosts = await getPostsByUsername(decodedUsername)
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center gap-y-6 overflow-hidden">
+    <main className="relative flex min-h-screen w-full flex-col items-center gap-y-6 overflow-hidden pb-20 lg:pb-6">
       <Header username={decodedUsername} />
       <ProfilePostsClientWrapper
         initialPosts={initialPosts}

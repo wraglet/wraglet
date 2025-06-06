@@ -18,9 +18,11 @@ const AuthenticatedLayout = async ({
     redirect('/')
   } else
     return (
-      <AuthenticatedLayoutClientWrapper currentUser={currentUser}>
-        {children}
-      </AuthenticatedLayoutClientWrapper>
+      <div className="pb-16 lg:pb-0">
+        <AuthenticatedLayoutClientWrapper currentUser={currentUser}>
+          {children}
+        </AuthenticatedLayoutClientWrapper>
+      </div>
     )
 }
 

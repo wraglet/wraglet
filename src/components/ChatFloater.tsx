@@ -110,7 +110,7 @@ const ChatFloater = ({ userId }: { userId: string }) => {
     <>
       {/* Chat heads stack (panel always shows when toggled) */}
       {shouldShowChatHeadsPanel && (
-        <div className="fixed right-8 bottom-24 z-50 flex flex-col items-center gap-2">
+        <div className="fixed right-8 bottom-36 z-50 flex flex-col items-center gap-2 lg:bottom-24">
           {/* Minimized chat heads (if any) */}
           {minimizedChats.map((chat) => {
             const convo = conversations.find(
@@ -161,7 +161,7 @@ const ChatFloater = ({ userId }: { userId: string }) => {
         </span>
       </ChannelProvider>
       {/* Floating chat windows */}
-      <div className="fixed right-24 bottom-4 z-50 flex gap-4">
+      <div className="fixed right-24 bottom-20 z-50 flex gap-4 lg:bottom-4">
         {openChats.map((chat) => {
           const convo = conversations.find(
             (c: any) => c._id === chat.conversationId

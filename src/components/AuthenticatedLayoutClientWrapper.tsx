@@ -5,6 +5,7 @@ import type { IUser } from '@/models/User'
 
 import ChatFloaterServer from '@/components/ChatFloaterServer'
 import Header from '@/components/Header'
+import MobileBottomNav from '@/components/MobileBottomNav'
 
 interface Props {
   currentUser: IUser
@@ -20,6 +21,7 @@ const AuthenticatedLayoutClientWrapper = ({ currentUser, children }: Props) => {
       <Header currentUser={currentUser} />
       {children}
       {!isMessagesRoute && <ChatFloaterServer currentUser={currentUser} />}
+      <MobileBottomNav />
     </div>
   )
 }

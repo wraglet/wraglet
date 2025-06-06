@@ -17,7 +17,7 @@ const ChatFloaterBadgeButton = ({ userId }: { userId: string }) => {
 
   return (
     <button
-      className="fixed right-6 bottom-6 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-blue-200 bg-[#BFE6FC] shadow-md transition hover:ring-2 hover:ring-blue-300 focus:outline-none"
+      className="fixed right-6 bottom-20 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-blue-200 bg-[#BFE6FC] shadow-md transition hover:ring-2 hover:ring-blue-300 focus:outline-none lg:bottom-6"
       aria-label="Open chat"
     >
       <ChatIcon className="h-6 w-6 text-[#0EA5E9]" />
