@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import client from '@/lib/db'
+import Follow from '@/models/Follow'
 import Post from '@/models/Post'
+import Share from '@/models/Share'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import { Types } from 'mongoose'
 import { v4 as uuidv4 } from 'uuid'
 
 export const POST = async (request: Request) => {
@@ -97,12 +98,38 @@ export const GET = async (request: Request) => {
 
   try {
     await client()
-    const query: any = {}
-    if (cursor) {
-      query._id = { $lt: new Types.ObjectId(cursor) }
+
+    const currentUser = await getCurrentUser()
+    if (!currentUser?._id) {
+      return NextResponse.json({ posts: [], nextCursor: null }, { status: 401 })
     }
-    const posts = await Post.find(query)
-      .sort({ _id: -1 })
+
+    // Build query for pagination
+    let query: any = {}
+    let shareQuery: any = {}
+
+    if (cursor) {
+      query.createdAt = { $lt: new Date(cursor) }
+      shareQuery.createdAt = { $lt: new Date(cursor) }
+    }
+
+    // Get user's following list for mutual shares
+    const userFollowingIds = await Follow.find({ followerId: currentUser._id })
+      .select('followingId')
+      .lean()
+    const followingIds = userFollowingIds.map((f) => f.followingId.toString())
+
+    const mutualFollowingIds = await Follow.find({
+      followerId: { $in: followingIds },
+      followingId: currentUser._id
+    })
+      .select('followerId')
+      .lean()
+    const mutualIds = mutualFollowingIds.map((f) => f.followerId.toString())
+
+    // Fetch regular posts
+    const postsPromise = Post.find(query)
+      .sort({ createdAt: -1 })
       .limit(limit + 1)
       .populate({
         path: 'author',
@@ -124,15 +151,85 @@ export const GET = async (request: Request) => {
       })
       .lean()
 
-    const hasMore = posts.length > limit
-    const postsToReturn = hasMore ? posts.slice(0, limit) : posts
-    const nextCursor = hasMore
-      ? postsToReturn[postsToReturn.length - 1]._id
-      : null
+    // Fetch shared posts
+    const shareQueryWithVisibility = {
+      ...shareQuery,
+      $or: [
+        { visibility: 'public' },
+        {
+          visibility: 'mutuals',
+          sharedBy: { $in: mutualIds }
+        },
+        {
+          visibility: 'only_me',
+          sharedBy: currentUser._id
+        }
+      ]
+    }
+
+    const sharesPromise = Share.find(shareQueryWithVisibility)
+      .sort({ createdAt: -1 })
+      .limit(limit + 1)
+      .populate({
+        path: 'sharedBy',
+        select: 'firstName lastName username profilePicture'
+      })
+      .populate({
+        path: 'originalPost',
+        populate: [
+          {
+            path: 'author',
+            select: 'firstName lastName username profilePicture'
+          },
+          {
+            path: 'comments',
+            populate: {
+              path: 'author',
+              select: 'firstName lastName username profilePicture'
+            }
+          },
+          {
+            path: 'reactions',
+            populate: {
+              path: 'userId',
+              select: 'firstName lastName username profilePicture'
+            }
+          }
+        ]
+      })
+      .lean()
+
+    const [posts, shares] = await Promise.all([postsPromise, sharesPromise])
+
+    // Combine and sort by creation time
+    const allContent = [
+      ...posts.map((post) => ({
+        type: 'post',
+        data: post,
+        createdAt: post.createdAt
+      })),
+      ...shares.map((share) => ({
+        type: 'share',
+        data: share,
+        createdAt: share.createdAt
+      }))
+    ]
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      .slice(0, limit + 1)
+
+    const hasMore = allContent.length > limit
+    const contentToReturn = hasMore ? allContent.slice(0, limit) : allContent
+    const nextCursor =
+      hasMore && contentToReturn.length > 0
+        ? contentToReturn[contentToReturn.length - 1].createdAt.toISOString()
+        : null
 
     return NextResponse.json({
-      posts: convertObjectIdsToStrings(postsToReturn),
-      nextCursor: nextCursor ? nextCursor.toString() : null
+      posts: convertObjectIdsToStrings(contentToReturn),
+      nextCursor
     })
   } catch (error) {
     console.error('Error fetching posts:', error)

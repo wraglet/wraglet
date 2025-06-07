@@ -2,7 +2,9 @@
 
 import { FormEvent, Fragment, Key, useEffect, useRef, useState } from 'react'
 import { StaticImport } from 'next/dist/shared/lib/get-img-props'
+import dynamic from 'next/dynamic'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useFollow } from '@/lib/hooks/useFollow'
 import { IComment } from '@/models/Comment'
 import { IPost } from '@/models/Post'
@@ -35,6 +37,11 @@ import CommentComponent from '@/components/Comment'
 import { ShareIcon } from '@/components/Icons'
 import ReactionIcon from '@/components/ReactionIcon'
 
+// Dynamic import for ShareModal
+const ShareModalAbly = dynamic(() => import('@/components/ShareModalAbly'), {
+  ssr: false
+})
+
 interface User {
   _id: string
   firstName: string
@@ -58,12 +65,13 @@ interface PostProps {
 const Post = ({ post: initialPost }: PostProps) => {
   useEffect(() => {
     import('@lottiefiles/lottie-player')
-  })
+  }, [])
 
   const { user } = useUserStore()
   const [post, setPost] = useState<IPost>(initialPost)
   const [showCommentInput, setShowCommentInput] = useState(false)
   const [comment, setComment] = useState('')
+  const [showShareModal, setShowShareModal] = useState(false)
   const [postComments, setPostComments] = useState<IComment[]>(
     (initialPost.comments || []).filter(
       (comment): comment is IComment =>
@@ -159,7 +167,10 @@ const Post = ({ post: initialPost }: PostProps) => {
     try {
       // Check if user has already reacted with this type
       const existingReaction = post.reactions.find(
-        (reaction) => reaction.userId._id === user._id && reaction.type === type
+        (reaction) =>
+          reaction.userId &&
+          reaction.userId._id === user._id &&
+          reaction.type === type
       )
 
       if (existingReaction) {
@@ -226,7 +237,10 @@ const Post = ({ post: initialPost }: PostProps) => {
 
   // Get user's reaction if any
   const userReaction =
-    user && post.reactions?.find((reaction) => reaction.userId._id === user._id)
+    user &&
+    post.reactions?.find(
+      (reaction) => reaction.userId && reaction.userId._id === user._id
+    )
 
   const handleCommentSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -288,8 +302,8 @@ const Post = ({ post: initialPost }: PostProps) => {
       }
       groups[reaction.type].count++
 
-      // Add user to the group if they reacted
-      if (user && reaction.userId._id === user._id) {
+      // Add user to the group if they reacted - add null safety checks
+      if (user && reaction.userId && reaction.userId._id === user._id) {
         const userData = reaction.userId as User
         groups[reaction.type].users.push(userData)
       }
@@ -347,6 +361,25 @@ const Post = ({ post: initialPost }: PostProps) => {
   const isAuthor = user?._id === post.author._id
   const { isFollowing, follow, loading } = useFollow(post.author._id)
 
+  // Share functionality
+  const handleShare = () => {
+    setShowShareModal(true)
+  }
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success('Link copied to clipboard!')
+    } catch (error) {
+      toast.error('Failed to copy link')
+    }
+  }
+
+  const handleCopyLink = async () => {
+    const postUrl = `${window.location.origin}/post/${post._id}`
+    await copyToClipboard(postUrl)
+  }
+
   return (
     <div className="flex w-full">
       <div className="flex w-full items-start justify-between gap-x-2 border border-solid border-neutral-200 bg-white px-4 py-3 drop-shadow-md sm:rounded-lg">
@@ -395,17 +428,27 @@ const Post = ({ post: initialPost }: PostProps) => {
               )}
             </div>
             {post.content.text && (
-              <p className="text-xs text-gray-600">{post.content.text}</p>
+              <Link
+                href={`/post/${post._id}`}
+                className="-m-1 block rounded-md p-1 transition-colors hover:bg-gray-50"
+              >
+                <p className="cursor-pointer text-xs text-gray-600">
+                  {post.content.text}
+                </p>
+              </Link>
             )}
 
             {post.content.images
               ? post.content.images.map(
-                  (image: {
-                    key: Key | null | undefined
-                    url: string | StaticImport
-                  }) => (
+                  (
+                    image: {
+                      key: Key | null | undefined
+                      url: string | StaticImport
+                    },
+                    index: number
+                  ) => (
                     <div
-                      key={image.key}
+                      key={image.key || `image-${index}`}
                       className="my-3 block overflow-hidden rounded-md"
                     >
                       <Image
@@ -431,14 +474,14 @@ const Post = ({ post: initialPost }: PostProps) => {
               {Object.keys(reactionCounts).length > 0 && (
                 <div className="flex items-center gap-x-1">
                   <div className="flex -space-x-1">
-                    {reactionGroups.slice(0, 3).map((group) => (
+                    {reactionGroups.slice(0, 3).map((group, index) => (
                       <div
-                        key={group.type}
+                        key={`${group.type}-${index}`}
                         className="relative h-4 w-4 rounded-full bg-white ring-2 ring-white"
                       >
                         {/* @ts-ignore */}
                         <lottie-player
-                          id={`reaction-${group.type}`}
+                          id={`reaction-display-${group.type}-${post._id}`}
                           autoplay
                           loop
                           mode="normal"
@@ -516,9 +559,9 @@ const Post = ({ post: initialPost }: PostProps) => {
                     context={context}
                     className="fill-white"
                   />
-                  {reactions.map((reaction) => (
+                  {reactions.map((reaction, index) => (
                     <button
-                      key={reaction.name}
+                      key={`${reaction.name}-${index}`}
                       className="cursor-pointer transition-transform hover:scale-125"
                       onClick={() => {
                         handleReaction(reaction.name)
@@ -527,8 +570,7 @@ const Post = ({ post: initialPost }: PostProps) => {
                     >
                       {/* @ts-ignore */}
                       <lottie-player
-                        id={reaction.name}
-                        ref={reaction.ref}
+                        id={`reaction-picker-${reaction.name}-${post._id}`}
                         autoplay
                         loop
                         mode="normal"
@@ -542,8 +584,11 @@ const Post = ({ post: initialPost }: PostProps) => {
             </div>
 
             <div className="group relative">
-              <div className="flex items-center gap-1 rounded-full border border-solid border-gray-400 px-2 py-0.5">
-                <ShareIcon className="cursor-pointer text-xs text-gray-600" />
+              <div
+                className="flex cursor-pointer items-center gap-1 rounded-full border border-solid border-gray-400 px-2 py-0.5 transition-colors hover:bg-gray-50"
+                onClick={handleShare}
+              >
+                <ShareIcon className="text-xs text-gray-600" />
               </div>
             </div>
           </div>
@@ -559,11 +604,11 @@ const Post = ({ post: initialPost }: PostProps) => {
           >
             <div className="flex flex-col gap-2">
               {Array.isArray(postComments) &&
-                postComments.map((comment) => {
+                postComments.map((comment, index) => {
                   if (!isCommentDocument(comment)) return null
                   return (
                     <CommentComponent
-                      key={comment._id.toString()}
+                      key={comment._id?.toString() || `comment-${index}`}
                       comment={comment}
                     />
                   )
@@ -607,12 +652,23 @@ const Post = ({ post: initialPost }: PostProps) => {
             <MenuItems className="absolute right-0 mt-1 w-30 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
               <div className="px-1">
                 <MenuItem>
+                  <Link
+                    href={`/post/${post._id}`}
+                    className="group flex w-full items-center rounded-md px-2 py-2 text-xs text-gray-900 data-[focus]:bg-sky-500 data-[focus]:text-white"
+                  >
+                    View Post
+                  </Link>
+                </MenuItem>
+                <MenuItem>
                   <button className="group flex w-full items-center rounded-md px-2 py-2 text-xs text-gray-900 data-[focus]:bg-sky-500 data-[focus]:text-white">
                     Save post
                   </button>
                 </MenuItem>
                 <MenuItem>
-                  <button className="group flex w-full items-center rounded-md px-2 py-2 text-xs text-gray-900 data-[focus]:bg-sky-500 data-[focus]:text-white">
+                  <button
+                    onClick={handleCopyLink}
+                    className="group flex w-full items-center rounded-md px-2 py-2 text-xs text-gray-900 data-[focus]:bg-sky-500 data-[focus]:text-white"
+                  >
                     Copy link
                   </button>
                 </MenuItem>
@@ -630,6 +686,19 @@ const Post = ({ post: initialPost }: PostProps) => {
           </Transition>
         </Menu>
       </div>
+
+      {/* ShareModal - dynamically imported */}
+      {showShareModal && (
+        <ShareModalAbly
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          post={post}
+          onShareToFeed={() => {
+            // Optionally refresh the feed or show success message
+            toast.success('Post shared successfully!')
+          }}
+        />
+      )}
     </div>
   )
 }

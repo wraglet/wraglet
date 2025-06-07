@@ -1,10 +1,9 @@
-import { PostInterface } from '@/interfaces'
 import { create } from 'zustand'
 
 type FeedPostsProps = {
-  posts: PostInterface[]
+  posts: any[] // Changed to any[] to handle both posts and shares
   isFeedPostsInitialized: boolean
-  setFeedPosts: (posts: PostInterface[]) => void
+  setFeedPosts: (posts: any[]) => void
   setIsFeedPostsInitialized: (initialized: boolean) => void
   clearFeedPosts: () => void
 }

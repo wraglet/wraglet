@@ -10,9 +10,10 @@ import toast from 'react-hot-toast'
 
 import CreatePost from '@/components/CreatePost'
 import PostClientWrapper from '@/components/PostClientWrapper'
+import SharedPost from '@/components/SharedPost'
 
 interface FeedWithAblyProps {
-  initialPosts: IPost[]
+  initialPosts: any[] // Changed to any[] to handle both posts and shares
   fetchNextPage: () => void
   hasNextPage: boolean
   isFetchingNextPage: boolean
@@ -57,12 +58,34 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
   )
 
   // Use Ably channel for real-time updates
-  const { publish } = useChannel('post-channel', (post) => {
+  const { publish } = useChannel('post-channel', (message) => {
     try {
-      // Check if the post already exists in the feed
-      const postExists = posts.some((p) => p._id === post.data._id)
-      if (!postExists) {
-        setFeedPosts([post.data, ...posts])
+      if (message.name === 'post') {
+        // Handle new posts
+        const postExists = posts.some(
+          (p: any) => p.type === 'post' && p.data._id === message.data._id
+        )
+        if (!postExists) {
+          const newPost = {
+            type: 'post',
+            data: message.data,
+            createdAt: message.data.createdAt
+          }
+          setFeedPosts([newPost, ...posts])
+        }
+      } else if (message.name === 'share') {
+        // Handle new shares
+        const shareExists = posts.some(
+          (p: any) => p.type === 'share' && p.data._id === message.data.shareId
+        )
+        if (!shareExists) {
+          const newShare = {
+            type: 'share',
+            data: message.data,
+            createdAt: message.data.createdAt
+          }
+          setFeedPosts([newShare, ...posts])
+        }
       }
     } catch (error) {
       console.error('Error handling post update:', error)
@@ -77,12 +100,16 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
       const res = await axios.post('/api/posts', { text, image })
 
       // Update local state first
-      const newPost = res.data
+      const newPost = {
+        type: 'post',
+        data: res.data,
+        createdAt: res.data.createdAt
+      }
       setFeedPosts([newPost, ...posts])
 
       // Publish to Ably channel
       try {
-        await publish('post', newPost)
+        await publish('post', res.data)
       } catch (err) {
         console.warn('Failed to publish post to Ably:', err)
       }
@@ -93,6 +120,23 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
       console.error('Post creation error:', error)
     } finally {
       dispatchState({ isLoading: false })
+    }
+  }
+
+  const renderFeedItem = (item: any, index: number) => {
+    if (item.type === 'share') {
+      return (
+        <SharedPost key={`share-${item.data._id}-${index}`} share={item.data} />
+      )
+    } else {
+      // Handle both old format (direct post) and new format (wrapped post)
+      const postData = item.data || item
+      return (
+        <PostClientWrapper
+          key={`post-${postData._id}-${index}`}
+          post={postData as IPost}
+        />
+      )
     }
   }
 
@@ -107,12 +151,7 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
           postImage={image}
           setPostImage={(image) => dispatchState({ image: image })}
         />
-        {posts.map((post: PostInterface) => (
-          <PostClientWrapper
-            key={`${post._id}-${post.createdAt}`}
-            post={post as unknown as IPost}
-          />
-        ))}
+        {posts.map((item: any, index: number) => renderFeedItem(item, index))}
         {hasNextPage && (
           <button
             className="w-full py-2 text-center text-blue-600 hover:underline"

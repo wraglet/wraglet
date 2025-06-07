@@ -9,6 +9,7 @@ import Message from '@/models/Message'
 import Post from '@/models/Post'
 import PostReaction from '@/models/PostReaction'
 import PostVote from '@/models/PostVote'
+import Share from '@/models/Share'
 import User from '@/models/User'
 import mongoose from 'mongoose'
 
@@ -21,6 +22,7 @@ export {
   Post,
   PostReaction,
   PostVote,
+  Share,
   User
 }
 
