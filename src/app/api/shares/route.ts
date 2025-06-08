@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
+import { getAblyInstance } from '@/lib/ably'
 import client from '@/lib/db'
 import Follow from '@/models/Follow'
 import Post from '@/models/Post'
@@ -57,6 +58,16 @@ export const POST = async (request: Request) => {
           select: 'firstName lastName username profilePicture'
         }
       })
+
+    // Publish to Ably for real-time updates
+    try {
+      const ably = getAblyInstance()
+      const channel = ably.channels.get('post-channel')
+      await channel.publish('share', populatedShare)
+    } catch (ablyError) {
+      console.warn('Failed to publish share to Ably:', ablyError)
+      // Don't fail the request if Ably fails
+    }
 
     return NextResponse.json(populatedShare)
   } catch (error: any) {

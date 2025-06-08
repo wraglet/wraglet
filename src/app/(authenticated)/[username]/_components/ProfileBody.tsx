@@ -8,19 +8,19 @@ import useFeedPostsStore from '@/store/feedPosts'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useChannel } from 'ably/react'
 import axios from 'axios'
-import { Types } from 'mongoose'
 import toast from 'react-hot-toast'
 import { FaImages } from 'react-icons/fa6'
 
 import CreatePost from '@/components/CreatePost'
 import PostClientWrapper from '@/components/PostClientWrapper'
+import SharedPost from '@/components/SharedPost'
 
 import AchievementsBadges from '@/app/(authenticated)/[username]/_components/AchievementsBadges'
 import PhotoCollection from '@/app/(authenticated)/[username]/_components/PhotoCollection'
 
 type ProfileBodyProps = {
   username: string
-  initialPosts: IPost[]
+  initialPosts: any[] // Changed to any[] to handle both posts and shares
 }
 
 const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
@@ -48,19 +48,85 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
     initialData: initialPosts
   })
 
-  const channel = useChannel('post-channel', (post) => {
+  const channel = useChannel('post-channel', (message) => {
     // Handle real-time post updates
     try {
-      if (post.data.author.username === username) {
+      if (
+        message.name === 'post' &&
+        message.data.author.username === username
+      ) {
         queryClient.setQueryData(
           ['posts', username],
-          (oldPosts: IPost[] | undefined) =>
-            oldPosts ? [post.data, ...oldPosts] : [post.data]
+          (oldPosts: any[] | undefined) => {
+            if (!oldPosts)
+              return [
+                {
+                  type: 'post',
+                  data: message.data,
+                  createdAt: message.data.createdAt
+                }
+              ]
+            return [
+              {
+                type: 'post',
+                data: message.data,
+                createdAt: message.data.createdAt
+              },
+              ...oldPosts
+            ]
+          }
+        )
+      } else if (
+        message.name === 'share' &&
+        message.data.sharedBy.username === username
+      ) {
+        queryClient.setQueryData(
+          ['posts', username],
+          (oldPosts: any[] | undefined) => {
+            if (!oldPosts)
+              return [
+                {
+                  type: 'share',
+                  data: message.data,
+                  createdAt: message.data.createdAt
+                }
+              ]
+            return [
+              {
+                type: 'share',
+                data: message.data,
+                createdAt: message.data.createdAt
+              },
+              ...oldPosts
+            ]
+          }
         )
       }
-      useFeedPostsStore
-        .getState()
-        .setFeedPosts([post.data, ...useFeedPostsStore.getState().posts])
+
+      // Update feed store for both cases
+      if (message.name === 'post') {
+        useFeedPostsStore
+          .getState()
+          .setFeedPosts([
+            {
+              type: 'post',
+              data: message.data,
+              createdAt: message.data.createdAt
+            },
+            ...useFeedPostsStore.getState().posts
+          ])
+      } else if (message.name === 'share') {
+        useFeedPostsStore
+          .getState()
+          .setFeedPosts([
+            {
+              type: 'share',
+              data: message.data,
+              createdAt: message.data.createdAt
+            },
+            ...useFeedPostsStore.getState().posts
+          ])
+      }
     } catch (error) {
       console.error('Error handling post update:', error)
     }
@@ -70,11 +136,19 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
     mutationFn: ({ text, image }: { text: string; image: string | null }) =>
       axios.post('/api/posts', { text, image }),
     onSuccess: (data) => {
-      const updatedPostsArray = [data.data, ...(userPosts || [])]
-      queryClient.setQueryData(['posts', username], updatedPostsArray)
+      const newPost = {
+        type: 'post',
+        data: data.data,
+        createdAt: data.data.createdAt
+      }
+      queryClient.setQueryData(
+        ['posts', username],
+        (oldPosts: any[] | undefined) =>
+          oldPosts ? [newPost, ...oldPosts] : [newPost]
+      )
       useFeedPostsStore
         .getState()
-        .setFeedPosts([data.data, ...useFeedPostsStore.getState().posts])
+        .setFeedPosts([newPost, ...useFeedPostsStore.getState().posts])
       dispatchState({ text: '', image: null })
       toast.success('Posted successfully')
       try {
@@ -95,6 +169,23 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
       return
     }
     mutateSubmitPost({ text, image })
+  }
+
+  const renderProfileItem = (item: any, index: number) => {
+    if (item.type === 'share') {
+      return (
+        <SharedPost key={`share-${item.data._id}-${index}`} share={item.data} />
+      )
+    } else {
+      // Handle both old format (direct post) and new format (wrapped post)
+      const postData = item.data || item
+      return (
+        <PostClientWrapper
+          key={`post-${postData._id}-${index}`}
+          post={postData as IPost}
+        />
+      )
+    }
   }
 
   return (
@@ -123,12 +214,9 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
           {isPending && <div>Loading...</div>}
           {userPosts &&
             !isPending &&
-            userPosts.map((post: IPost) => (
-              <PostClientWrapper
-                key={(post._id as string | Types.ObjectId)?.toString()}
-                post={post}
-              />
-            ))}
+            userPosts.map((item: any, index: number) =>
+              renderProfileItem(item, index)
+            )}
         </div>
       </div>
 

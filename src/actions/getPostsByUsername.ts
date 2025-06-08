@@ -3,6 +3,7 @@
 import client from '@/lib/db'
 import { initModels } from '@/lib/models'
 import Post from '@/models/Post'
+import Share from '@/models/Share'
 import User from '@/models/User'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 import { Types } from 'mongoose'
@@ -28,8 +29,8 @@ const getPostsByUsername = async (username: string) => {
       return [] // Return an empty array if the user is not found
     }
 
-    // Query posts with populated fields
-    const posts = await Post.find({ author: user._id })
+    // Query regular posts with populated fields
+    const postsPromise = Post.find({ author: user._id })
       .sort({ createdAt: -1 })
       .populate({
         path: 'author',
@@ -51,9 +52,61 @@ const getPostsByUsername = async (username: string) => {
       })
       .lean()
 
-    // Return the queried posts - they will be automatically serialized to JSON
+    // Query shares made by this user
+    const sharesPromise = Share.find({ sharedBy: user._id })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'sharedBy',
+        select: 'firstName lastName username profilePicture'
+      })
+      .populate({
+        path: 'originalPost',
+        populate: [
+          {
+            path: 'author',
+            select: 'firstName lastName username profilePicture'
+          },
+          {
+            path: 'comments',
+            populate: {
+              path: 'author',
+              select: 'firstName lastName username profilePicture'
+            }
+          },
+          {
+            path: 'reactions',
+            populate: {
+              path: 'userId',
+              select: 'firstName lastName username profilePicture'
+            }
+          }
+        ]
+      })
+      .lean()
+
+    // Execute both queries in parallel
+    const [posts, shares] = await Promise.all([postsPromise, sharesPromise])
+
+    // Combine and sort by creation time
+    const allContent = [
+      ...posts.map((post) => ({
+        type: 'post',
+        data: post,
+        createdAt: post.createdAt
+      })),
+      ...shares.map((share) => ({
+        type: 'share',
+        data: share,
+        createdAt: share.createdAt
+      }))
+    ].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+
+    // Return the queried posts and shares - they will be automatically serialized to JSON
     // when crossing the server/client boundary
-    return convertObjectIdsToStrings(posts)
+    return convertObjectIdsToStrings(allContent)
   } catch (error) {
     console.error('Error getting posts by username:', error)
     return [] // Return an empty array on error

@@ -77,9 +77,6 @@ const ShareModal = ({
 
       if (response.status === 200) {
         toast.success('Post shared to your feed!')
-
-        // TODO: Publish to Ably for real-time updates when Ably pattern is implemented
-
         onShareToFeed?.()
         onClose()
         setShareMessage('')
