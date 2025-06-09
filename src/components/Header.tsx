@@ -10,7 +10,8 @@ import useUserStore, { User } from '@/store/user'
 
 import AvatarMenu from '@/components/AvatarMenu'
 import HeaderMessagesIconClientWrapper from '@/components/HeaderMessagesIconClientWrapper'
-import { BellIcon, ChatIcon, HomeIcon, PeopleIcon } from '@/components/NavIcons'
+import HeaderNotificationsIconClientWrapper from '@/components/HeaderNotificationsIconClientWrapper'
+import { ChatIcon, HomeIcon } from '@/components/NavIcons'
 import SearchBar from '@/components/SearchBar'
 
 const quicksand = Quicksand({
@@ -73,9 +74,6 @@ const Header = ({ currentUser }: { currentUser: IUser }) => {
             <HomeIcon className="text-white" />
           </Link>
         </li>
-        <li className="cursor-pointer">
-          <PeopleIcon className="text-white" />
-        </li>
         <li className="relative cursor-pointer">
           <Suspense fallback={<ChatIcon className="text-white" />}>
             <HeaderMessagesIconClientWrapper
@@ -83,8 +81,12 @@ const Header = ({ currentUser }: { currentUser: IUser }) => {
             />
           </Suspense>
         </li>
-        <li className="cursor-pointer">
-          <BellIcon className="text-white" />
+        <li className="relative cursor-pointer">
+          <Suspense fallback={<div className="h-5 w-5" />}>
+            <HeaderNotificationsIconClientWrapper
+              userId={(currentUser as any)._id}
+            />
+          </Suspense>
         </li>
         <AvatarMenu />
       </ul>

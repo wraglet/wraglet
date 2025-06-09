@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import {
+  Bell,
   Calendar,
   Check,
   Code,
@@ -25,6 +26,22 @@ interface ChangelogEntry {
 }
 
 const changelogData: ChangelogEntry[] = [
+  {
+    date: '2025-06-10',
+    version: '0.8.1',
+    title: 'Shared Post Notifications & UI Fixes',
+    description:
+      'Critical fixes for shared post notifications and restored Lottie reaction animations',
+    features: [
+      'Fixed shared post notification redirects to properly link to shared content',
+      'Resolved Ably context error when viewing shared posts directly',
+      'Restored Lottie reaction emoji animations throughout the platform',
+      'Enhanced notification system to handle both posts and shares correctly',
+      'Improved post page consistency with feed reaction experience'
+    ],
+    type: 'patch',
+    icon: <Bell className="h-6 w-6" />
+  },
   {
     date: '2025-06-09',
     version: '0.8.0',

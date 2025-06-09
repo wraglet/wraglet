@@ -1,11 +1,11 @@
 import { IconType } from 'react-icons'
 import {
-  FaRegThumbsUp,
-  FaRegHeart,
+  FaRegFaceAngry,
   FaRegFaceGrinTears,
-  FaRegFaceSurprise,
   FaRegFaceSadTear,
-  FaRegFaceAngry
+  FaRegFaceSurprise,
+  FaRegHeart,
+  FaRegThumbsUp
 } from 'react-icons/fa6'
 
 type Props = {
@@ -27,7 +27,7 @@ const ReactionIcon = ({ type, onClick }: Props) => {
 
   return (
     <SelectedIcon
-      className='text-xs text-pink-600 cursor-pointer'
+      className="cursor-pointer text-xs text-pink-600"
       onClick={onClick}
     />
   )

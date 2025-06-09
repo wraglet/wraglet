@@ -70,7 +70,7 @@ const LoginForm: FC<LoginFormProps> = ({ buttonIcon }) => {
     <FormProvider {...formMethods}>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex w-full flex-col gap-6"
+        className="flex w-full flex-col gap-4"
       >
         <Input
           {...formMethods.register('email')}

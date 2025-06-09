@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import client from '@/lib/db'
+import { createReactionNotification } from '@/lib/notifications'
 import Post from '@/models/Post'
 import PostReaction from '@/models/PostReaction'
 
@@ -24,6 +25,12 @@ export const PATCH = async (
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
+    // Get the post to check author
+    const post = (await Post.findById(postId).select('author').lean()) as any
+    if (!post) {
+      return new NextResponse('Post not found', { status: 404 })
+    }
+
     // Check if the user has already reacted to the post
     const existingReaction = await PostReaction.findOne({
       postId: postId,
@@ -31,6 +38,8 @@ export const PATCH = async (
     })
 
     let reaction
+    let isNewReaction = false
+
     if (existingReaction) {
       // Update existing reaction
       reaction = await PostReaction.findByIdAndUpdate(
@@ -48,11 +57,26 @@ export const PATCH = async (
         updatedAt: new Date()
       })
       await reaction.save()
+      isNewReaction = true
 
       // Add reaction to post if it's new
       await Post.findByIdAndUpdate(postId, {
         $push: { reactions: reaction._id }
       })
+    }
+
+    // Create reaction notification only for new reactions
+    if (isNewReaction) {
+      try {
+        await createReactionNotification(
+          currentUser._id.toString(),
+          post.author.toString(),
+          postId,
+          type
+        )
+      } catch (error) {
+        console.error('Error creating reaction notification:', error)
+      }
     }
 
     const updatedPost = await Post.findById(postId)

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import client from '@/lib/db'
+import { createReactionNotification } from '@/lib/notifications'
 import PostReaction from '@/models/PostReaction'
 import Share from '@/models/Share'
 
@@ -24,6 +25,14 @@ export const PATCH = async (
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
+    // Get the share to check who shared it and get original post
+    const share = (await Share.findById(shareId)
+      .select('sharedBy originalPost')
+      .lean()) as any
+    if (!share) {
+      return new NextResponse('Share not found', { status: 404 })
+    }
+
     // Check if the user has already reacted to the share
     const existingReaction = await PostReaction.findOne({
       postId: shareId,
@@ -31,6 +40,8 @@ export const PATCH = async (
     })
 
     let reaction
+    let isNewReaction = false
+
     if (existingReaction) {
       // Update existing reaction
       reaction = await PostReaction.findByIdAndUpdate(
@@ -48,11 +59,27 @@ export const PATCH = async (
         updatedAt: new Date()
       })
       await reaction.save()
+      isNewReaction = true
 
       // Add reaction to share if it's new
       await Share.findByIdAndUpdate(shareId, {
         $push: { reactions: reaction._id }
       })
+    }
+
+    // Create reaction notification only for new reactions
+    if (isNewReaction) {
+      try {
+        await createReactionNotification(
+          currentUser._id.toString(),
+          share.sharedBy.toString(),
+          share.originalPost.toString(), // Use original post ID for routing
+          type,
+          shareId // Pass shareId as additional data
+        )
+      } catch (error) {
+        console.error('Error creating reaction notification:', error)
+      }
     }
 
     const updatedShare = await Share.findById(shareId)

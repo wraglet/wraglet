@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
+import { createFollowNotification } from '@/lib/notifications'
 import Follow from '@/models/Follow'
 import { Types } from 'mongoose'
 
@@ -81,6 +82,14 @@ export const POST = async (request: Request) => {
       followerId: currentUserId,
       followingId: targetUserId
     })
+
+    // Create follow notification
+    try {
+      await createFollowNotification(currentUserId, targetUserId)
+    } catch (error) {
+      console.error('Error creating follow notification:', error)
+    }
+
     return NextResponse.json({ success: true })
   } catch (error) {
     return NextResponse.json(

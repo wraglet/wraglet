@@ -60,7 +60,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }).lean()) as UserWithId | null
 
           if (user) {
-            console.log('User found:', user)
             const isPasswordCorrect = await bcrypt.compare(
               credentials?.password as string,
               user.hashedPassword

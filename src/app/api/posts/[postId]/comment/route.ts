@@ -3,6 +3,7 @@ import getCurrentUser from '@/actions/getCurrentUser'
 import { getAblyInstance } from '@/lib/ably'
 import client from '@/lib/db'
 import { initModels } from '@/lib/models'
+import { createCommentNotification } from '@/lib/notifications'
 import Comment, { ICommentDocument } from '@/models/Comment'
 import Post, { IPostDocument } from '@/models/Post'
 import { Types } from 'mongoose'
@@ -50,6 +51,18 @@ export const POST = async (
     post.comments = post.comments || []
     post.comments.push(comment._id as unknown as Types.ObjectId)
     await post.save()
+
+    // Create comment notification
+    try {
+      await createCommentNotification(
+        currentUser._id.toString(),
+        (post.author as any).toString(),
+        (post._id as any).toString(),
+        (comment._id as any).toString()
+      )
+    } catch (error) {
+      console.error('Error creating comment notification:', error)
+    }
 
     // Try to publish to Ably if available, but don't let it affect the core functionality
     try {

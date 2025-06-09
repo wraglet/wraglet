@@ -64,7 +64,7 @@ const UnauthenticatedLayoutClient = ({
       {/* Authentication card (smaller) */}
       {isAuthPage ? (
         <section className="relative z-20 flex w-full flex-1 items-center justify-center overflow-hidden px-2 py-4">
-          <div className="animate-fade-in-up relative mx-2 flex h-full max-h-[calc(100vh-200px)] w-full max-w-md overflow-hidden rounded-3xl bg-white/80 shadow-2xl">
+          <div className="animate-fade-in-up relative mx-2 flex max-h-[calc(100vh-120px)] min-h-fit w-full max-w-md overflow-hidden rounded-3xl bg-white/80 shadow-2xl">
             {/* Thematic blue left border */}
             <div className="hidden w-2 rounded-l-3xl bg-gradient-to-b from-[#42BBFF] to-[#0EA5E9] sm:block" />
             <div

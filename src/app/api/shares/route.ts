@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import { getAblyInstance } from '@/lib/ably'
 import client from '@/lib/db'
+import { createShareNotification } from '@/lib/notifications'
 import Follow from '@/models/Follow'
 import Post from '@/models/Post'
 import Share from '@/models/Share'
@@ -32,8 +33,10 @@ export const POST = async (request: Request) => {
       actualPostId = existingShare.originalPost.toString()
     }
 
-    // Check if the actual post exists
-    const originalPost = await Post.findById(actualPostId)
+    // Check if the actual post exists and get author info
+    const originalPost = (await Post.findById(actualPostId)
+      .select('author')
+      .lean()) as any
     if (!originalPost) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 })
     }
@@ -61,6 +64,20 @@ export const POST = async (request: Request) => {
       visibility,
       message: message.trim()
     })
+
+    // Create share notification (only if not sharing own post)
+    if (originalPost.author.toString() !== currentUser._id.toString()) {
+      try {
+        await createShareNotification(
+          currentUser._id.toString(),
+          originalPost.author.toString(),
+          actualPostId,
+          share._id.toString()
+        )
+      } catch (error) {
+        console.error('Error creating share notification:', error)
+      }
+    }
 
     // Increment the share count on the original post
     await Post.findByIdAndUpdate(actualPostId, {

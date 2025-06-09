@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import client from '@/lib/db'
+import { createNewPostNotification } from '@/lib/notifications'
 import Follow from '@/models/Follow'
 import Post from '@/models/Post'
 import Share from '@/models/Share'
@@ -54,40 +55,43 @@ export const POST = async (request: Request) => {
 
     let content = {}
 
-    if (text && image) {
-      const imageUrl = await uploadImageToR2(image)
-      content = { text, images: [imageUrl] }
-    } else if (text) {
-      content = { text }
-    } else if (image) {
-      const imageUrl = await uploadImageToR2(image)
-      content = { images: [imageUrl] }
-    } else {
-      return new NextResponse('Text or image is required', { status: 400 })
+    if (text) {
+      content = { ...content, text }
     }
 
-    const newPost = await Post.create({
+    if (image) {
+      const uploadedImage = await uploadImageToR2(image)
+      content = { ...content, images: [uploadedImage] }
+    }
+
+    const post = await Post.create({
       content,
       audience,
       author: currentUser._id
     })
 
-    const populatedPost = await Post.findById(newPost._id)
-      .populate({
-        path: 'author',
-        select:
-          'id firstName lastName email dob gender bio pronoun profilePicture coverPhoto createdAt updatedAt'
-      })
-      .exec()
+    // Get user's followers to send notifications
+    try {
+      const followers = await Follow.find({ followingId: currentUser._id })
+        .select('followerId')
+        .lean()
 
-    return NextResponse.json(populatedPost)
-  } catch (err: any) {
-    console.log('Fetching posts error: ', err)
-    console.error(
-      'Error happened while doing POST for /api/posts at route.ts: ',
-      err
-    )
-    return new NextResponse('Internal Error: ', { status: 500 })
+      if (followers.length > 0) {
+        const followerIds = followers.map((f) => f.followerId.toString())
+        await createNewPostNotification(
+          currentUser._id.toString(),
+          followerIds,
+          post._id.toString()
+        )
+      }
+    } catch (error) {
+      console.error('Error creating new post notifications:', error)
+    }
+
+    return NextResponse.json(convertObjectIdsToStrings(post))
+  } catch (error) {
+    console.error('Error creating post:', error)
+    return new NextResponse('Internal Error', { status: 500 })
   }
 }
 

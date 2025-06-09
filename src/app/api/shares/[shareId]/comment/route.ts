@@ -3,8 +3,9 @@ import getCurrentUser from '@/actions/getCurrentUser'
 import { getAblyInstance } from '@/lib/ably'
 import client from '@/lib/db'
 import { initModels } from '@/lib/models'
+import { createCommentNotification } from '@/lib/notifications'
 import Comment, { ICommentDocument } from '@/models/Comment'
-import Share, { IShareDocument } from '@/models/Share'
+import Share from '@/models/Share'
 import { Types } from 'mongoose'
 
 export const POST = async (
@@ -28,7 +29,10 @@ export const POST = async (
     // Ensure models are registered
     initModels()
 
-    const share = (await Share.findById(shareId)) as IShareDocument | null
+    const share = (await Share.findById(shareId).populate(
+      'sharedBy',
+      '_id'
+    )) as any
     if (!share) {
       return new NextResponse('Share not found', { status: 404 })
     }
@@ -50,6 +54,18 @@ export const POST = async (
     share.comments = share.comments || []
     share.comments.push(comment._id as unknown as Types.ObjectId)
     await share.save()
+
+    // Create comment notification for the share author
+    try {
+      await createCommentNotification(
+        currentUser._id.toString(),
+        share.sharedBy._id.toString(),
+        share._id.toString(),
+        (comment._id as any).toString()
+      )
+    } catch (error) {
+      console.error('Error creating comment notification:', error)
+    }
 
     // Try to publish to Ably if available, but don't let it affect the core functionality
     try {
