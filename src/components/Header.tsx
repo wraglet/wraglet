@@ -11,6 +11,7 @@ import useUserStore, { User } from '@/store/user'
 import AvatarMenu from '@/components/AvatarMenu'
 import HeaderMessagesIconClientWrapper from '@/components/HeaderMessagesIconClientWrapper'
 import { BellIcon, ChatIcon, HomeIcon, PeopleIcon } from '@/components/NavIcons'
+import SearchBar from '@/components/SearchBar'
 
 const quicksand = Quicksand({
   subsets: ['latin'],
@@ -64,10 +65,7 @@ const Header = ({ currentUser }: { currentUser: IUser }) => {
         </Link>
       </div>
       <div className="flex h-full w-full items-center lg:w-[600px]">
-        <input
-          type="search"
-          className="h-[30px] w-full rounded-2xl border border-solid border-[#E5E5E5] bg-[#E7ECF0] px-2 text-sm text-[#333333] focus:outline-hidden"
-        />
+        <SearchBar className="w-full" />
       </div>
       <ul className="flex items-center justify-between gap-x-4 lg:gap-x-6">
         <li className="hidden cursor-pointer md:block">

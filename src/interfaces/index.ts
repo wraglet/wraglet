@@ -87,3 +87,28 @@ export interface PostVoteInterface {
   createdAt: Date
   updatedAt?: Date
 }
+
+export interface SearchResultItem {
+  _id: string
+  type: 'user' | 'post' | 'blog' | 'video'
+  title: string
+  subtitle?: string
+  avatar?: string
+  url: string
+  relevanceScore?: number
+}
+
+export interface SearchResponse {
+  success: boolean
+  results: SearchResultItem[]
+  totalCount: number
+  query: string
+}
+
+export interface SearchSuggestion {
+  _id: string
+  text: string
+  type: 'user' | 'post' | 'blog' | 'video' | 'recent'
+  avatar?: string
+  url: string
+}
