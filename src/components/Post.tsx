@@ -382,94 +382,98 @@ const Post = ({ post: initialPost }: PostProps) => {
 
   return (
     <div className="flex w-full">
-      <div className="flex w-full items-start justify-between gap-x-2 border border-solid border-neutral-200 bg-white px-4 py-3 drop-shadow-md sm:rounded-lg">
-        <div className="relative block">
-          <Avatar
-            gender={post.author?.gender}
-            src={post.author.profilePicture?.url!}
-          />
+      <div className="flex w-full items-start justify-between gap-x-2 border border-solid border-neutral-200 bg-white drop-shadow-md sm:rounded-lg">
+        <div className="px-4 py-3">
+          <div className="relative block">
+            <Avatar
+              gender={post.author?.gender}
+              src={post.author.profilePicture?.url!}
+            />
+          </div>
         </div>
-        <div className="flex grow flex-col justify-start gap-y-5">
-          <div className="flex flex-col gap-y-1">
-            <div className="flex items-baseline space-x-1">
-              <h3 className={`text-sm leading-none font-bold`}>
-                {post.author.firstName} {post.author.lastName}
-              </h3>
-              {!isAuthor &&
-                (isFollowing ? (
-                  <span className="ml-2 text-xs font-semibold text-sky-600">
-                    Following
-                  </span>
-                ) : (
-                  <button
-                    className="ml-2 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-600 hover:bg-sky-500 hover:text-white disabled:opacity-60"
-                    onClick={() => follow()}
-                    disabled={loading}
-                  >
-                    Follow
-                  </button>
-                ))}
-              <svg
-                className="self-center"
-                width="2"
-                height="3"
-                viewBox="0 0 2 3"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <circle cx="1" cy="1.85547" r="1" fill="#4B5563" />
-              </svg>
-              {post.createdAt && (
-                <h4 className="text-xs text-zinc-500">
-                  {formatDistanceToNow(new Date(post.createdAt.toString()), {
-                    addSuffix: true
-                  })}
-                </h4>
-              )}
-            </div>
-            {post.content.text && (
-              <Link
-                href={`/post/${post._id}`}
-                className="-m-1 block rounded-md p-1 transition-colors hover:bg-gray-50"
-              >
-                <p className="cursor-pointer text-xs text-gray-600">
-                  {post.content.text}
-                </p>
-              </Link>
-            )}
-
-            {post.content.images
-              ? post.content.images.map(
-                  (
-                    image: {
-                      key: Key | null | undefined
-                      url: string | StaticImport
-                    },
-                    index: number
-                  ) => (
-                    <div
-                      key={image.key || `image-${index}`}
-                      className="my-3 block overflow-hidden rounded-md"
+        <div className="flex grow flex-col justify-start">
+          <div className="px-4 py-3">
+            <div className="flex flex-col gap-y-1">
+              <div className="flex items-baseline space-x-1">
+                <h3 className={`text-sm leading-none font-bold`}>
+                  {post.author.firstName} {post.author.lastName}
+                </h3>
+                {!isAuthor &&
+                  (isFollowing ? (
+                    <span className="ml-2 text-xs font-semibold text-sky-600">
+                      Following
+                    </span>
+                  ) : (
+                    <button
+                      className="ml-2 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-600 hover:bg-sky-500 hover:text-white disabled:opacity-60"
+                      onClick={() => follow()}
+                      disabled={loading}
                     >
-                      <Image
-                        src={image.url}
-                        alt="Post Image"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        width={1}
-                        height={1}
-                        style={{
-                          height: 'auto',
-                          width: '100%'
-                        }}
-                      />
-                    </div>
+                      Follow
+                    </button>
+                  ))}
+                <svg
+                  className="self-center"
+                  width="2"
+                  height="3"
+                  viewBox="0 0 2 3"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle cx="1" cy="1.85547" r="1" fill="#4B5563" />
+                </svg>
+                {post.createdAt && (
+                  <h4 className="text-xs text-zinc-500">
+                    {formatDistanceToNow(new Date(post.createdAt.toString()), {
+                      addSuffix: true
+                    })}
+                  </h4>
+                )}
+              </div>
+              {post.content.text && (
+                <Link
+                  href={`/post/${post._id}`}
+                  className="-m-1 block rounded-md p-1 transition-colors hover:bg-gray-50"
+                >
+                  <p className="cursor-pointer text-xs text-gray-600">
+                    {post.content.text}
+                  </p>
+                </Link>
+              )}
+
+              {post.content.images
+                ? post.content.images.map(
+                    (
+                      image: {
+                        key: Key | null | undefined
+                        url: string | StaticImport
+                      },
+                      index: number
+                    ) => (
+                      <div
+                        key={image.key || `image-${index}`}
+                        className="my-3 block overflow-hidden rounded-md"
+                      >
+                        <Image
+                          src={image.url}
+                          alt="Post Image"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          width={1}
+                          height={1}
+                          style={{
+                            height: 'auto',
+                            width: '100%'
+                          }}
+                        />
+                      </div>
+                    )
                   )
-                )
-              : null}
+                : null}
+            </div>
           </div>
 
           {/* Interaction counts section */}
-          <div className="flex items-center justify-between border-b border-solid border-[#E7ECF0] pb-2">
+          <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-500">
             <div className="flex items-center gap-x-1">
               {Object.keys(reactionCounts).length > 0 && (
                 <div className="flex items-center gap-x-1">
@@ -499,100 +503,122 @@ const Post = ({ post: initialPost }: PostProps) => {
             </div>
             <div className="flex items-center gap-x-3 text-xs text-gray-500">
               {postComments.length > 0 && (
-                <span>{postComments.length} comments</span>
+                <span>
+                  {postComments.length}{' '}
+                  {postComments.length === 1 ? 'comment' : 'comments'}
+                </span>
               )}
               {voteDisplay}
-              <span>2 shares</span>
+              {post.shareCount !== undefined && post.shareCount > 0 && (
+                <span>
+                  {post.shareCount} {post.shareCount === 1 ? 'share' : 'shares'}
+                </span>
+              )}
             </div>
           </div>
 
-          <div className="z-10 flex items-center justify-between bg-white">
-            <div className="group relative">
-              <div className="flex items-center gap-1 rounded-full border border-solid border-gray-400 px-2 py-0.5">
-                <LuArrowBigUp
-                  className={`cursor-pointer text-xs ${userVote === 'upvote' ? 'text-green-600' : 'text-gray-600'}`}
-                  onClick={() => handleVote('upvote')}
-                />
-                <div className="h-3 w-[1px] bg-gray-300" />
-                <LuArrowBigDown
-                  className={`cursor-pointer text-xs ${userVote === 'downvote' ? 'text-red-600' : 'text-gray-600'}`}
-                  onClick={() => handleVote('downvote')}
-                />
-              </div>
-            </div>
+          {/* Action buttons */}
+          <div className="border-t border-solid border-[#E7ECF0] px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="group relative">
+                <div
+                  ref={refs.setReference}
+                  role="button"
+                  tabIndex={0}
+                  className="flex items-center gap-1 rounded-full border border-solid border-gray-400 px-2 py-0.5"
+                  onClick={handleReactionClick}
+                >
+                  {userReaction ? (
+                    <ReactionIcon
+                      type={userReaction.type}
+                      onClick={() => removeReaction()}
+                    />
+                  ) : (
+                    <FaRegHeart className="cursor-pointer text-xs text-gray-600" />
+                  )}
+                </div>
 
-            <div className="group relative">
-              <div className="flex items-center gap-1 rounded-full border border-solid border-gray-400 px-2 py-0.5">
-                <FaRegComment
-                  className="cursor-pointer text-xs text-gray-600"
-                  onClick={toggleComment}
-                />
-              </div>
-            </div>
-
-            <div className="group relative">
-              <div
-                ref={refs.setReference}
-                role="button"
-                tabIndex={0}
-                className="flex items-center gap-1 rounded-full border border-solid border-gray-400 px-2 py-0.5"
-                onClick={handleReactionClick}
-              >
-                {userReaction ? (
-                  <ReactionIcon
-                    type={userReaction.type}
-                    onClick={() => removeReaction()}
-                  />
-                ) : (
-                  <FaRegHeart className="cursor-pointer text-xs text-gray-600" />
+                {showEmojis && (
+                  <div
+                    ref={refs.setFloating}
+                    style={floatingStyles}
+                    className="z-50 flex w-fit gap-1 rounded-lg border border-solid border-gray-200 bg-white p-2 shadow-lg"
+                  >
+                    <FloatingArrow
+                      ref={arrowRef}
+                      context={context}
+                      className="fill-white"
+                    />
+                    {reactions.map((reaction, index) => (
+                      <button
+                        key={`${reaction.name}-${index}`}
+                        className="cursor-pointer transition-transform hover:scale-125"
+                        onClick={() => {
+                          handleReaction(reaction.name)
+                          setShowEmojis(false)
+                        }}
+                      >
+                        {/* @ts-ignore */}
+                        <lottie-player
+                          id={`reaction-picker-${reaction.name}-${post._id}`}
+                          autoplay
+                          loop
+                          mode="normal"
+                          src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/lottie/${reaction.name}.json`}
+                          style={{ width: '24px', height: '24px' }}
+                        />
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
 
-              {showEmojis && (
-                <div
-                  ref={refs.setFloating}
-                  style={floatingStyles}
-                  className="z-50 flex w-fit gap-1 rounded-lg border border-solid border-gray-200 bg-white p-2 shadow-lg"
+              <div className="flex items-center gap-2">
+                {/* Voting buttons */}
+                <button
+                  onClick={() => handleVote('upvote')}
+                  className={`flex items-center gap-1 rounded-full border px-2 py-0.5 transition-colors ${
+                    userVote === 'upvote'
+                      ? 'border-green-500 bg-green-50 text-green-600'
+                      : 'border-gray-400 text-gray-600 hover:border-green-500 hover:bg-green-50'
+                  }`}
                 >
-                  <FloatingArrow
-                    ref={arrowRef}
-                    context={context}
-                    className="fill-white"
-                  />
-                  {reactions.map((reaction, index) => (
-                    <button
-                      key={`${reaction.name}-${index}`}
-                      className="cursor-pointer transition-transform hover:scale-125"
-                      onClick={() => {
-                        handleReaction(reaction.name)
-                        setShowEmojis(false)
-                      }}
-                    >
-                      {/* @ts-ignore */}
-                      <lottie-player
-                        id={`reaction-picker-${reaction.name}-${post._id}`}
-                        autoplay
-                        loop
-                        mode="normal"
-                        src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/lottie/${reaction.name}.json`}
-                        style={{ width: '24px', height: '24px' }}
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                  <LuArrowBigUp className="text-xs" />
+                </button>
 
-            <div className="group relative">
-              <div
-                className="flex cursor-pointer items-center gap-1 rounded-full border border-solid border-gray-400 px-2 py-0.5 transition-colors hover:bg-gray-50"
-                onClick={handleShare}
-              >
-                <ShareIcon className="text-xs text-gray-600" />
+                <button
+                  onClick={() => handleVote('downvote')}
+                  className={`flex items-center gap-1 rounded-full border px-2 py-0.5 transition-colors ${
+                    userVote === 'downvote'
+                      ? 'border-red-500 bg-red-50 text-red-600'
+                      : 'border-gray-400 text-gray-600 hover:border-red-500 hover:bg-red-50'
+                  }`}
+                >
+                  <LuArrowBigDown className="text-xs" />
+                </button>
+
+                {/* Comment button */}
+                <div
+                  className="flex cursor-pointer items-center gap-1 rounded-full border border-solid border-gray-400 px-2 py-0.5 transition-colors hover:bg-gray-50"
+                  onClick={toggleComment}
+                >
+                  <FaRegComment className="text-xs text-gray-600" />
+                </div>
+
+                {/* Share button */}
+                <div className="group relative">
+                  <div
+                    className="flex cursor-pointer items-center gap-1 rounded-full border border-solid border-gray-400 px-2 py-0.5 transition-colors hover:bg-gray-50"
+                    onClick={handleShare}
+                  >
+                    <ShareIcon className="text-xs text-gray-600" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
+          {/* Comments section */}
           <div
             style={{ maxHeight: showCommentInput ? 'none' : '0px' }}
             ref={content}
@@ -600,7 +626,7 @@ const Post = ({ post: initialPost }: PostProps) => {
               showCommentInput
                 ? 'border-t border-solid border-[#E7ECF0] pt-4'
                 : 'hidden'
-            } flex w-full flex-col gap-4 overflow-hidden transition-all duration-300 ease-in-out`}
+            } flex w-full flex-col gap-4 overflow-hidden px-4 pb-4 transition-all duration-300 ease-in-out`}
           >
             <div className="flex flex-col gap-2">
               {Array.isArray(postComments) &&

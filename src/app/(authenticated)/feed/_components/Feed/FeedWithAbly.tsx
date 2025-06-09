@@ -76,7 +76,7 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
       } else if (message.name === 'share') {
         // Handle new shares
         const shareExists = posts.some(
-          (p: any) => p.type === 'share' && p.data._id === message.data.shareId
+          (p: any) => p.type === 'share' && p.data._id === message.data._id
         )
         if (!shareExists) {
           const newShare = {
@@ -84,8 +84,41 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
             data: message.data,
             createdAt: message.data.createdAt
           }
-          setFeedPosts([newShare, ...posts])
+
+          // Also update the original post's shareCount in the feed
+          const updatedPosts = posts.map((post: any) => {
+            if (
+              post.type === 'post' &&
+              post.data._id === message.data.originalPost._id
+            ) {
+              return {
+                ...post,
+                data: {
+                  ...post.data,
+                  shareCount: (post.data.shareCount || 0) + 1
+                }
+              }
+            }
+            return post
+          })
+
+          setFeedPosts([newShare, ...updatedPosts])
         }
+      } else if (message.name === 'post-update') {
+        // Handle post updates (like shareCount changes)
+        const updatedPosts = posts.map((post: any) => {
+          if (post.type === 'post' && post.data._id === message.data.postId) {
+            return {
+              ...post,
+              data: {
+                ...post.data,
+                shareCount: message.data.shareCount
+              }
+            }
+          }
+          return post
+        })
+        setFeedPosts(updatedPosts)
       }
     } catch (error) {
       console.error('Error handling post update:', error)

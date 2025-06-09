@@ -28,6 +28,7 @@ export interface IPost {
     createdAt?: string
     updatedAt?: string
   }[]
+  shareCount?: number
   createdAt?: string
   updatedAt?: string
   __v?: number // Mongoose version key
@@ -64,7 +65,8 @@ const PostSchema = new Schema<IPostDocument>(
         updatedAt: Date
       }
     ],
-    comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }]
+    comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
+    shareCount: { type: Number, default: 0 }
   },
   { timestamps: true }
 )

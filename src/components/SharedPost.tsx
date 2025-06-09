@@ -8,7 +8,7 @@ import { FaGlobeAmericas, FaLock, FaUserFriends } from 'react-icons/fa'
 import { FaArrowsRotate } from 'react-icons/fa6'
 
 import Avatar from '@/components/Avatar'
-import PostClientWrapper from '@/components/PostClientWrapper'
+import ShareContent from '@/components/ShareContent'
 
 interface SharedPostProps {
   share: IShare & {
@@ -18,6 +18,7 @@ interface SharedPostProps {
       firstName: string
       lastName: string
       username: string
+      gender?: string
       profilePicture?: {
         url: string
       } | null
@@ -78,10 +79,8 @@ const SharedPost = ({ share }: SharedPostProps) => {
         )}
       </div>
 
-      {/* Original Post */}
-      <div className="p-0">
-        <PostClientWrapper post={share.originalPost} />
-      </div>
+      {/* Share Content with its own reactions */}
+      <ShareContent share={share} />
     </div>
   )
 }

@@ -23,26 +23,48 @@ export const POST = async (request: Request) => {
       return NextResponse.json({ error: 'Invalid post ID' }, { status: 400 })
     }
 
-    // Check if post exists
-    const originalPost = await Post.findById(originalPostId)
+    // Check if the originalPostId is actually a share
+    const existingShare = await Share.findById(originalPostId)
+    let actualPostId = originalPostId
+
+    // If trying to share a shared post, redirect to share the original post instead
+    if (existingShare) {
+      actualPostId = existingShare.originalPost.toString()
+    }
+
+    // Check if the actual post exists
+    const originalPost = await Post.findById(actualPostId)
     if (!originalPost) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 })
     }
 
-    // Check if user is trying to share their own post
-    if (originalPost.author.toString() === currentUser._id.toString()) {
-      return NextResponse.json(
-        { error: 'Cannot share your own post' },
-        { status: 400 }
-      )
+    // Allow users to share their own posts
+    // Check if user has already shared this post (using the actual post ID) - but only if it's not their own post
+    if (originalPost.author.toString() !== currentUser._id.toString()) {
+      const existingUserShare = await Share.findOne({
+        originalPost: actualPostId,
+        sharedBy: currentUser._id
+      })
+
+      if (existingUserShare) {
+        return NextResponse.json(
+          { error: 'You have already shared this post' },
+          { status: 409 }
+        )
+      }
     }
 
-    // Create the share
+    // Create the share (always point to the original post, not the shared post)
     const share = await Share.create({
-      originalPost: originalPostId,
+      originalPost: actualPostId,
       sharedBy: currentUser._id,
       visibility,
       message: message.trim()
+    })
+
+    // Increment the share count on the original post
+    await Post.findByIdAndUpdate(actualPostId, {
+      $inc: { shareCount: 1 }
     })
 
     // Populate the share with necessary data
@@ -58,12 +80,41 @@ export const POST = async (request: Request) => {
           select: 'firstName lastName username profilePicture'
         }
       })
+      .populate({
+        path: 'reactions',
+        populate: {
+          path: 'userId',
+          select: 'firstName lastName username profilePicture'
+        }
+      })
+      .populate({
+        path: 'comments',
+        populate: {
+          path: 'author',
+          select: 'firstName lastName username profilePicture'
+        }
+      })
 
     // Publish to Ably for real-time updates
     try {
       const ably = getAblyInstance()
       const channel = ably.channels.get('post-channel')
       await channel.publish('share', populatedShare)
+
+      // Also publish an update to the original post's shareCount
+      const updatedOriginalPost = await Post.findById(actualPostId)
+        .populate({
+          path: 'author',
+          select: 'firstName lastName username profilePicture'
+        })
+        .lean()
+
+      if (updatedOriginalPost) {
+        await channel.publish('post-update', {
+          postId: actualPostId,
+          shareCount: (updatedOriginalPost as any).shareCount
+        })
+      }
     } catch (ablyError) {
       console.warn('Failed to publish share to Ably:', ablyError)
       // Don't fail the request if Ably fails
@@ -149,26 +200,24 @@ export const GET = async (request: Request) => {
       })
       .populate({
         path: 'originalPost',
-        populate: [
-          {
-            path: 'author',
-            select: 'firstName lastName username profilePicture'
-          },
-          {
-            path: 'comments',
-            populate: {
-              path: 'author',
-              select: 'firstName lastName username profilePicture'
-            }
-          },
-          {
-            path: 'reactions',
-            populate: {
-              path: 'userId',
-              select: 'firstName lastName username profilePicture'
-            }
-          }
-        ]
+        populate: {
+          path: 'author',
+          select: 'firstName lastName username profilePicture'
+        }
+      })
+      .populate({
+        path: 'reactions',
+        populate: {
+          path: 'userId',
+          select: 'firstName lastName username profilePicture'
+        }
+      })
+      .populate({
+        path: 'comments',
+        populate: {
+          path: 'author',
+          select: 'firstName lastName username profilePicture'
+        }
       })
 
     const hasMore = shares.length > limit

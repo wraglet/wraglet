@@ -61,26 +61,24 @@ const getPostsByUsername = async (username: string) => {
       })
       .populate({
         path: 'originalPost',
-        populate: [
-          {
-            path: 'author',
-            select: 'firstName lastName username profilePicture'
-          },
-          {
-            path: 'comments',
-            populate: {
-              path: 'author',
-              select: 'firstName lastName username profilePicture'
-            }
-          },
-          {
-            path: 'reactions',
-            populate: {
-              path: 'userId',
-              select: 'firstName lastName username profilePicture'
-            }
-          }
-        ]
+        populate: {
+          path: 'author',
+          select: 'firstName lastName username profilePicture'
+        }
+      })
+      .populate({
+        path: 'reactions',
+        populate: {
+          path: 'userId',
+          select: 'firstName lastName username profilePicture'
+        }
+      })
+      .populate({
+        path: 'comments',
+        populate: {
+          path: 'author',
+          select: 'firstName lastName username profilePicture'
+        }
       })
       .lean()
 

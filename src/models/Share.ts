@@ -8,6 +8,26 @@ export interface IShare {
   sharedBy: AuthorInterface
   visibility: 'public' | 'mutuals' | 'only_me'
   message?: string
+  reactions: {
+    userId: {
+      _id: string
+    }
+    type: string
+  }[]
+  comments: {
+    _id: string
+    content: string
+    author: AuthorInterface
+    post: string
+    createdAt?: string
+    updatedAt?: string
+  }[]
+  votes: {
+    userId: string
+    voteType: 'upvote' | 'downvote'
+    createdAt?: Date
+    updatedAt?: Date
+  }[]
   createdAt?: string
   updatedAt?: string
 }
@@ -16,11 +36,19 @@ export interface IShare {
 export interface IShareDocument
   extends Omit<
       IShare,
-      '_id' | 'sharedBy' | 'originalPost' | 'createdAt' | 'updatedAt'
+      | '_id'
+      | 'sharedBy'
+      | 'originalPost'
+      | 'reactions'
+      | 'comments'
+      | 'createdAt'
+      | 'updatedAt'
     >,
     Document {
   originalPost: Types.ObjectId
   sharedBy: Types.ObjectId | AuthorInterface
+  reactions: Types.ObjectId[] | any[]
+  comments: Types.ObjectId[] | any[]
   createdAt?: Date
   updatedAt?: Date
 }
@@ -34,7 +62,17 @@ const ShareSchema = new Schema<IShareDocument>(
       enum: ['public', 'mutuals', 'only_me'],
       default: 'public'
     },
-    message: { type: String, default: '' }
+    message: { type: String, default: '' },
+    reactions: [{ type: Schema.Types.ObjectId, ref: 'PostReaction' }],
+    comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
+    votes: [
+      {
+        userId: { type: Schema.Types.ObjectId, ref: 'User' },
+        voteType: { type: String, enum: ['upvote', 'downvote'] },
+        createdAt: Date,
+        updatedAt: Date
+      }
+    ]
   },
   { timestamps: true }
 )
