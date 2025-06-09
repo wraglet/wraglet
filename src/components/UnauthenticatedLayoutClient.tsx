@@ -102,6 +102,12 @@ const UnauthenticatedLayoutClient = ({
           Help
         </Link>
         <Link
+          href="/changelog"
+          className="transition-colors hover:underline focus:underline"
+        >
+          Changelog
+        </Link>
+        <Link
           href="/terms-of-service"
           className="transition-colors hover:underline focus:underline"
         >
