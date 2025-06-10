@@ -1,18 +1,18 @@
 'use client'
 
 import { Suspense } from 'react'
-import { IUser } from '@/models/User'
+import type { IUser } from '@/models/User'
 
 import ChatFloaterClientWrapper from '@/components/ChatFloaterClientWrapper'
 
-type Props = {
+interface ChatFloaterServerProps {
   currentUser: IUser
 }
 
-function ChatFloaterServer({ currentUser }: Props) {
+const ChatFloaterServer = ({ currentUser }: ChatFloaterServerProps) => {
   return (
     <Suspense fallback={null}>
-      <ChatFloaterClientWrapper userId={(currentUser as any)._id} />
+      <ChatFloaterClientWrapper />
     </Suspense>
   )
 }

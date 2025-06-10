@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import useChatFloaterStore from '@/store/chatFloater'
 import useUserStore from '@/store/user'
-import { useQuery } from '@tanstack/react-query'
+import { ChatRoomProvider } from '@ably/chat/react'
 import { ChannelProvider } from 'ably/react'
 
+import type { IConversation } from '@/types/conversation'
 import Avatar from '@/components/Avatar'
 import ChatFloaterBadgeButton from '@/components/ChatFloaterBadgeButton'
 import ChatWindow from '@/components/messages/ChatWindow'
@@ -16,7 +17,7 @@ interface FloaterChat {
   name: string
 }
 
-const ChatFloater = ({ userId }: { userId: string }) => {
+const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
   const {
     openChats,
     closeChat,
@@ -31,16 +32,6 @@ const ChatFloater = ({ userId }: { userId: string }) => {
   const [users, setUsers] = useState<any[]>([])
   const [usersLoading, setUsersLoading] = useState(false)
   const [usersError, setUsersError] = useState<string | null>(null)
-
-  // Fetch all conversations for header/chat heads
-  const { data: conversations = [] } = useQuery({
-    queryKey: ['floater-conversations'],
-    queryFn: async () => {
-      const res = await fetch('/api/conversations')
-      const json = await res.json()
-      return json.data || []
-    }
-  })
 
   // Helper to get display info for a conversation
   const getDisplayInfo = (convo: any) => {
@@ -155,11 +146,13 @@ const ChatFloater = ({ userId }: { userId: string }) => {
         </div>
       )}
       {/* Floating chat icon button */}
-      <ChannelProvider channelName={`user-${userId}-messages`}>
-        <span onClick={() => setShowChatHeads((v) => !v)}>
-          <ChatFloaterBadgeButton userId={userId} />
-        </span>
-      </ChannelProvider>
+      {currentUser?._id && (
+        <ChannelProvider channelName={`user-${currentUser._id}-messages`}>
+          <span onClick={() => setShowChatHeads((v) => !v)}>
+            <ChatFloaterBadgeButton userId={currentUser._id} />
+          </span>
+        </ChannelProvider>
+      )}
       {/* Floating chat windows */}
       <div className="fixed right-24 bottom-20 z-50 flex gap-4 lg:bottom-4">
         {openChats.map((chat) => {
@@ -212,11 +205,9 @@ const ChatFloater = ({ userId }: { userId: string }) => {
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-2 text-sm text-gray-500">
-                <ChannelProvider
-                  channelName={`conversation-${chat.conversationId}`}
-                >
+                <ChatRoomProvider name={chat.conversationId}>
                   <ChatWindow conversationId={chat.conversationId} />
-                </ChannelProvider>
+                </ChatRoomProvider>
               </div>
             </div>
           )

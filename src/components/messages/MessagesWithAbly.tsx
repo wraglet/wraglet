@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import useUserStore from '@/store/user'
+import { ChatRoomProvider } from '@ably/chat/react'
 import { Bars3Icon, ChevronLeftIcon } from '@heroicons/react/24/outline'
 import { useQuery } from '@tanstack/react-query'
-import { ChannelProvider } from 'ably/react'
 
 import type { IConversation } from '@/types/conversation'
 import ChatWindow from '@/components/messages/ChatWindow'
@@ -12,27 +12,7 @@ import Contacts from '@/components/messages/Contacts'
 import GroupChatHeader from '@/components/messages/GroupChatHeader'
 import { NewChatModal } from '@/components/messages/NewChatModal'
 
-interface Message {
-  _id: string
-  sender: any
-  content: string
-  createdAt: string
-}
-
-interface MessagesWithAblyProps {
-  conversations?: IConversation[]
-  fetchNextPage: () => void
-  hasNextPage: boolean
-  isFetchingNextPage: boolean
-  status: string
-}
-
-const MessagesWithAbly = ({
-  fetchNextPage,
-  hasNextPage,
-  isFetchingNextPage,
-  status
-}: Omit<MessagesWithAblyProps, 'conversations'>) => {
+const MessagesWithAbly = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showNewChat, setShowNewChat] = useState(false)
   const [users, setUsers] = useState<any[]>([])
@@ -151,56 +131,56 @@ const MessagesWithAbly = ({
           onSelectUser={handleSelectUser}
           variant="wraglet"
         />
-        <ChannelProvider channelName="conversations">
-          <Contacts
-            conversations={conversations}
-            selectedId={selectedId}
-            setSelectedId={handleSelectConversation}
-            refetchConversations={refetchConversations}
-          />
-        </ChannelProvider>
+        <Contacts
+          conversations={conversations}
+          selectedId={selectedId}
+          setSelectedId={handleSelectConversation}
+          refetchConversations={refetchConversations}
+        />
       </aside>
 
       {/* Chat Window */}
-      <main className="flex min-h-0 flex-1 flex-col">
-        {/* Mobile chat header with back button */}
-        {selectedConversation && (
-          <div className="relative">
-            <button
-              onClick={() => setShowContactsSidebar(true)}
-              className="absolute top-2 left-2 z-10 rounded-full p-2 hover:bg-gray-100 lg:hidden"
-            >
-              <Bars3Icon className="h-5 w-5 text-gray-600" />
-            </button>
-            <GroupChatHeader
-              participants={headerParticipants}
-              isGroup={isGroup}
-            />
-          </div>
-        )}
-
-        <div className="flex-1 overflow-y-auto p-4">
-          {!selectedId ? (
-            <div className="flex h-full flex-col items-center justify-center gap-4 text-gray-400">
+      <main className="flex min-h-0 flex-1 flex-col bg-white">
+        {selectedConversation ? (
+          <>
+            {/* Mobile chat header with back button */}
+            <div className="relative border-b">
               <button
                 onClick={() => setShowContactsSidebar(true)}
-                className="rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 lg:hidden"
+                className="absolute top-1/2 left-2 z-10 -translate-y-1/2 rounded-full p-2 hover:bg-gray-100 lg:hidden"
               >
-                View Conversations
+                <Bars3Icon className="h-5 w-5 text-gray-600" />
               </button>
-              <div className="text-center">
-                <p>Select a conversation to start chatting</p>
-                <p className="mt-1 hidden text-sm lg:block">
-                  Choose a conversation from the sidebar
-                </p>
-              </div>
+              <GroupChatHeader
+                participants={headerParticipants}
+                isGroup={isGroup}
+              />
             </div>
-          ) : (
-            <ChannelProvider channelName={`conversation-${selectedId}`}>
-              <ChatWindow conversationId={selectedId} />
-            </ChannelProvider>
-          )}
-        </div>
+
+            {selectedId && (
+              <div className="min-h-0 flex-1">
+                <ChatRoomProvider name={selectedId}>
+                  <ChatWindow conversationId={selectedId} />
+                </ChatRoomProvider>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center gap-4 text-gray-400">
+            <button
+              onClick={() => setShowContactsSidebar(true)}
+              className="rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 lg:hidden"
+            >
+              View Conversations
+            </button>
+            <div className="text-center">
+              <p>Select a conversation to start chatting</p>
+              <p className="mt-1 hidden text-sm lg:block">
+                Choose a conversation from the sidebar
+              </p>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )

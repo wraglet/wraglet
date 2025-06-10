@@ -9,12 +9,7 @@ type Props = {
 const MessagesServer = ({ userId }: Props) => {
   return (
     <div className="mx-auto w-full max-w-2xl">
-      <MessagesWithAbly
-        fetchNextPage={() => {}}
-        hasNextPage={false}
-        isFetchingNextPage={false}
-        status="success"
-      />
+      <MessagesWithAbly />
     </div>
   )
 }

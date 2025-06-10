@@ -1,46 +1,13 @@
 import NextAuth from 'next-auth'
-import { JWT } from 'next-auth/jwt'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import client from '@/lib/db'
-import User, { IUserDocument } from '@/models/User'
+import User, { type IUserDocument } from '@/models/User'
 import bcrypt from 'bcryptjs'
 import { Types } from 'mongoose'
 
 // Define a type for the user with _id field for lean() queries
 type UserWithId = IUserDocument & {
   _id: Types.ObjectId
-}
-
-// Extend NextAuth types
-declare module 'next-auth' {
-  interface User {
-    id?: string
-    email?: string | null
-    firstName?: string
-    lastName?: string
-    username?: string
-    emailVerified?: Date | null
-  }
-  interface Session {
-    user: User & {
-      id: string
-      email: string
-      firstName: string
-      lastName: string
-      username: string
-      emailVerified: Date | null
-    }
-  }
-}
-
-declare module 'next-auth/jwt' {
-  interface JWT {
-    id: string
-    email: string
-    firstName: string
-    lastName: string
-    username: string
-  }
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -68,12 +35,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
             if (isPasswordCorrect) {
               return {
-                id: user._id.toString(),
+                _id: user._id.toString(),
                 email: user.email,
                 firstName: user.firstName,
                 lastName: user.lastName,
-                username: user.username,
-                emailVerified: null
+                profilePicture: user.profilePicture
               }
             }
           } else {
@@ -92,41 +58,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     jwt: async ({ token, user }) => {
       if (user) {
-        const typedToken = token as JWT & {
-          id: string
-          email: string
-          firstName: string
-          lastName: string
-          username: string
-          emailVerified: Date | null
-        }
-        typedToken.id = user.id || ''
-        typedToken.email = user.email || ''
-        typedToken.firstName = user.firstName || ''
-        typedToken.lastName = user.lastName || ''
-        typedToken.username = user.username || ''
-        typedToken.emailVerified = user.emailVerified || null
+        token._id = user._id
+        token.email = user.email as string
+        token.firstName = user.firstName
+        token.lastName = user.lastName
+        token.profilePicture = user.profilePicture
       }
       return token
     },
     session: async ({ session, token }) => {
       if (token) {
-        const typedToken = token as JWT & {
-          id: string
-          email: string
-          firstName: string
-          lastName: string
-          username: string
-          emailVerified: Date | null
-        }
-        session.user = {
-          id: typedToken.id,
-          email: typedToken.email,
-          firstName: typedToken.firstName,
-          lastName: typedToken.lastName,
-          username: typedToken.username,
-          emailVerified: typedToken.emailVerified
-        }
+        session.user._id = token._id
+        session.user.email = token.email
+        session.user.firstName = token.firstName
+        session.user.lastName = token.lastName
+        session.user.profilePicture = token.profilePicture
       }
       return session
     }

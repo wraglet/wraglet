@@ -17,6 +17,33 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ably/chat@npm:^0.8.0":
+  version: 0.8.0
+  resolution: "@ably/chat@npm:0.8.0"
+  dependencies:
+    "@rollup/rollup-darwin-arm64": "npm:^4.18"
+    "@rollup/rollup-linux-x64-gnu": "npm:^4.18"
+    async-mutex: "npm:^0.5.0"
+    dequal: "npm:^2.0.3"
+    lodash.clonedeep: "npm:^4.5.0"
+  peerDependencies:
+    ably: ^2.9.0
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+  dependenciesMeta:
+    "@rollup/rollup-darwin-arm64":
+      optional: true
+    "@rollup/rollup-linux-x64-gnu":
+      optional: true
+  peerDependenciesMeta:
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: 10c0/11a480731badc4df06e656cac48f85f5e915eef71a76bcb902d16527760143c026f6e28a714b4d30c253a55f99046ab04a08664ad2e4f4cbe52fdd91015e1663
+  languageName: node
+  linkType: hard
+
 "@ably/msgpack-js@npm:^0.4.0":
   version: 0.4.0
   resolution: "@ably/msgpack-js@npm:0.4.0"
@@ -1868,6 +1895,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@rollup/rollup-darwin-arm64@npm:^4.18":
+  version: 4.42.0
+  resolution: "@rollup/rollup-darwin-arm64@npm:4.42.0"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@rollup/rollup-linux-x64-gnu@npm:^4.18":
+  version: 4.42.0
+  resolution: "@rollup/rollup-linux-x64-gnu@npm:4.42.0"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
 "@rtsao/scc@npm:^1.1.0":
   version: 1.1.0
   resolution: "@rtsao/scc@npm:1.1.0"
@@ -3160,11 +3201,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ably@npm:^2.4.0":
-  version: 2.4.1
-  resolution: "ably@npm:2.4.1"
+"ably@npm:^2.9.0":
+  version: 2.9.0
+  resolution: "ably@npm:2.9.0"
   dependencies:
     "@ably/msgpack-js": "npm:^0.4.0"
+    dequal: "npm:^2.0.3"
     fastestsmallesttextencoderdecoder: "npm:^1.0.22"
     got: "npm:^11.8.5"
     ulid: "npm:^2.3.0"
@@ -3177,7 +3219,7 @@ __metadata:
       optional: true
     react-dom:
       optional: true
-  checksum: 10c0/9bcf45ed4cc0f946096b6215e422cab6295299568616ace5e2892051877fe4605bd8b42cbea5e510e7284aeff92c8167fead3c77653f70f4459ac51fabd90cd0
+  checksum: 10c0/66f5dab5808bb644db7e40121b33c336d37091fc7e30462e86f068c2c99c3e30e2dd923018866ff5cde0304b775080c1a520a17c8d3feef32e833c23d764ab27
   languageName: node
   linkType: hard
 
@@ -3364,6 +3406,15 @@ __metadata:
   version: 0.0.8
   resolution: "ast-types-flow@npm:0.0.8"
   checksum: 10c0/f2a0ba8055353b743c41431974521e5e852a9824870cd6fce2db0e538ac7bf4da406bbd018d109af29ff3f8f0993f6a730c9eddbd0abd031fbcb29ca75c1014e
+  languageName: node
+  linkType: hard
+
+"async-mutex@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "async-mutex@npm:0.5.0"
+  dependencies:
+    tslib: "npm:^2.4.0"
+  checksum: 10c0/9096e6ad6b674c894d8ddd5aa4c512b09bb05931b8746ebd634952b05685608b2b0820ed5c406e6569919ff5fe237ab3c491e6f2887d6da6b6ba906db3ee9c32
   languageName: node
   linkType: hard
 
@@ -3900,7 +3951,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dequal@npm:^2.0.0":
+"dequal@npm:^2.0.0, dequal@npm:^2.0.3":
   version: 2.0.3
   resolution: "dequal@npm:2.0.3"
   checksum: 10c0/f98860cdf58b64991ae10205137c0e97d384c3a4edc7f807603887b7c4b850af1224a33d88012009f150861cbee4fa2d322c4cc04b9313bee312e47f6ecaa888
@@ -5579,6 +5630,13 @@ __metadata:
   dependencies:
     p-locate: "npm:^5.0.0"
   checksum: 10c0/d3972ab70dfe58ce620e64265f90162d247e87159b6126b01314dd67be43d50e96a50b517bce2d9452a79409c7614054c277b5232377de50416564a77ac7aad3
+  languageName: node
+  linkType: hard
+
+"lodash.clonedeep@npm:^4.5.0":
+  version: 4.5.0
+  resolution: "lodash.clonedeep@npm:4.5.0"
+  checksum: 10c0/2caf0e4808f319d761d2939ee0642fa6867a4bbf2cfce43276698828380756b99d4c4fa226d881655e6ac298dd453fe12a5ec8ba49861777759494c534936985
   languageName: node
   linkType: hard
 
@@ -7904,6 +7962,7 @@ __metadata:
   resolution: "wraglet@workspace:."
   dependencies:
     "@ably-labs/react-hooks": "npm:^2.1.2"
+    "@ably/chat": "npm:^0.8.0"
     "@ably/spaces": "npm:^0.4.0"
     "@aws-sdk/client-s3": "npm:^3.674.0"
     "@aws-sdk/lib-storage": "npm:^3.686.0"
@@ -7928,7 +7987,7 @@ __metadata:
     "@types/uuid": "npm:^10"
     "@vercel/analytics": "npm:^1.5.0"
     "@vercel/speed-insights": "npm:^1.2.0"
-    ably: "npm:^2.4.0"
+    ably: "npm:^2.9.0"
     axios: "npm:^1.7.7"
     bcryptjs: "npm:^2.4.3"
     class-variance-authority: "npm:^0.7.0"

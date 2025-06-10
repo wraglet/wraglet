@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import type { IUser } from '@/models/User'
+import { AblyProvider } from '@/providers/AblyProvider'
 
 import ChatFloaterServer from '@/components/ChatFloaterServer'
 import Header from '@/components/Header'
@@ -17,12 +18,14 @@ const AuthenticatedLayoutClientWrapper = ({ currentUser, children }: Props) => {
   const isMessagesRoute = pathname.startsWith('/messages')
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center overflow-hidden bg-[rgba(110,201,247,0.15)]">
-      <Header currentUser={currentUser} />
-      {children}
-      {!isMessagesRoute && <ChatFloaterServer currentUser={currentUser} />}
-      <MobileBottomNav />
-    </div>
+    <AblyProvider>
+      <div className="relative flex min-h-screen flex-col items-center overflow-hidden bg-[rgba(110,201,247,0.15)]">
+        <Header currentUser={currentUser} />
+        {children}
+        {!isMessagesRoute && <ChatFloaterServer currentUser={currentUser} />}
+        <MobileBottomNav />
+      </div>
+    </AblyProvider>
   )
 }
 
