@@ -19,12 +19,10 @@ import { LuArrowBigDown, LuArrowBigUp } from 'react-icons/lu'
 
 import Avatar from '@/components/Avatar'
 import CommentComponent from '@/components/Comment'
-import { ShareIcon } from '@/components/Icons'
 import ReactionIcon from '@/components/ReactionIcon'
 
 interface PostInteractionsProps {
   post: IPost
-  onShare?: () => void
 }
 
 interface User {
@@ -43,10 +41,7 @@ interface ReactionGroup {
   users: User[]
 }
 
-const PostInteractions = ({
-  post: initialPost,
-  onShare
-}: PostInteractionsProps) => {
+const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
   useEffect(() => {
     import('@lottiefiles/lottie-player')
   }, [])
@@ -62,21 +57,23 @@ const PostInteractions = ({
     )
   )
 
-  // Keep track of comment IDs we've seen
-  const commentIdsRef = useRef(
-    new Set(postComments.map((c) => c._id.toString()))
-  )
-
   // Try to use Ably channel for both comments and reactions
   const channel = useChannel(`post-${post._id}`, (message) => {
+    // Ignore messages from the current user to prevent duplication
+    if (message.clientId === user?._id) {
+      return
+    }
+
     if (message.name === 'comment') {
       const newComment = message.data
-      // Only add the comment if we haven't seen it before
-      if (!commentIdsRef.current.has(newComment._id.toString())) {
-        commentIdsRef.current.add(newComment._id.toString())
-        setPostComments((prev) => [...prev, newComment])
-        setShowCommentInput(true)
-      }
+      setPostComments((prevComments) => {
+        // Double-check to prevent duplicates under any circumstance
+        if (prevComments.some((c) => c._id === newComment._id)) {
+          return prevComments
+        }
+        return [...prevComments, newComment]
+      })
+      setShowCommentInput(true)
     } else if (message.name === 'reaction') {
       // Update the post with new reaction data
       setPost(message.data)
@@ -250,8 +247,6 @@ const PostInteractions = ({
   }
 
   const handleVote = async (voteType: 'upvote' | 'downvote') => {
-    if (!user) return
-
     try {
       // Determine if this is a share or a regular post
       const isShare = 'originalPost' in post
@@ -259,51 +254,32 @@ const PostInteractions = ({
         ? `/api/shares/${post._id}/vote`
         : `/api/posts/${post._id}/vote`
 
-      const response = await axios.patch(apiEndpoint, {
-        voteType
+      const response = await fetch(apiEndpoint, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ voteType })
       })
 
-      if (response.status !== 200) {
-        throw new Error('Failed to update vote')
+      if (!response.ok) {
+        throw new Error('Failed to vote')
       }
 
-      const updatedPost = response.data
+      const updatedPost = await response.json()
       setPost(updatedPost)
 
-      if (channel && channel.publish) {
-        await channel.publish({
-          name: 'vote',
-          data: updatedPost
-        })
+      // Publish vote update to Ably
+      try {
+        await channel.publish('vote', updatedPost)
+      } catch (err) {
+        console.warn('Failed to publish vote to Ably:', err)
       }
     } catch (error) {
-      console.error('Error updating vote:', error)
-      toast.error('Failed to update vote')
+      console.error('Error voting:', error)
+      toast.error('Failed to vote')
     }
   }
-
-  const handleShare = () => {
-    if (onShare) {
-      onShare()
-    }
-  }
-
-  // Get reaction counts by type
-  const reactionCounts =
-    post.reactions?.reduce(
-      (acc, reaction) => {
-        acc[reaction.type] = (acc[reaction.type] || 0) + 1
-        return acc
-      },
-      {} as Record<string, number>
-    ) || {}
-
-  // Get user's reaction if any
-  const userReaction =
-    user &&
-    post.reactions?.find(
-      (reaction) => reaction.userId && reaction.userId._id === user._id
-    )
 
   const handleCommentSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -322,14 +298,11 @@ const PostInteractions = ({
 
       const newComment = response.data
 
-      // Add the comment to local state
-      setPostComments((prev) => [...prev, newComment])
-      // Add the comment ID to the set to prevent Ably double-add
-      commentIdsRef.current.add(newComment._id.toString())
+      // Clear the input field and keep comments open
       setComment('')
       setShowCommentInput(true)
 
-      // Publish to Ably channel
+      // Publish to Ably channel. The useChannel hook will handle adding it to the state.
       if (channel && channel.publish) {
         await channel.publish('comment', newComment)
       }
@@ -366,6 +339,23 @@ const PostInteractions = ({
       <span className="text-red-600">-{downvotes}</span>
     </span>
   )
+
+  // Get reaction counts by type
+  const reactionCounts =
+    post.reactions?.reduce(
+      (acc, reaction) => {
+        acc[reaction.type] = (acc[reaction.type] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    ) || {}
+
+  // Get user's reaction if any
+  const userReaction =
+    user &&
+    post.reactions?.find(
+      (reaction) => reaction.userId && reaction.userId._id === user._id
+    )
 
   return (
     <div>
@@ -502,15 +492,7 @@ const PostInteractions = ({
               <FaRegComment className="text-xs text-gray-600" />
             </div>
 
-            {/* Share button */}
-            <div className="group relative">
-              <div
-                className="flex cursor-pointer items-center gap-1 rounded-full border border-solid border-gray-400 px-2 py-0.5 transition-colors hover:bg-gray-50"
-                onClick={handleShare}
-              >
-                <ShareIcon className="text-xs text-gray-600" />
-              </div>
-            </div>
+            {/* Share button is intentionally removed for shared posts */}
           </div>
         </div>
       </div>

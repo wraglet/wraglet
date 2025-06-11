@@ -1,11 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { IPost } from '@/models/Post'
 import { IShare } from '@/models/Share'
-import useUserStore from '@/store/user'
 import { ChannelProvider } from 'ably/react'
 import { formatDistanceToNow } from 'date-fns'
 import { HiDotsHorizontal } from 'react-icons/hi'
@@ -14,9 +12,12 @@ import Avatar from '@/components/Avatar'
 import PostImages from '@/components/PostImages'
 import PostInteractions from '@/components/PostInteractions'
 
-const ShareModalAbly = dynamic(() => import('@/components/ShareModalAbly'), {
-  ssr: false
-})
+const ShareModalWithAbly = dynamic(
+  () => import('@/components/ShareModalWithAbly'),
+  {
+    ssr: false
+  }
+)
 
 interface ShareContentProps {
   share: IShare & {
@@ -35,9 +36,6 @@ interface ShareContentProps {
 }
 
 const ShareContent = ({ share }: ShareContentProps) => {
-  const { user } = useUserStore()
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
-
   // Transform share to look like a post for interactions
   const shareAsPost = {
     ...share,
@@ -116,20 +114,8 @@ const ShareContent = ({ share }: ShareContentProps) => {
 
       {/* Share's Own Interactions (separate from original post) */}
       <ChannelProvider channelName={`post-${share._id}`}>
-        <PostInteractions
-          post={shareAsPost}
-          onShare={() => setIsShareModalOpen(true)}
-        />
+        <PostInteractions post={shareAsPost} />
       </ChannelProvider>
-
-      {/* Share Modal for resharing */}
-      {isShareModalOpen && (
-        <ShareModalAbly
-          isOpen={isShareModalOpen}
-          onClose={() => setIsShareModalOpen(false)}
-          post={share.originalPost} // Always share the original post, not the share
-        />
-      )}
     </>
   )
 }

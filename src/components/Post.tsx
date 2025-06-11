@@ -38,9 +38,12 @@ import { ShareIcon } from '@/components/Icons'
 import ReactionIcon from '@/components/ReactionIcon'
 
 // Dynamic import for ShareModal
-const ShareModalAbly = dynamic(() => import('@/components/ShareModalAbly'), {
-  ssr: false
-})
+const ShareModalWithAbly = dynamic(
+  () => import('@/components/ShareModalWithAbly'),
+  {
+    ssr: false
+  }
+)
 
 interface User {
   _id: string
@@ -78,21 +81,25 @@ const Post = ({ post: initialPost }: PostProps) => {
         typeof comment !== 'string' && '_id' in comment
     )
   )
-  // Keep track of comment IDs we've seen
-  const commentIdsRef = useRef(
-    new Set(postComments.map((c) => c._id.toString()))
-  )
 
   // Try to use Ably channel for both comments and reactions
   const channel = useChannel(`post-${post._id}`, (message) => {
+    // Ignore messages from the current user to prevent duplication
+    // as we are already handling optimistic updates.
+    if (message.clientId === user?._id) {
+      return
+    }
+
     if (message.name === 'comment') {
       const newComment = message.data
-      // Only add the comment if we haven't seen it before
-      if (!commentIdsRef.current.has(newComment._id.toString())) {
-        commentIdsRef.current.add(newComment._id.toString())
-        setPostComments((prev) => [...prev, newComment])
-        setShowCommentInput(true)
-      }
+      setPostComments((prevComments) => {
+        // Double-check to prevent duplicates under any circumstance
+        if (prevComments.some((c) => c._id === newComment._id)) {
+          return prevComments
+        }
+        return [...prevComments, newComment]
+      })
+      setShowCommentInput(true)
     } else if (message.name === 'reaction') {
       // Update the post with new reaction data
       setPost(message.data)
@@ -253,14 +260,11 @@ const Post = ({ post: initialPost }: PostProps) => {
 
       const newComment = response.data
 
-      // Add the comment to local state
-      setPostComments((prev) => [...prev, newComment])
-      // Add the comment ID to the set to prevent Ably double-add
-      commentIdsRef.current.add(newComment._id.toString())
+      // Clear the input field and keep comments open
       setComment('')
       setShowCommentInput(true)
 
-      // Publish to Ably channel
+      // Publish to Ably channel. The useChannel hook will handle adding it to the state.
       if (channel && channel.publish) {
         await channel.publish('comment', newComment)
       }
@@ -715,14 +719,10 @@ const Post = ({ post: initialPost }: PostProps) => {
 
       {/* ShareModal - dynamically imported */}
       {showShareModal && (
-        <ShareModalAbly
+        <ShareModalWithAbly
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
           post={post}
-          onShareToFeed={() => {
-            // Optionally refresh the feed or show success message
-            toast.success('Post shared successfully!')
-          }}
         />
       )}
     </div>

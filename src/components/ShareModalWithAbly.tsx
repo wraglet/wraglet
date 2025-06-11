@@ -24,6 +24,28 @@ import { HiLink, HiX } from 'react-icons/hi'
 import Avatar from '@/components/Avatar'
 import { Button } from '@/components/ui/button'
 
+interface ExternalShareButtonProps {
+  icon: React.ElementType
+  label: string
+  onClick: () => void
+  className?: string
+}
+
+const ExternalShareButton = ({
+  icon: Icon,
+  label,
+  onClick,
+  className
+}: ExternalShareButtonProps) => (
+  <button
+    onClick={onClick}
+    className={`flex items-center justify-center gap-2 rounded-lg border border-gray-200 p-3 transition-colors hover:border-gray-300 ${className}`}
+  >
+    <Icon className="h-5 w-5 text-gray-600" />
+    <span className="text-sm font-medium text-gray-900">{label}</span>
+  </button>
+)
+
 interface ShareModalProps {
   isOpen: boolean
   onClose: () => void
@@ -43,7 +65,7 @@ const ShareModalWithAbly = ({
   >('public')
   const [shareMessage, setShareMessage] = useState('')
   const [isSharing, setIsSharing] = useState(false)
-  const { publish } = useChannel('post-channel', () => {})
+  const { publish } = useChannel(`post-${post._id}`, () => {})
 
   const visibilityOptions = [
     {
@@ -98,12 +120,12 @@ const ShareModalWithAbly = ({
         setShareMessage('')
         setSelectedVisibility('public')
       }
-    } catch (error: any) {
-      console.error('Error sharing post:', error)
-      if (error.response?.status === 409) {
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
         toast.error('You have already shared this post')
       } else {
         toast.error('Failed to share post')
+        console.error('Error sharing post:', error)
       }
     } finally {
       setIsSharing(false)
@@ -264,75 +286,48 @@ const ShareModalWithAbly = ({
                     })}
                   </div>
 
+                  {/* Share Button */}
                   <Button
                     onClick={handleShareToFeed}
+                    className="w-full"
                     disabled={isSharing}
-                    className="w-full bg-sky-500 text-white hover:bg-sky-600 disabled:opacity-50"
                   >
-                    {isSharing ? 'Sharing...' : 'Share to Feed'}
+                    {isSharing ? 'Sharing...' : 'Share Now'}
                   </Button>
                 </div>
 
-                {/* Divider */}
-                <div className="my-6 border-t border-gray-200"></div>
-
                 {/* External Share Section */}
-                <div>
+                <div className="border-t border-gray-200 pt-4">
                   <h4 className="mb-3 text-sm font-medium text-gray-900">
-                    Share externally
+                    Or share with a link
                   </h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    <ExternalShareButton
+                      icon={HiLink}
+                      label="Copy Link"
                       onClick={() => handleExternalShare('link')}
-                      className="flex items-center gap-2 rounded-lg border border-gray-200 p-3 transition-colors hover:border-gray-300"
-                    >
-                      <HiLink className="h-5 w-5 text-gray-600" />
-                      <span className="text-sm font-medium text-gray-900">
-                        Copy Link
-                      </span>
-                    </button>
-
-                    {'share' in navigator && (
-                      <button
-                        onClick={() => handleExternalShare('native')}
-                        className="flex items-center gap-2 rounded-lg border border-gray-200 p-3 transition-colors hover:border-gray-300"
-                      >
-                        <span className="text-lg">📱</span>
-                        <span className="text-sm font-medium text-gray-900">
-                          More
-                        </span>
-                      </button>
-                    )}
-
-                    <button
+                    />
+                    <ExternalShareButton
+                      icon={FaTwitter}
+                      label="Twitter"
                       onClick={() => handleExternalShare('twitter')}
-                      className="flex items-center gap-2 rounded-lg border border-gray-200 p-3 transition-colors hover:border-gray-300"
-                    >
-                      <FaTwitter className="h-5 w-5 text-blue-400" />
-                      <span className="text-sm font-medium text-gray-900">
-                        Twitter
-                      </span>
-                    </button>
-
-                    <button
+                    />
+                    <ExternalShareButton
+                      icon={FaFacebookF}
+                      label="Facebook"
                       onClick={() => handleExternalShare('facebook')}
-                      className="flex items-center gap-2 rounded-lg border border-gray-200 p-3 transition-colors hover:border-gray-300"
-                    >
-                      <FaFacebookF className="h-5 w-5 text-blue-600" />
-                      <span className="text-sm font-medium text-gray-900">
-                        Facebook
-                      </span>
-                    </button>
-
-                    <button
+                    />
+                    <ExternalShareButton
+                      icon={FaWhatsapp}
+                      label="WhatsApp"
                       onClick={() => handleExternalShare('whatsapp')}
-                      className="col-span-2 flex items-center gap-2 rounded-lg border border-gray-200 p-3 transition-colors hover:border-gray-300"
-                    >
-                      <FaWhatsapp className="h-5 w-5 text-green-500" />
-                      <span className="text-sm font-medium text-gray-900">
-                        WhatsApp
-                      </span>
-                    </button>
+                    />
+                    <ExternalShareButton
+                      icon={HiLink}
+                      label="More"
+                      onClick={() => handleExternalShare('native')}
+                      className="sm:col-span-2"
+                    />
                   </div>
                 </div>
               </DialogPanel>

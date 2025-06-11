@@ -4,7 +4,9 @@ import dynamic from 'next/dynamic'
 import { IPost } from '@/models/Post'
 import { IShare } from '@/models/Share'
 
-const PostAbly = dynamic(() => import('@/components/PostAbly'), { ssr: false })
+const PostWithAbly = dynamic(() => import('@/components/PostWithAbly'), {
+  ssr: false
+})
 const SharedPostAbly = dynamic(() => import('@/components/SharedPostAbly'), {
   ssr: false
 })
@@ -20,7 +22,7 @@ const PostClientWrapper = ({ post }: PostClientWrapperProps) => {
   }
 
   // Regular post
-  return <PostAbly post={post as IPost} />
+  return <PostWithAbly post={post as IPost} />
 }
 
 export default PostClientWrapper

@@ -1,16 +1,16 @@
 'use client'
 
-import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
+import { ChannelProvider } from 'ably/react'
 
-import { BellIcon } from '@/components/NavIcons'
-
-const HeaderNotificationsIconAbly = dynamic(
-  () => import('./HeaderNotificationsIconAbly'),
-  { ssr: false }
+const HeaderNotificationsIcon = dynamic(
+  () => import('@/components/HeaderNotificationsIcon'),
+  {
+    ssr: false
+  }
 )
 
-interface HeaderNotificationsIconClientWrapperProps {
+export interface HeaderNotificationsIconClientWrapperProps {
   userId: string
 }
 
@@ -18,9 +18,9 @@ const HeaderNotificationsIconClientWrapper = ({
   userId
 }: HeaderNotificationsIconClientWrapperProps) => {
   return (
-    <Suspense fallback={<BellIcon className="text-white" />}>
-      <HeaderNotificationsIconAbly userId={userId} />
-    </Suspense>
+    <ChannelProvider channelName={`user-${userId}-notifications`}>
+      <HeaderNotificationsIcon userId={userId} />
+    </ChannelProvider>
   )
 }
 

@@ -1,20 +1,27 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { ChannelProvider } from 'ably/react'
 
-interface HeaderMessagesIconClientWrapperProps {
+const HeaderMessagesIcon = dynamic(
+  () => import('@/components/HeaderMessagesIcon'),
+  {
+    ssr: false
+  }
+)
+
+export interface HeaderMessagesIconClientWrapperProps {
   userId: string
 }
-
-const HeaderMessagesIconAbly = dynamic(
-  () => import('./HeaderMessagesIconAbly'),
-  { ssr: false }
-)
 
 const HeaderMessagesIconClientWrapper = ({
   userId
 }: HeaderMessagesIconClientWrapperProps) => {
-  return <HeaderMessagesIconAbly userId={userId} />
+  return (
+    <ChannelProvider channelName={`user-${userId}-messages`}>
+      <HeaderMessagesIcon userId={userId} />
+    </ChannelProvider>
+  )
 }
 
 export default HeaderMessagesIconClientWrapper
