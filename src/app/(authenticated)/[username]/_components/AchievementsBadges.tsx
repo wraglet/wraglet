@@ -1,10 +1,10 @@
 'use client'
 
-import { FC } from 'react'
+import { FC, ReactNode } from 'react'
 import { FaMedal, FaStar, FaTrophy } from 'react-icons/fa6'
 
 interface Achievement {
-  icon: JSX.Element
+  icon: ReactNode
   title: string
   description: string
 }
