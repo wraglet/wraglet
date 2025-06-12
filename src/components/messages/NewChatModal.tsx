@@ -23,8 +23,9 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({
   variant = 'default'
 }) => {
   const [search, setSearch] = useState('')
-  const filtered = users.filter((u) =>
-    u.username.toLowerCase().includes(search.toLowerCase())
+  const filtered = users.filter(
+    (u) =>
+      u && u.username && u.username.toLowerCase().includes(search.toLowerCase())
   )
   if (!open) return null
   return (
