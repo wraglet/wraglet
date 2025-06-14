@@ -1,7 +1,7 @@
 import getPostsByUsername from '@/actions/getPostsByUsername'
 
-import Header from '@/app/(authenticated)/[username]/_components/Header'
-import ProfilePostsClientWrapper from '@/app/(authenticated)/[username]/_components/ProfilePostsClientWrapper'
+import Header from '@/components/profile/Header'
+import ProfilePostsClientWrapper from '@/components/profile/ProfilePostsClientWrapper'
 
 const ProfilePage = async ({
   params

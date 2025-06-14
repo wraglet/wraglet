@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 
-import { ChangelogTimeline } from '@/components/unauthenticated/ChangelogTimeline'
+import { ChangelogTimeline } from '@/components/legals/ChangelogTimeline'
 
 export const metadata: Metadata = {
   title: 'Changelog - Wraglet',

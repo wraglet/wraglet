@@ -11,8 +11,8 @@ import {
 } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 
-import Avatar from '@/components/Avatar'
-import { Button } from '@/components/ui/button'
+import Avatar from '@/components/shared/Avatar'
+import { ShadcnButton } from '@/components/shared/ShadcnButton'
 
 const NotificationsPage = () => {
   const [allNotifications, setAllNotifications] = useState<INotification[]>([])
@@ -196,14 +196,14 @@ const NotificationsPage = () => {
               )}
             </div>
             {unreadCount > 0 && (
-              <Button
+              <ShadcnButton
                 variant="outline"
                 size="sm"
                 onClick={() => markAllAsReadMutation.mutate()}
                 disabled={markAllAsReadMutation.isPending}
               >
                 Mark all as read
-              </Button>
+              </ShadcnButton>
             )}
           </div>
         </div>
@@ -278,14 +278,14 @@ const NotificationsPage = () => {
         {/* Load More */}
         {hasNextPage && (
           <div className="border-t border-gray-200 px-6 py-4">
-            <Button
+            <ShadcnButton
               variant="outline"
               className="w-full"
               onClick={() => fetchNextPage()}
               disabled={isFetchingNextPage}
             >
               {isFetchingNextPage ? 'Loading...' : 'Load more notifications'}
-            </Button>
+            </ShadcnButton>
           </div>
         )}
       </div>

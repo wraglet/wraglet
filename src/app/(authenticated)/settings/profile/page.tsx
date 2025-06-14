@@ -11,7 +11,7 @@ import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { z } from 'zod'
 
-import Avatar from '@/components/Avatar'
+import Avatar from '@/components/shared/Avatar'
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(50),

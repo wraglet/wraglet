@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { SearchResponse, SearchResultItem } from '@/interfaces'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 
-import Avatar from '@/components/Avatar'
+import Avatar from '@/components/shared/Avatar'
 
 const SearchResults = () => {
   const searchParams = useSearchParams()

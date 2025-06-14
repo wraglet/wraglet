@@ -1,13 +1,6 @@
 'use client'
 
-import dynamic from 'next/dynamic'
-
-const MessagesAbly = dynamic(
-  () => import('@/components/messages/MessagesAbly'),
-  {
-    ssr: false
-  }
-)
+import MessagesAbly from '@/components/chat/MessagesAbly'
 
 const MessagesPage = () => {
   return (

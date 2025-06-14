@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import getCurrentUser from '@/actions/getCurrentUser'
 import getSession from '@/actions/getSession'
 
-import AuthenticatedLayoutClientWrapper from '@/components/AuthenticatedLayoutClientWrapper'
+import AuthenticatedLayoutClientWrapper from '@/components/layout/AuthenticatedLayoutClientWrapper'
 
 export const dynamic = 'force-dynamic'
 

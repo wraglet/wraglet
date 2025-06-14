@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import getSession from '@/actions/getSession'
 
-import AuthCard from '@/components/AuthCard'
+import AuthCard from '@/components/auth/AuthCard'
 
 export const metadata: Metadata = {
   title: 'Sign In to Wraglet',

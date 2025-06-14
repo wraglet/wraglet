@@ -2,11 +2,12 @@ import { Suspense } from 'react'
 import getCurrentUser from '@/actions/getCurrentUser'
 import getOtherUsers from '@/actions/getOtherUsers'
 
-import FeedClientWrapper from '@/app/(authenticated)/feed/_components/Feed/FeedClientWrapper'
-import FeedNewChatModalWrapper from '@/app/(authenticated)/feed/_components/FeedNewChatModalWrapper'
-import LeftNav from '@/app/(authenticated)/feed/_components/LeftNav'
-import MobileResponsiveWrapper from '@/app/(authenticated)/feed/_components/MobileResponsiveWrapper'
-import RightNav from '@/app/(authenticated)/feed/_components/RightNav'
+import FeedNewChatModalWrapper from '@/components/chat/FeedNewChatModalWrapper'
+import FeedClientWrapper from '@/components/feed/FeedClientWrapper'
+import LeftNav from '@/components/feed/LeftNav'
+import MobileResponsiveWrapper from '@/components/feed/MobileResponsiveWrapper'
+import RightNav from '@/components/feed/RightNav'
+
 import Loading from '@/app/loading'
 
 const Page = async () => {

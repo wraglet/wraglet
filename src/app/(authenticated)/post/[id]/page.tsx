@@ -2,7 +2,7 @@ import Link from 'next/link'
 import getPostById from '@/actions/getPostById'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 
-import PostClientWrapper from '@/components/PostClientWrapper'
+import PostClientWrapper from '@/components/feed/PostClientWrapper'
 
 const PostPage = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params

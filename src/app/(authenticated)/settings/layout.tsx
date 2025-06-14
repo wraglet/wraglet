@@ -10,8 +10,8 @@ import {
   UserIcon
 } from '@heroicons/react/24/outline'
 
-import MobileSettingsButton from '@/components/MobileSettingsButton'
-import MobileSettingsDrawer from '@/components/MobileSettingsDrawer'
+import MobileSettingsButton from '@/components/layout/MobileSettingsButton'
+import MobileSettingsDrawer from '@/components/layout/MobileSettingsDrawer'
 
 const settingsCategories = [
   { label: 'Profile', href: '/settings/profile', icon: UserIcon },

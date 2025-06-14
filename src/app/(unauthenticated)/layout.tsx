@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import UnauthenticatedLayoutClient from '@/components/UnauthenticatedLayoutClient'
+import UnauthenticatedLayoutClient from '@/components/layout/UnauthenticatedLayoutClient'
 
 export const metadata: Metadata = {
   title: {
