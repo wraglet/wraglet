@@ -1,47 +1,106 @@
-import type { Metadata } from 'next'
+import { Dosis } from 'next/font/google'
+import Image from 'next/image'
+import Link from 'next/link'
 
+import AuthButtons from '@/components/auth/AuthButtons'
 import UnauthenticatedLayoutClient from '@/components/layout/UnauthenticatedLayoutClient'
 
-export const metadata: Metadata = {
-  title: {
-    default: 'Wraglet',
-    template: '%s | Wraglet'
-  },
-  description:
-    'Read important information about Wraglet. Access our help center, terms of service, privacy policy, cookie policy, and advertising information.',
-  openGraph: {
-    title: 'Wraglet',
-    description:
-      'Read important information about Wraglet. Access our help center, terms of service, privacy policy, cookie policy, and advertising information.',
-    images: [
-      {
-        url: 'https://cdn.wraglet.com/images/logo/logo.png',
-        alt: 'Wraglet',
-        type: 'image/png',
-        width: 300,
-        height: 300
-      }
-    ],
-    siteName: 'Wraglet'
-  },
-  twitter: {
-    title: 'Wraglet',
-    description:
-      'Read important information about Wraglet. Access our help center, terms of service, privacy policy, cookie policy, and advertising information.',
-    images: [
-      {
-        url: 'https://cdn.wraglet.com/images/logo/logo.png',
-        alt: 'Wraglet',
-        type: 'image/png',
-        width: 300,
-        height: 300
-      }
-    ]
-  }
-}
+const dosis = Dosis({ subsets: ['latin'], weight: ['700'], display: 'swap' })
 
 const UnauthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
-  return <UnauthenticatedLayoutClient>{children}</UnauthenticatedLayoutClient>
+  return (
+    <main className="relative flex h-screen flex-col items-center justify-between overflow-hidden bg-gradient-to-br from-[#eaf6fd] via-[#e3f1fa] to-[#b3e0fa]">
+      {/* Top logo/wordmark */}
+      <div className="animate-fade-in-down justiy-between z-20 flex w-full justify-between px-6 pt-8 pb-2">
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/logo/android-chrome-192x192.png`}
+            width={40}
+            height={40}
+            alt="Wraglet logo"
+          />
+          <span
+            className={`${dosis.className} text-2xl font-bold tracking-tight text-[#0EA5E9]`}
+          >
+            wraglet
+          </span>
+        </Link>
+        <AuthButtons />
+      </div>
+
+      {/* Globe illustration: only show on md+ */}
+      <div className="animate-fade-in-up pointer-events-none absolute bottom-0 left-0 z-10 hidden select-none md:block">
+        <div className="relative h-[420px] w-[430px] xl:h-[535px] xl:w-[552px]">
+          <Image
+            priority
+            src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/logo/logo.png`}
+            fill
+            style={{
+              objectFit: 'contain',
+              filter: 'drop-shadow(0 0 60px #42BBFF88)'
+            }}
+            alt="Wraglet globe"
+          />
+        </div>
+      </div>
+
+      {/* Mobile abstract background pattern */}
+      <div className="absolute inset-0 z-0 block bg-[url('/images/mobile-bg.svg')] bg-cover bg-top bg-no-repeat opacity-30 md:hidden" />
+
+      <section className="relative z-20 flex w-full flex-1 items-center justify-center overflow-hidden px-2 py-4">
+        <UnauthenticatedLayoutClient>{children}</UnauthenticatedLayoutClient>
+      </section>
+      {/* Footer */}
+      <footer className="z-20 mt-auto flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-white/30 bg-transparent px-2 py-3 text-xs font-medium text-[#1B87EA]">
+        <Link
+          href="/help"
+          className="transition-colors hover:underline focus:underline"
+        >
+          Help
+        </Link>
+        <Link
+          href="/changelog"
+          className="transition-colors hover:underline focus:underline"
+        >
+          Changelog
+        </Link>
+        <Link
+          href="/terms-of-service"
+          className="transition-colors hover:underline focus:underline"
+        >
+          Terms of Service
+        </Link>
+        <Link
+          href="/privacy-policy"
+          className="transition-colors hover:underline focus:underline"
+        >
+          Privacy Policy
+        </Link>
+        <Link
+          href="/cookie-policy"
+          className="transition-colors hover:underline focus:underline"
+        >
+          Cookie Policy
+        </Link>
+        <Link
+          href="/advertising"
+          className="transition-colors hover:underline focus:underline"
+        >
+          Advertising
+        </Link>
+        <span className="flex w-full items-center justify-center gap-1 text-center text-[11px] font-semibold text-[#0EA5E9]">
+          <Image
+            src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/logo/android-chrome-192x192.png`}
+            width={16}
+            height={16}
+            alt="Globe icon"
+            className="inline-block"
+          />
+          &copy; {new Date().getFullYear()} Wraglet
+        </span>
+      </footer>
+    </main>
+  )
 }
 
 export default UnauthenticatedLayout

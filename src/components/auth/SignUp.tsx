@@ -2,6 +2,7 @@
 
 import { FC } from 'react'
 import { signIn } from 'next-auth/react'
+import Link from 'next/link'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import axios from 'axios'
@@ -20,13 +21,7 @@ import {
   FormMessage
 } from '@/components/shared/Form'
 import Input from '@/components/shared/Input'
-import ListBox, { ListProps } from '@/components/shared/ListBox'
-
-const friendRequestsOptions: ListProps[] = [
-  { val: 'everyone', name: 'Everyone' },
-  { val: 'friendsOfFriends', name: 'Friends of Friends' },
-  { val: 'noOne', name: 'No One' }
-]
+import ListBox from '@/components/shared/ListBox'
 
 const genderOptions: string[] = ['Female', 'Male', 'Others']
 const pronounOptions: string[] = ['She/Her', 'He/Him', 'They/Them']
@@ -123,12 +118,13 @@ const SignUp: FC = () => {
         onSubmit={handleSubmit(onSubmit)}
         className="flex w-full flex-col gap-4"
       >
-        <div className="flex gap-2">
+        {/* First and Last Name Fields */}
+        <div className="flex flex-col gap-2 md:flex-row">
           <FormField
             control={control}
             name="firstName"
             render={({ field }) => (
-              <FormItem className="w-1/2">
+              <FormItem className="w-full md:w-1/2">
                 <FormControl>
                   <Input
                     placeholder="First name"
@@ -147,7 +143,7 @@ const SignUp: FC = () => {
             control={control}
             name="lastName"
             render={({ field }) => (
-              <FormItem className="w-1/2">
+              <FormItem className="w-full md:w-1/2">
                 <FormControl>
                   <Input
                     placeholder="Last name"
@@ -229,12 +225,13 @@ const SignUp: FC = () => {
             </FormItem>
           )}
         />
-        <div className="flex gap-2">
+        {/* Gender and Pronoun Fields */}
+        <div className="flex flex-col gap-2 md:flex-row">
           <FormField
             control={control}
             name="gender"
             render={({ field }) => (
-              <FormItem className="w-1/2">
+              <FormItem className="w-full md:w-1/2">
                 <FormControl>
                   <ListBox
                     label="Gender"
@@ -254,7 +251,7 @@ const SignUp: FC = () => {
             control={control}
             name="pronoun"
             render={({ field }) => (
-              <FormItem className="w-1/2">
+              <FormItem className="w-full md:w-1/2">
                 <FormControl>
                   <ListBox
                     label="Pronoun"
@@ -303,7 +300,25 @@ const SignUp: FC = () => {
         <div className="my-2 border-t border-solid border-[#E3F1FA]/70" />
         <div className="flex flex-col gap-2">
           <h3 className="font-geist-sans mb-1 text-sm text-slate-600">
-            Terms of Service and Privacy Policy
+            <span>By signing up, you agree to our </span>
+            <a
+              href="/terms-of-service"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#0EA5E9] underline hover:text-[#42BBFF]"
+            >
+              Terms of Service
+            </a>
+            <span> and </span>
+            <a
+              href="/privacy-policy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#0EA5E9] underline hover:text-[#42BBFF]"
+            >
+              Privacy Policy
+            </a>
+            .
           </h3>
           <FormField
             control={control}
@@ -329,7 +344,7 @@ const SignUp: FC = () => {
         </div>
         <div className="mt-4 flex w-full items-center justify-center border-t border-solid border-[#E3F1FA]/70 pt-4">
           <Button
-            className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-[#42BBFF] to-[#0EA5E9] py-3 text-lg font-semibold text-white shadow-lg transition-all hover:from-[#0EA5E9] hover:to-[#42BBFF] focus:ring-2 focus:ring-[#0EA5E9]"
+            className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-[#42BBFF] to-[#0EA5E9] py-2.5 text-base font-semibold text-white shadow-lg transition-all hover:from-[#0EA5E9] hover:to-[#42BBFF] focus:ring-2 focus:ring-[#0EA5E9] disabled:cursor-not-allowed disabled:opacity-60"
             type="submit"
             disabled={!isValid}
           >
@@ -352,6 +367,15 @@ const SignUp: FC = () => {
             </span>
             <span className="group-active:animate-ripple pointer-events-none absolute inset-0 rounded-xl bg-white/20" />
           </Button>
+        </div>
+        <div className="mt-2 flex w-full items-center justify-center">
+          <Link
+            href="/"
+            className="text-sm font-medium text-[#0EA5E9] transition-colors hover:underline focus:underline"
+          >
+            Already have an account?{' '}
+            <span className="font-semibold">Log in!</span>
+          </Link>
         </div>
       </form>
     </FormProvider>

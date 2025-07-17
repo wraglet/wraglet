@@ -90,5 +90,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   pages: {
     signIn: '/',
     error: '/'
+  },
+  cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === 'production'
+          ? '__Secure-next-auth.session-token'
+          : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production'
+        // Optionally set domain for production if needed:
+        // domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : undefined,
+      }
+    }
   }
 })
