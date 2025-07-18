@@ -1,9 +1,7 @@
 'use client'
 
-import { FC, FormEvent, useEffect, useReducer } from 'react'
-import { PostInterface } from '@/interfaces'
+import { FC, FormEvent, useEffect, useReducer, useState } from 'react'
 import { IPost } from '@/models/Post'
-import useFeedPostsStore from '@/store/feedPosts'
 import { ChannelProvider, useChannel } from 'ably/react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
@@ -18,6 +16,7 @@ interface FeedWithAblyProps {
   hasNextPage: boolean
   isFetchingNextPage: boolean
   status: string
+  isTrendingFeed?: boolean // NEW: optional prop
 }
 
 const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
@@ -25,26 +24,15 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
   fetchNextPage,
   hasNextPage,
   isFetchingNextPage,
-  status
+  status,
+  isTrendingFeed = false // NEW: default false
 }) => {
-  const {
-    posts,
-    setFeedPosts,
-    isFeedPostsInitialized,
-    setIsFeedPostsInitialized
-  } = useFeedPostsStore()
+  // Local posts state for real-time and optimistic updates
+  const [posts, setPosts] = useState<any[]>(initialPosts)
 
   useEffect(() => {
-    if (!isFeedPostsInitialized) {
-      setFeedPosts(initialPosts as unknown as PostInterface[])
-      setIsFeedPostsInitialized(true)
-    }
-  }, [
-    initialPosts,
-    setFeedPosts,
-    setIsFeedPostsInitialized,
-    isFeedPostsInitialized
-  ])
+    setPosts(initialPosts)
+  }, [initialPosts])
 
   const initialState = {
     text: '',
@@ -61,7 +49,7 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
   const { publish } = useChannel('post-channel', (message) => {
     try {
       if (message.name === 'post') {
-        // Handle new posts
+        // Handle new posts (deduplicate)
         const postExists = posts.some(
           (p: any) => p.type === 'post' && p.data._id === message.data._id
         )
@@ -71,7 +59,7 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
             data: message.data,
             createdAt: message.data.createdAt
           }
-          setFeedPosts([newPost, ...posts])
+          setPosts((prev) => [newPost, ...prev])
         }
       } else if (message.name === 'share') {
         // Handle new shares
@@ -84,7 +72,6 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
             data: message.data,
             createdAt: message.data.createdAt
           }
-
           // Also update the original post's shareCount in the feed
           const updatedPosts = posts.map((post: any) => {
             if (
@@ -101,8 +88,7 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
             }
             return post
           })
-
-          setFeedPosts([newShare, ...updatedPosts])
+          setPosts((prev) => [newShare, ...updatedPosts])
         }
       } else if (message.name === 'post-update') {
         // Handle post updates (like shareCount changes)
@@ -118,7 +104,7 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
           }
           return post
         })
-        setFeedPosts(updatedPosts)
+        setPosts(updatedPosts)
       }
     } catch (error) {
       console.error('Error handling post update:', error)
@@ -132,13 +118,13 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
     try {
       const res = await axios.post('/api/posts', { text, image })
 
-      // Update local state first
+      // Optimistically add new post to local state
       const newPost = {
         type: 'post',
         data: res.data,
         createdAt: res.data.createdAt
       }
-      setFeedPosts([newPost, ...posts])
+      setPosts((prev) => [newPost, ...prev])
 
       // Publish to Ably channel
       try {
@@ -182,6 +168,11 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
   return (
     <div className="mx-auto w-full max-w-2xl">
       <div className="space-y-4">
+        {isTrendingFeed && (
+          <div className="py-2 text-center font-semibold text-blue-600">
+            Discover Trending Posts
+          </div>
+        )}
         <CreatePost
           isLoading={isLoading}
           submitPost={submitPost}
