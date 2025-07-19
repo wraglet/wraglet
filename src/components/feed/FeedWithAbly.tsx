@@ -1,12 +1,9 @@
 'use client'
 
-import { FC, FormEvent, useEffect, useReducer, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { IPost } from '@/models/Post'
 import { ChannelProvider, useChannel } from 'ably/react'
-import axios from 'axios'
-import toast from 'react-hot-toast'
 
-import CreatePost from '@/components/feed/CreatePost'
 import PostClientWrapper from '@/components/feed/PostClientWrapper'
 import SharedPost from '@/components/feed/SharedPost'
 
@@ -27,128 +24,90 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
   status,
   isTrendingFeed = false // NEW: default false
 }) => {
-  // Local posts state for real-time and optimistic updates
-  const [posts, setPosts] = useState<any[]>(initialPosts)
+  // Local posts state for real-time and optimistic updates with deduplication
+  const [posts, setPosts] = useState<any[]>(() => {
+    // Deduplicate initial posts
+    const seen = new Set()
+    return initialPosts.filter((post: any) => {
+      const id = post._id || post.data?._id
+      if (!id || seen.has(id)) return false
+      seen.add(id)
+      return true
+    })
+  })
 
   useEffect(() => {
-    setPosts(initialPosts)
+    // Deduplicate when initialPosts change
+    const seen = new Set()
+    const deduplicatedPosts = initialPosts.filter((post: any) => {
+      const id = post._id || post.data?._id
+      if (!id || seen.has(id)) return false
+      seen.add(id)
+      return true
+    })
+    setPosts(deduplicatedPosts)
   }, [initialPosts])
-
-  const initialState = {
-    text: '',
-    image: null,
-    isLoading: false
-  }
-
-  const [{ text, image, isLoading }, dispatchState] = useReducer(
-    (state: any, action: any) => ({ ...state, ...action }),
-    initialState
-  )
 
   // Use Ably channel for real-time updates
   const { publish } = useChannel('post-channel', (message) => {
     try {
       if (message.name === 'post') {
         // Handle new posts (deduplicate)
-        const postExists = posts.some(
-          (p: any) => p.type === 'post' && p.data._id === message.data._id
-        )
-        if (!postExists) {
-          const newPost = {
-            type: 'post',
-            data: message.data,
-            createdAt: message.data.createdAt
-          }
-          setPosts((prev) => [newPost, ...prev])
-        }
-      } else if (message.name === 'share') {
-        // Handle new shares
-        const shareExists = posts.some(
-          (p: any) => p.type === 'share' && p.data._id === message.data._id
-        )
-        if (!shareExists) {
-          const newShare = {
-            type: 'share',
-            data: message.data,
-            createdAt: message.data.createdAt
-          }
-          // Also update the original post's shareCount in the feed
-          const updatedPosts = posts.map((post: any) => {
-            if (
-              post.type === 'post' &&
-              post.data._id === message.data.originalPost._id
-            ) {
-              return {
-                ...post,
-                data: {
-                  ...post.data,
-                  shareCount: (post.data.shareCount || 0) + 1
-                }
-              }
-            }
-            return post
+        setPosts((prev) => {
+          const postExists = prev.some((p: any) => {
+            const existingId = p._id || p.data?._id
+            return existingId === message.data._id
           })
-          setPosts((prev) => [newShare, ...updatedPosts])
-        }
-      } else if (message.name === 'post-update') {
-        // Handle post updates (like shareCount changes)
-        const updatedPosts = posts.map((post: any) => {
-          if (post.type === 'post' && post.data._id === message.data.postId) {
-            return {
-              ...post,
-              data: {
-                ...post.data,
-                shareCount: message.data.shareCount
-              }
+          if (!postExists) {
+            const newPost = {
+              type: 'post',
+              data: message.data,
+              createdAt: message.data.createdAt
             }
+            return [newPost, ...prev]
           }
-          return post
+          return prev
         })
-        setPosts(updatedPosts)
+      } else if (message.name === 'share') {
+        // Handle new shares (deduplicate)
+        setPosts((prev) => {
+          const shareExists = prev.some((p: any) => {
+            const existingId = p._id || p.data?._id
+            return existingId === message.data._id
+          })
+          if (!shareExists) {
+            const newShare = {
+              type: 'share',
+              data: message.data,
+              createdAt: message.data.createdAt
+            }
+            return [newShare, ...prev]
+          }
+          return prev
+        })
       }
     } catch (error) {
-      console.error('Error handling post update:', error)
+      console.error('Error handling Ably message:', error)
     }
   })
-
-  const submitPost = async (e: FormEvent) => {
-    e.preventDefault()
-    dispatchState({ isLoading: true })
-
-    try {
-      const res = await axios.post('/api/posts', { text, image })
-
-      // Optimistically add new post to local state
-      const newPost = {
-        type: 'post',
-        data: res.data,
-        createdAt: res.data.createdAt
-      }
-      setPosts((prev) => [newPost, ...prev])
-
-      // Publish to Ably channel
-      try {
-        await publish('post', res.data)
-      } catch (err) {
-        console.warn('Failed to publish post to Ably:', err)
-      }
-
-      dispatchState({ text: '', image: null })
-    } catch (error) {
-      toast.error('An error occurred when creating a post')
-      console.error('Post creation error:', error)
-    } finally {
-      dispatchState({ isLoading: false })
-    }
-  }
 
   const renderFeedItem = (item: any, index: number) => {
     if (!item) return null
 
+    // Generate unique key that handles duplicates
+    const getUniqueKey = (item: any, index: number) => {
+      const id = item._id || item.data?._id
+      if (!id) return `feed-item-${index}`
+
+      if (item.type === 'share') {
+        return `feed-share-${id}-${index}`
+      } else {
+        return `feed-post-${id}-${index}`
+      }
+    }
+
     if (item.type === 'share') {
-      return (
-        <SharedPost key={`share-${item.data._id}-${index}`} share={item.data} />
-      )
+      return <SharedPost key={getUniqueKey(item, index)} share={item.data} />
     } else {
       // Handle both old format (direct post) and new format (wrapped post)
       const postData = item.data || item
@@ -158,7 +117,7 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
       }
       return (
         <PostClientWrapper
-          key={`post-${postData._id}-${index}`}
+          key={getUniqueKey(item, index)}
           post={postData as IPost}
         />
       )
@@ -173,14 +132,6 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
             Discover Trending Posts
           </div>
         )}
-        <CreatePost
-          isLoading={isLoading}
-          submitPost={submitPost}
-          text={text}
-          setText={(e) => dispatchState({ text: e.target.value })}
-          postImage={image}
-          setPostImage={(image) => dispatchState({ image: image })}
-        />
         {posts.map((item: any, index: number) => renderFeedItem(item, index))}
         {hasNextPage && (
           <button

@@ -168,15 +168,13 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
 
   const renderProfileItem = (item: any, index: number) => {
     if (item.type === 'share') {
-      return (
-        <SharedPost key={`share-${item.data._id}-${index}`} share={item.data} />
-      )
+      return <SharedPost key={`share-${item.data._id}`} share={item.data} />
     } else {
       // Handle both old format (direct post) and new format (wrapped post)
       const postData = item.data || item
       return (
         <PostClientWrapper
-          key={`post-${postData._id}-${index}`}
+          key={`post-${postData._id}`}
           post={postData as IPost}
         />
       )
