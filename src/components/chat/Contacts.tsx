@@ -30,7 +30,7 @@ const CollageAvatar = ({ users }: { users: any[] }) => {
           style={{ width: 28, height: 28 }}
         >
           <Avatar
-            src={user.profilePicture || user.profilePicture?.url || null}
+            src={user.profilePicture?.url}
             gender={user.gender}
             alt={user.firstName}
             className="h-7 w-7"
@@ -151,11 +151,7 @@ const Contacts = ({
                     <CollageAvatar users={displayUsers} />
                   ) : (
                     <Avatar
-                      src={
-                        displayUsers[0]?.profilePicture?.url ||
-                        displayUsers[0]?.profilePicture ||
-                        null
-                      }
+                      src={displayUsers[0]?.profilePicture?.url}
                       gender={displayUsers[0]?.gender}
                       alt={displayUsers[0]?.firstName}
                       className="h-10 w-10"

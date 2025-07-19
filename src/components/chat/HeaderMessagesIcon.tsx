@@ -145,11 +145,7 @@ const HeaderMessagesIcon = ({
                       </span>
                     ) : (
                       <Avatar
-                        src={
-                          displayUsers[0]?.profilePicture?.url ||
-                          displayUsers[0]?.profilePicture ||
-                          null
-                        }
+                        src={displayUsers[0]?.profilePicture?.url}
                         gender={displayUsers[0]?.gender}
                         alt={displayUsers[0]?.firstName}
                         className="h-8 w-8"

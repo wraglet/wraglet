@@ -21,7 +21,7 @@ const quicksand = Quicksand({
   preload: true
 })
 
-const Header = ({ currentUser }: { currentUser: IUser }) => {
+const Header = ({ currentUser }: { currentUser: IUser & { _id: string } }) => {
   const { justLoggedIn, userInitialized, setJustLoggedIn, setUserInitialized } =
     useGlobalStore()
   const { setUser } = useUserStore()
@@ -31,8 +31,13 @@ const Header = ({ currentUser }: { currentUser: IUser }) => {
       setJustLoggedIn(true)
     }
 
-    if (justLoggedIn && !userInitialized) {
-      setUser(currentUser as unknown as User)
+    if (justLoggedIn && !userInitialized && currentUser) {
+      // Ensure currentUser has required fields
+      const userWithDefaults = {
+        ...currentUser,
+        gender: currentUser.gender || 'Other'
+      }
+      setUser(userWithDefaults as unknown as User)
       setUserInitialized(true)
       setJustLoggedIn(false)
     }
@@ -76,15 +81,13 @@ const Header = ({ currentUser }: { currentUser: IUser }) => {
         </li>
         <li className="relative cursor-pointer">
           <Suspense fallback={<ChatIcon className="text-white" />}>
-            <HeaderMessagesIconClientWrapper
-              userId={(currentUser as any)._id}
-            />
+            <HeaderMessagesIconClientWrapper userId={currentUser?._id || ''} />
           </Suspense>
         </li>
         <li className="relative cursor-pointer">
           <Suspense fallback={<div className="h-5 w-5" />}>
             <HeaderNotificationsIconClientWrapper
-              userId={(currentUser as any)._id}
+              userId={currentUser?._id || ''}
             />
           </Suspense>
         </li>

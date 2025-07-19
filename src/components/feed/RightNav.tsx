@@ -5,11 +5,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { UserInterface } from '@/interfaces'
 import { useFollow } from '@/lib/hooks/useFollow'
-import useChatFloaterStore from '@/store/chatFloater'
 import { formatDistanceToNow } from 'date-fns'
-import toast from 'react-hot-toast'
 import { FaHashtag } from 'react-icons/fa'
-import { IoPersonAddSharp } from 'react-icons/io5'
 
 import Avatar from '@/components/shared/Avatar'
 
@@ -18,102 +15,75 @@ const UserSuggestion = ({
   user,
   onFollowChange
 }: {
-  user: UserInterface
+  user: UserInterface & {
+    isTrending?: boolean
+    isRecentActive?: boolean
+    isNew?: boolean
+  }
   onFollowChange?: (userId: string, isFollowing: boolean) => void
 }) => {
-  const {
-    isFollowing,
-    follow,
-    loading,
-    followersCount,
-    followingCount,
-    isInitialLoading
-  } = useFollow(user._id)
-  const openChat = useChatFloaterStore((s) => s.openChat)
+  const { isFollowing, follow, loading } = useFollow(user._id)
 
-  const handleFollow = useCallback(async () => {
-    try {
-      await follow()
-      onFollowChange?.(user._id, !isFollowing)
-      toast.success(isFollowing ? 'Unfollowed' : 'Following')
-    } catch (error) {
-      toast.error('Failed to follow user')
+  const handleFollow = async () => {
+    const result = await follow(undefined)
+    if (onFollowChange && result !== undefined) {
+      onFollowChange(user._id, result)
     }
-  }, [follow, isFollowing, onFollowChange, user._id])
-
-  const handleMessage = useCallback(async () => {
-    try {
-      const res = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ participantIds: [user._id] })
-      })
-      const json = await res.json()
-      if (json.success && json.data?._id) {
-        openChat(json.data._id)
-      } else {
-        toast.error('Failed to start chat')
-      }
-    } catch {
-      toast.error('Failed to start chat')
-    }
-  }, [user._id, openChat])
+  }
 
   return (
-    <div className="group relative flex items-center justify-between rounded-lg transition-all duration-200 hover:bg-sky-50/50">
-      <div className="flex items-center gap-3">
-        <Link
-          href={`/${user.username}`}
-          className="block overflow-hidden rounded-full transition-transform duration-200 hover:scale-105"
-        >
-          <Avatar
-            gender={user.gender}
-            className="h-11 w-11 ring-2 ring-white"
-            alt={`${user.firstName}'s Profile`}
-            src={user.profilePicture?.url!}
-          />
-        </Link>
-        <div className="flex flex-col gap-0.5">
-          <Link
-            href={`/${user.username}`}
-            className="text-sm font-semibold text-gray-900 hover:text-sky-500"
-          >
-            {user.firstName} {user.lastName}
-          </Link>
-          {isInitialLoading ? (
-            <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
-          ) : (
-            <p className="text-xs font-medium text-gray-500">
-              {followersCount} followers · {followingCount} following
-            </p>
-          )}
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        {isInitialLoading ? (
-          <>
-            <div className="h-6 w-16 animate-pulse rounded-full bg-gray-200"></div>
-            <div className="h-6 w-16 animate-pulse rounded-full bg-gray-200"></div>
-          </>
-        ) : (
-          <>
-            <button
-              className="flex w-fit items-center gap-1 rounded-full bg-sky-100 px-2 py-1 text-xs font-medium text-sky-600 transition-all duration-200 hover:bg-sky-500 hover:text-white disabled:opacity-60"
-              onClick={handleFollow}
-              disabled={loading}
-            >
-              <IoPersonAddSharp className="h-4 w-4" aria-hidden="true" />
-              {isFollowing ? 'Following' : loading ? 'Following...' : 'Follow'}
-            </button>
-            <button
-              className="flex w-fit items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600 transition-all duration-200 hover:bg-blue-500 hover:text-white"
-              onClick={handleMessage}
-            >
-              💬 Message
-            </button>
-          </>
+    <div className="flex items-center gap-3">
+      <div className="relative">
+        <Avatar
+          src={user.profilePicture?.url || null}
+          alt={user.username}
+          size="h-11 w-11"
+          gender={user.gender}
+        />
+        {/* Badge for trending users */}
+        {user.isTrending && (
+          <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-500">
+            <span className="text-xs text-white">🔥</span>
+          </div>
+        )}
+        {/* Badge for recent active users */}
+        {user.isRecentActive && !user.isTrending && (
+          <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+            <span className="text-xs text-white">⚡</span>
+          </div>
+        )}
+        {/* Badge for new users */}
+        {user.isNew && !user.isTrending && !user.isRecentActive && (
+          <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500">
+            <span className="text-xs text-white">🆕</span>
+          </div>
         )}
       </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1">
+          <p className="truncate text-sm font-semibold text-gray-900">
+            {user.firstName} {user.lastName}
+          </p>
+          {/* Show badge text for trending users */}
+          {user.isTrending && (
+            <span className="rounded bg-orange-100 px-1 text-xs text-orange-600">
+              Trending
+            </span>
+          )}
+        </div>
+        <p className="truncate text-xs text-gray-500">{user.username}</p>
+      </div>
+      <button
+        className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+          isFollowing
+            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            : 'bg-blue-500 text-white hover:bg-blue-600'
+        } disabled:opacity-50`}
+        onClick={handleFollow}
+        disabled={loading}
+      >
+        {isFollowing ? 'Following' : loading ? 'Following...' : 'Follow'}
+      </button>
     </div>
   )
 }
@@ -202,12 +172,10 @@ const ActivityItem = ({ activity }: { activity: any }) => {
 // Main RightNav component (simplified - no Ably for now)
 const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
   const [trendingTopics, setTrendingTopics] = useState<any[]>([])
-  const [whoToFollow, setWhoToFollow] = useState<UserInterface[]>([])
   const [trendingPosts, setTrendingPosts] = useState<any[]>([])
   const [activities, setActivities] = useState<any[]>([])
   const [loading, setLoading] = useState({
     topics: true,
-    whoToFollow: true,
     trendingPosts: true,
     activities: true
   })
@@ -221,17 +189,6 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
         setLoading((prev) => ({ ...prev, topics: false }))
       })
       .catch(() => setLoading((prev) => ({ ...prev, topics: false })))
-  }, [])
-
-  // Fetch who to follow
-  useEffect(() => {
-    fetch('/api/users/people-you-may-know')
-      .then((res) => res.json())
-      .then((data) => {
-        setWhoToFollow(data.users || [])
-        setLoading((prev) => ({ ...prev, whoToFollow: false }))
-      })
-      .catch(() => setLoading((prev) => ({ ...prev, whoToFollow: false })))
   }, [])
 
   // Fetch trending posts
@@ -260,11 +217,6 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
     window.location.href = `/?topic=${encodeURIComponent(tag)}`
   }, [])
 
-  // Filter out users that are already in the discover section to avoid duplicates
-  const filteredWhoToFollow = whoToFollow.filter(
-    (user) => !otherUsers.some((otherUser) => otherUser._id === user._id)
-  )
-
   // Debug: Check for duplicates in otherUsers
   useEffect(() => {
     if (otherUsers && otherUsers.length > 0) {
@@ -283,7 +235,7 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
   return (
     <aside className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-200 sticky top-14 hidden h-[calc(100vh-3.5rem)] w-[280px] flex-shrink-0 overflow-y-auto lg:block xl:w-[320px]">
       <div className="flex h-full flex-col gap-4 py-4">
-        {/* Discover People */}
+        {/* Discover People - Single, improved section */}
         <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
           <h2 className="mb-5 text-base font-semibold text-gray-900">
             Discover People
@@ -296,6 +248,11 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
               <p className="py-4 text-center text-sm text-gray-500">
                 No new people to discover right now
               </p>
+            )}
+            {otherUsers.length > 5 && (
+              <button className="mt-2 text-sm text-blue-600 hover:text-blue-800">
+                See more people
+              </button>
             )}
           </div>
         </div>
@@ -328,38 +285,6 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
             ) : (
               <p className="py-4 text-center text-sm text-gray-500">
                 No trending topics
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Who to Follow */}
-        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-5 text-base font-semibold text-gray-900">
-            Who to Follow
-          </h2>
-          <div className="flex flex-col gap-4">
-            {loading.whoToFollow ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="h-11 w-11 animate-pulse rounded-full bg-gray-200"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 w-24 animate-pulse rounded bg-gray-200"></div>
-                      <div className="h-3 w-32 animate-pulse rounded bg-gray-200"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : filteredWhoToFollow.length > 0 ? (
-              filteredWhoToFollow
-                .slice(0, 3)
-                .map((user) => (
-                  <UserSuggestion key={`follow-${user._id}`} user={user} />
-                ))
-            ) : (
-              <p className="py-4 text-center text-sm text-gray-500">
-                No suggestions available
               </p>
             )}
           </div>

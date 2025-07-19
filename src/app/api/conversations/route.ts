@@ -17,7 +17,10 @@ export const GET = async (req: Request) => {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const conversations = await Conversation.find({ participants: userId })
-      .populate('participants', 'firstName lastName username profilePicture')
+      .populate(
+        'participants',
+        'firstName lastName username profilePicture gender'
+      )
       .populate('lastMessage')
       .sort({ updatedAt: -1 })
       .lean()
@@ -154,7 +157,10 @@ export const PATCH = async (req: Request) => {
     })
     // Return updated conversation
     const updated = await Conversation.findById(conversationId)
-      .populate('participants', 'firstName lastName username profilePicture')
+      .populate(
+        'participants',
+        'firstName lastName username profilePicture gender'
+      )
       .populate('lastMessage')
       .lean()
     return NextResponse.json({ success: true, data: updated })

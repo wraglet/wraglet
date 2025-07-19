@@ -172,17 +172,11 @@ const SearchResults = () => {
                   >
                     <div className="flex items-center gap-3 md:gap-4">
                       <div className="flex-shrink-0">
-                        {result.avatar ? (
-                          <Avatar
-                            src={result.avatar || null}
-                            size="h-10 w-10 md:h-12 md:w-12"
-                            gender="Male"
-                          />
-                        ) : (
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-base md:h-12 md:w-12 md:text-lg">
-                            {getTypeIcon(result.type)}
-                          </div>
-                        )}
+                        <Avatar
+                          src={result.avatar || null}
+                          size="h-10 w-10 md:h-12 md:w-12"
+                          gender={result.gender}
+                        />
                       </div>
 
                       <div className="min-w-0 flex-1">

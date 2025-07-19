@@ -1,11 +1,9 @@
 'use client'
 
-import { useCallback, useEffect } from 'react'
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { UserInterface } from '@/interfaces'
 import { useFollow } from '@/lib/hooks/useFollow'
-import useChatFloaterStore from '@/store/chatFloater'
-import toast from 'react-hot-toast'
 import { IoClose, IoPersonAddSharp } from 'react-icons/io5'
 
 import Avatar from '@/components/shared/Avatar'
@@ -16,91 +14,75 @@ interface MobileDiscoverDrawerProps {
   otherUsers: UserInterface[]
 }
 
-const UserSuggestion = ({ user }: { user: UserInterface }) => {
-  const {
-    isFollowing,
-    follow,
-    loading,
-    followersCount,
-    followingCount,
-    isInitialLoading
-  } = useFollow(user._id)
-  const openChat = useChatFloaterStore((s) => s.openChat)
-
-  const handleMessage = useCallback(async () => {
-    try {
-      const res = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ participantIds: [user._id] })
-      })
-      const json = await res.json()
-      if (json.success && json.data?._id) {
-        openChat(json.data._id)
-      } else {
-        toast.error('Failed to start chat')
-      }
-    } catch {
-      toast.error('Failed to start chat')
-    }
-  }, [user._id, openChat])
+const UserSuggestion = ({
+  user
+}: {
+  user: UserInterface & {
+    isTrending?: boolean
+    isRecentActive?: boolean
+    isNew?: boolean
+  }
+}) => {
+  const { isFollowing, follow, loading } = useFollow(user._id)
 
   return (
     <div className="group relative flex items-center justify-between rounded-lg p-3 transition-all duration-200 hover:bg-sky-50/50">
       <div className="flex w-full items-center gap-3">
-        <Link
-          href={`/${user.username}`}
-          className="block overflow-hidden rounded-full transition-transform duration-200 hover:scale-105"
-        >
+        <div className="relative">
           <Avatar
             gender={user.gender}
             className="h-12 w-12 ring-2 ring-white"
             alt={`${user.firstName}'s Profile`}
             src={user.profilePicture?.url!}
           />
-        </Link>
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <Link
-            href={`/${user.username}`}
-            className="truncate text-sm font-semibold text-gray-900 hover:text-sky-500"
-          >
-            {user.firstName} {user.lastName}
-          </Link>
-          {isInitialLoading ? (
-            <div className="h-4 w-36 animate-pulse rounded bg-gray-200"></div>
-          ) : (
-            <p className="text-xs font-medium text-gray-500">
-              {followersCount} followers · {followingCount} following
-            </p>
+          {/* Badge for trending users */}
+          {user.isTrending && (
+            <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-500">
+              <span className="text-xs text-white">🔥</span>
+            </div>
           )}
-          <div className="mt-2 flex gap-2">
-            {isInitialLoading ? (
-              <>
-                <div className="h-7 flex-1 animate-pulse rounded-full bg-gray-200"></div>
-                <div className="h-7 flex-1 animate-pulse rounded-full bg-gray-200"></div>
-              </>
-            ) : (
-              <>
-                <button
-                  className="flex flex-1 items-center justify-center gap-1 rounded-full bg-sky-100 px-3 py-1.5 text-xs font-medium text-sky-600 transition-all duration-200 hover:bg-sky-500 hover:text-white disabled:opacity-60"
-                  onClick={() => follow()}
-                  disabled={isFollowing || loading}
-                >
-                  <IoPersonAddSharp className="h-4 w-4" aria-hidden="true" />
-                  {isFollowing
-                    ? 'Following'
-                    : loading
-                      ? 'Following...'
-                      : 'Follow'}
-                </button>
-                <button
-                  className="flex flex-1 items-center justify-center gap-1 rounded-full bg-blue-100 px-3 py-1.5 text-xs font-medium text-blue-600 transition-all duration-200 hover:bg-blue-500 hover:text-white"
-                  onClick={handleMessage}
-                >
-                  💬 Message
-                </button>
-              </>
+          {/* Badge for recent active users */}
+          {user.isRecentActive && !user.isTrending && (
+            <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+              <span className="text-xs text-white">⚡</span>
+            </div>
+          )}
+          {/* Badge for new users */}
+          {user.isNew && !user.isTrending && !user.isRecentActive && (
+            <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500">
+              <span className="text-xs text-white">🆕</span>
+            </div>
+          )}
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex items-center gap-1">
+            <Link
+              href={`/${user.username}`}
+              className="truncate text-sm font-semibold text-gray-900 hover:text-sky-500"
+            >
+              {user.firstName} {user.lastName}
+            </Link>
+            {/* Show badge text for trending users */}
+            {user.isTrending && (
+              <span className="rounded bg-orange-100 px-1 text-xs text-orange-600">
+                Trending
+              </span>
             )}
+          </div>
+          <p className="text-xs text-gray-500">{user.username}</p>
+          <div className="mt-2">
+            <button
+              className={`flex w-full items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                isFollowing
+                  ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-sky-100 text-sky-600 hover:bg-sky-500 hover:text-white'
+              } disabled:opacity-60`}
+              onClick={() => follow(undefined)}
+              disabled={isFollowing || loading}
+            >
+              <IoPersonAddSharp className="h-4 w-4" aria-hidden="true" />
+              {isFollowing ? 'Following' : loading ? 'Following...' : 'Follow'}
+            </button>
           </div>
         </div>
       </div>

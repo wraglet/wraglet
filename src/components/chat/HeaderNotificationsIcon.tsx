@@ -231,7 +231,7 @@ const HeaderNotificationsIcon = ({
                     <div className="flex-shrink-0">
                       {notification.sender ? (
                         <Avatar
-                          src={notification.sender.profilePicture?.url || null}
+                          src={notification.sender.profilePicture?.url}
                           gender={notification.sender.gender}
                           alt={notification.sender.firstName}
                           size="h-10 w-10"

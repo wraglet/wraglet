@@ -28,12 +28,16 @@ const LeftSideNav = () => {
             className="group flex h-12 items-center rounded-lg border border-neutral-200 bg-white px-3 transition hover:bg-gray-400"
           >
             <div className="flex items-center space-x-3">
-              <Avatar
-                gender={user?.gender}
-                className="group-hover:border-white"
-                alt={`${user?.firstName}'s Profile`}
-                src={user?.profilePicture?.url!}
-              />
+              {user && user.gender ? (
+                <Avatar
+                  gender={user.gender}
+                  className="group-hover:border-white"
+                  alt={`${user.firstName}'s Profile`}
+                  src={user.profilePicture?.url || null}
+                />
+              ) : (
+                <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200" />
+              )}
               <span className="text-sm font-semibold text-[#333333] group-hover:text-white">
                 {user?.firstName}
               </span>

@@ -19,7 +19,7 @@ export const GET = async (req: Request) => {
       )
 
     const messages = await Message.find({ conversation: conversationId })
-      .populate('sender', 'firstName lastName username profilePicture')
+      .populate('sender', 'firstName lastName username profilePicture gender')
       .sort({ createdAt: 1 })
       .lean()
 
@@ -56,7 +56,7 @@ export const POST = async (req: Request) => {
     })
     // Populate sender info for real-time UI
     const populatedMessage = await Message.findById(message._id)
-      .populate('sender', 'firstName lastName username profilePicture')
+      .populate('sender', 'firstName lastName username profilePicture gender')
       .lean()
     // Update lastMessage in conversation
     await Conversation.findByIdAndUpdate(conversationId, {

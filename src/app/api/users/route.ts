@@ -57,7 +57,7 @@ export const GET = async (req: Request) => {
     }
     // Exclude current user
     const users = await User.find({ _id: { $ne: currentUser._id } })
-      .select('firstName lastName username profilePicture')
+      .select('firstName lastName username profilePicture gender')
       .lean()
     return NextResponse.json({ success: true, users })
   } catch (error: any) {

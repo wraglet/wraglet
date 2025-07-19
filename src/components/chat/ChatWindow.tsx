@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { IUser } from '@/models/User'
-import useUserStore from '@/store/user'
+import useUserStore, { User } from '@/store/user'
 import { type ChatMessageEvent, type Message } from '@ably/chat'
 import {
   useMessages,
@@ -153,7 +152,7 @@ const ChatWindow = ({ conversationId }: { conversationId: string }) => {
                   }
                 }
 
-                const senderProfile = sender as Partial<IUser> | undefined
+                const senderProfile = sender as Partial<User> | undefined
 
                 return (
                   <li
@@ -162,18 +161,16 @@ const ChatWindow = ({ conversationId }: { conversationId: string }) => {
                       isCurrentUser ? 'flex-row-reverse items-end' : 'items-end'
                     }`}
                   >
-                    {!isCurrentUser && (
-                      <Avatar
-                        src={
-                          typeof senderProfile?.profilePicture === 'object'
-                            ? senderProfile.profilePicture.url
-                            : senderProfile?.profilePicture || null
-                        }
-                        gender={senderProfile?.gender}
-                        alt={senderProfile?.firstName}
-                        className="h-7 w-7"
-                      />
-                    )}
+                    {!isCurrentUser &&
+                      senderProfile &&
+                      senderProfile.gender && (
+                        <Avatar
+                          src={senderProfile.profilePicture?.url || null}
+                          gender={senderProfile.gender}
+                          alt={senderProfile.firstName}
+                          className="h-7 w-7"
+                        />
+                      )}
                     <div
                       className={`flex max-w-[75%] flex-col ${
                         isCurrentUser

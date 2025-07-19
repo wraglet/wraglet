@@ -39,7 +39,7 @@ export const GET = async (request: NextRequest) => {
           }
         ]
       })
-        .select('firstName lastName username profilePicture bio')
+        .select('firstName lastName username profilePicture bio gender')
         .limit(limit / 2)
         .lean()
 
@@ -50,6 +50,7 @@ export const GET = async (request: NextRequest) => {
           title: `${user.firstName} ${user.lastName}`,
           subtitle: `${user.username}${user.bio ? ` • ${user.bio.substring(0, 50)}${user.bio.length > 50 ? '...' : ''}` : ''}`,
           avatar: user.profilePicture?.url,
+          gender: user.gender,
           url: `/${user.username}`,
           relevanceScore: calculateRelevanceScore(query, [
             user.firstName,
@@ -66,7 +67,7 @@ export const GET = async (request: NextRequest) => {
       const posts = await Post.find({
         'content.text': { $regex: query, $options: 'i' }
       })
-        .populate('author', 'firstName lastName username profilePicture')
+        .populate('author', 'firstName lastName username profilePicture gender')
         .select('content author createdAt')
         .limit(limit / 2)
         .lean()
@@ -80,6 +81,7 @@ export const GET = async (request: NextRequest) => {
             postText.length > 60 ? `${postText.substring(0, 60)}...` : postText,
           subtitle: `by ${post.author.firstName} ${post.author.lastName} (${post.author.username})`,
           avatar: post.author.profilePicture?.url,
+          gender: post.author.gender,
           url: `/post/${post._id}`,
           relevanceScore: calculateRelevanceScore(query, [postText])
         })

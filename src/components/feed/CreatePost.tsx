@@ -49,11 +49,15 @@ const CreatePost = ({
       <div className="flex w-full grow items-start border border-solid border-neutral-200 bg-white drop-shadow-md sm:rounded-lg">
         <div className="flex w-full gap-x-2 px-4 py-3">
           <div className="relative block">
-            <Avatar
-              gender={user?.gender}
-              alt={`${user?.firstName}'s photo`}
-              src={user?.profilePicture?.url!}
-            />
+            {user && user.gender ? (
+              <Avatar
+                gender={user.gender}
+                alt={`${user.firstName}'s photo`}
+                src={user.profilePicture?.url || null}
+              />
+            ) : (
+              <div className="h-9 w-9 animate-pulse rounded-full bg-gray-200" />
+            )}
           </div>
           <form
             onSubmit={submitPost}

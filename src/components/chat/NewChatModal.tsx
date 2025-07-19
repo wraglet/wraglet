@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import Image from 'next/image'
+
+import Avatar from '@/components/shared/Avatar'
 
 interface NewChatModalProps {
   open: boolean
@@ -67,12 +68,11 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({
                 className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-3 transition hover:bg-blue-50"
                 onClick={() => onSelectUser(u)}
               >
-                <Image
-                  src={u.profilePicture?.url || '/default-avatar.png'}
-                  alt={u.firstName}
-                  width={40}
-                  height={40}
-                  className="h-10 w-10 rounded-full border border-blue-100 object-cover"
+                <Avatar
+                  src={u.profilePicture?.url}
+                  alt={`${u.firstName}'s avatar`}
+                  size="h-10 w-10"
+                  gender={u.gender}
                 />
                 <div className="flex flex-col">
                   <span className="font-semibold text-gray-900">

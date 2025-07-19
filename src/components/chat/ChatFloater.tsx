@@ -35,7 +35,8 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
 
   // Helper to get display info for a conversation
   const getDisplayInfo = (convo: any) => {
-    if (!convo) return { name: '', avatar: '', isGroup: false, users: [] }
+    if (!convo)
+      return { name: '', avatar: '', isGroup: false, users: [], gender: '' }
     let displayUsers = convo.participants
     if (!convo.isGroup && currentUser?._id) {
       displayUsers = convo.participants.filter(
@@ -55,7 +56,8 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
           displayUsers[0]?.profilePicture ||
           '',
       isGroup: convo.isGroup,
-      users: displayUsers
+      users: displayUsers,
+      gender: convo.isGroup ? '' : displayUsers[0]?.gender || ''
     }
   }
 
@@ -123,6 +125,7 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
                   </div>
                 ) : (
                   <Avatar
+                    gender={info.gender}
                     src={info.avatar}
                     alt={info.name}
                     className="h-10 w-10"
@@ -177,6 +180,7 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
                     </div>
                   ) : (
                     <Avatar
+                      gender={info.gender}
                       src={info.avatar}
                       alt={info.name}
                       className="h-8 w-8"

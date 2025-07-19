@@ -232,7 +232,7 @@ const SearchBar = ({
                   <Avatar
                     src={result.avatar || null}
                     size="h-7 w-7 md:h-8 md:w-8"
-                    gender="Male"
+                    gender={result.gender}
                   />
                 ) : (
                   <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-xs md:h-8 md:w-8 md:text-sm">

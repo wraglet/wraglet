@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import getCurrentUser from '@/actions/getCurrentUser'
-import getOtherUsers from '@/actions/getOtherUsers'
+import getDiscoverUsers from '@/actions/getDiscoverUsers'
 
 import FeedNewChatModalWrapper from '@/components/chat/FeedNewChatModalWrapper'
 import FeedClientWrapper from '@/components/feed/FeedClientWrapper'
@@ -11,10 +11,10 @@ import RightNav from '@/components/feed/RightNav'
 import Loading from '@/app/loading'
 
 const FeedPage = async () => {
-  const otherUsers =
-    (await getOtherUsers().catch((err: any) => {
+  const discoverUsers =
+    (await getDiscoverUsers().catch((err: any) => {
       console.error(
-        'Error happened while getting getOtherUsers() on Feed component: ',
+        'Error happened while getting getDiscoverUsers() on Feed component: ',
         err
       )
       return [] // Return empty array on error
@@ -22,13 +22,13 @@ const FeedPage = async () => {
 
   const currentUser = await getCurrentUser()
 
-  // Debug: Check for duplicates in otherUsers
-  if (otherUsers && otherUsers.length > 0) {
-    const userIds = otherUsers.map((user: any) => user._id)
+  // Debug: Check for duplicates in discoverUsers
+  if (discoverUsers && discoverUsers.length > 0) {
+    const userIds = discoverUsers.map((user: any) => user._id)
     const uniqueIds = new Set(userIds)
     if (userIds.length !== uniqueIds.size) {
       console.warn(
-        'Duplicate users found in otherUsers:',
+        'Duplicate users found in discoverUsers:',
         userIds.filter(
           (id: string, index: number) => userIds.indexOf(id) !== index
         )
@@ -48,19 +48,16 @@ const FeedPage = async () => {
           </div>
         </div>
         <Suspense fallback={<Loading />}>
-          <RightNav otherUsers={otherUsers} />
+          <RightNav otherUsers={discoverUsers} />
         </Suspense>
       </main>
 
       {/* Mobile responsive components */}
-      <MobileResponsiveWrapper otherUsers={otherUsers} />
+      <MobileResponsiveWrapper otherUsers={discoverUsers} />
 
-      <FeedNewChatModalWrapper otherUsers={otherUsers} />
+      <FeedNewChatModalWrapper otherUsers={discoverUsers} />
     </>
   )
 }
-
-// Move FeedNewChatModalWrapper to its own file as a client component
-// Remove it from this file and import it instead
 
 export default FeedPage

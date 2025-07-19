@@ -20,7 +20,9 @@ const getUserByUsername = async (username: string) => {
     // Find the user by username, excluding the hashed password
     const user = await User.findOne({
       username: username
-    }).select('-hashedPassword')
+    }).select(
+      'firstName lastName email username gender profilePicture coverPhoto bio pronoun dob publicProfileVisible followingIds createdAt updatedAt'
+    )
 
     // Check if the found user is the current user
     const isCurrentUser = user && user.email === session?.user?.email
@@ -29,7 +31,17 @@ const getUserByUsername = async (username: string) => {
     if (user) {
       const userObject = user.toObject()
       // Convert all ObjectIds to strings recursively
-      return convertObjectIdsToStrings({ ...userObject, isCurrentUser })
+      const convertedUser = convertObjectIdsToStrings({
+        ...userObject,
+        isCurrentUser
+      })
+
+      // Ensure gender field is always present
+      if (!convertedUser.gender) {
+        convertedUser.gender = 'Other'
+      }
+
+      return convertedUser
     }
 
     return null // Return null if the user is not found

@@ -94,6 +94,7 @@ export interface SearchResultItem {
   title: string
   subtitle?: string
   avatar?: string
+  gender: string
   url: string
   relevanceScore?: number
 }

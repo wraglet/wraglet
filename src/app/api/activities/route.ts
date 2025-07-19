@@ -29,7 +29,7 @@ export const GET = async (request: Request) => {
       author: { $in: followingIds },
       createdAt: { $gte: new Date(Date.now() - 1000 * 60 * 60 * 24) } // Last 24 hours
     })
-      .populate('author', 'firstName lastName username profilePicture')
+      .populate('author', 'firstName lastName username profilePicture gender')
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean()
@@ -52,8 +52,14 @@ export const GET = async (request: Request) => {
       followerId: { $in: followingIds },
       createdAt: { $gte: new Date(Date.now() - 1000 * 60 * 60 * 24) }
     })
-      .populate('followerId', 'firstName lastName username profilePicture')
-      .populate('followingId', 'firstName lastName username profilePicture')
+      .populate(
+        'followerId',
+        'firstName lastName username profilePicture gender'
+      )
+      .populate(
+        'followingId',
+        'firstName lastName username profilePicture gender'
+      )
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean()

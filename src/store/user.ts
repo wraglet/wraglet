@@ -17,8 +17,17 @@ export interface User {
   profilePicture?: {
     url: string
   }
-  photoCollection: Photo[]
+  coverPhoto?: {
+    url: string
+  }
+  bio?: string
+  pronoun?: string
+  dob?: string
+  publicProfileVisible?: boolean
+  followingIds?: string[]
+  createdAt: string
   updatedAt: string
+  photoCollection: Photo[]
   // ... other user fields
 }
 
