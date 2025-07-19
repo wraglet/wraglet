@@ -1,151 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import Image from 'next/image'
+import { useCallback, useState } from 'react'
 import { UserInterface } from '@/interfaces'
-import { useFollow } from '@/lib/hooks/useFollow'
-import * as Ably from 'ably'
-import { AblyProvider, ChannelProvider, useChannel } from 'ably/react'
+import { useQuery } from '@tanstack/react-query'
+import { ChannelProvider, useChannel } from 'ably/react'
 
-import RightNavNoAbly from '@/components/feed/RightNavNoAbly'
 import Avatar from '@/components/shared/Avatar'
-
-// Components from the main RightNav
-const UserSuggestion = ({
-  user,
-  onFollowChange
-}: {
-  user: UserInterface
-  onFollowChange?: (userId: string, isFollowing: boolean) => void
-}) => {
-  const {
-    isFollowing,
-    follow,
-    loading,
-    followersCount,
-    followingCount,
-    isInitialLoading
-  } = useFollow(user._id)
-
-  const handleFollow = useCallback(async () => {
-    try {
-      await follow()
-      onFollowChange?.(user._id, !isFollowing)
-    } catch (error) {
-      console.error('Failed to follow user:', error)
-    }
-  }, [follow, isFollowing, onFollowChange, user._id])
-
-  return (
-    <div className="group relative flex items-center justify-between rounded-lg transition-all duration-200 hover:bg-sky-50/50">
-      <div className="flex items-center gap-3">
-        <div className="block overflow-hidden rounded-full transition-transform duration-200 hover:scale-105">
-          <Avatar
-            src={user.profilePicture?.url || null}
-            alt={`${user.firstName}'s Profile`}
-            size="h-11 w-11"
-            gender={user.gender}
-          />
-        </div>
-        <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-semibold text-gray-900">
-            {user.firstName} {user.lastName}
-          </span>
-          {isInitialLoading ? (
-            <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
-          ) : (
-            <p className="text-xs font-medium text-gray-500">
-              {followersCount} followers · {followingCount} following
-            </p>
-          )}
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        {isInitialLoading ? (
-          <div className="h-6 w-16 animate-pulse rounded-full bg-gray-200"></div>
-        ) : (
-          <button
-            className="flex w-fit items-center gap-1 rounded-full bg-sky-100 px-2 py-1 text-xs font-medium text-sky-600 transition-all duration-200 hover:bg-sky-500 hover:text-white disabled:opacity-60"
-            onClick={handleFollow}
-            disabled={loading}
-          >
-            {isFollowing ? 'Following' : loading ? 'Following...' : 'Follow'}
-          </button>
-        )}
-      </div>
-    </div>
-  )
-}
-
-const TrendingTopic = ({
-  topic,
-  onClick
-}: {
-  topic: { tag: string; count: number }
-  onClick: (tag: string) => void
-}) => {
-  return (
-    <button
-      onClick={() => onClick(topic.tag)}
-      className="flex w-full items-center justify-between rounded-lg p-3 transition-all duration-200 hover:bg-sky-50"
-    >
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-900">#{topic.tag}</span>
-      </div>
-      <span className="text-xs text-gray-500">{topic.count} posts</span>
-    </button>
-  )
-}
-
-const TrendingPostPreview = ({ post }: { post: any }) => {
-  return (
-    <div className="flex items-start gap-3 rounded-lg p-3 transition-all duration-200 hover:bg-sky-50">
-      {post.images?.[0] && (
-        <Image
-          src={post.images[0].url}
-          alt="Post preview"
-          width={48}
-          height={48}
-          className="h-12 w-12 rounded object-cover"
-        />
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="line-clamp-2 text-sm text-gray-900">{post.content}</p>
-        <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
-          <span>
-            {post.author.firstName} {post.author.lastName}
-          </span>
-          <span>•</span>
-          <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const ActivityItem = ({ activity }: { activity: any }) => {
-  return (
-    <div className="flex items-start gap-3 rounded-lg p-3 transition-all duration-200 hover:bg-sky-50">
-      <Avatar
-        src={activity.user.profilePicture?.url || null}
-        alt={`${activity.user.firstName}'s Profile`}
-        size="h-8 w-8"
-        gender={activity.user.gender}
-      />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm text-gray-900">
-          <span className="font-medium">
-            {activity.user.firstName} {activity.user.lastName}
-          </span>{' '}
-          {activity.action}
-        </p>
-        <p className="text-xs text-gray-500">
-          {new Date(activity.timestamp).toLocaleDateString()}
-        </p>
-      </div>
-    </div>
-  )
-}
+import Button from '@/components/shared/Button'
 
 // Real-time content component
 const RightNavContent = ({
@@ -157,15 +18,52 @@ const RightNavContent = ({
 }) => {
   const [discoverUsers, setDiscoverUsers] =
     useState<UserInterface[]>(otherUsers)
-  const [trendingTopics, setTrendingTopics] = useState<any[]>([])
-  const [whoToFollow, setWhoToFollow] = useState<UserInterface[]>([])
-  const [trendingPosts, setTrendingPosts] = useState<any[]>([])
-  const [activities, setActivities] = useState<any[]>([])
-  const [loading, setLoading] = useState({
-    topics: true,
-    whoToFollow: true,
-    trendingPosts: true,
-    activities: true
+
+  const { data: trendingTopics, isLoading: topicsLoading } = useQuery({
+    queryKey: ['trendingTopics'],
+    queryFn: async () => {
+      const res = await fetch('/api/users/topics-trending')
+      const data = await res.json()
+      return data.topics || []
+    }
+  })
+
+  const { data: whoToFollow, isLoading: whoToFollowLoading } = useQuery({
+    queryKey: ['whoToFollow'],
+    queryFn: async () => {
+      const res = await fetch('/api/users/people-you-may-know')
+      const data = await res.json()
+      return data.users || []
+    }
+  })
+
+  const { data: trendingPosts, isLoading: trendingPostsLoading } = useQuery({
+    queryKey: ['trendingPosts'],
+    queryFn: async () => {
+      const res = await fetch('/api/posts?limit=5&feedType=trending')
+      const data = await res.json()
+      const posts = data.posts || []
+
+      // Deduplicate posts by _id to prevent duplicates from API
+      const seen = new Set()
+      const uniquePosts = posts.filter((post: any) => {
+        const id = post._id || post.data?._id
+        if (!id || seen.has(id)) return false
+        seen.add(id)
+        return true
+      })
+
+      return uniquePosts
+    }
+  })
+
+  const { data: activities, isLoading: activitiesLoading } = useQuery({
+    queryKey: ['activities'],
+    queryFn: async () => {
+      const res = await fetch('/api/activities?limit=10')
+      const data = await res.json()
+      return data.activities || []
+    }
   })
 
   // Real-time channel for user interactions
@@ -177,7 +75,7 @@ const RightNavContent = ({
         setDiscoverUsers((prev) => prev.filter((user) => user._id !== userId))
       }
     } else if (message.name === 'new-activity') {
-      setActivities((prev) => [message.data, ...prev.slice(0, 9)]) // Keep latest 10
+      // setActivities((prev) => [message.data, ...prev.slice(0, 9)]) // Keep latest 10
     }
   })
 
@@ -195,225 +93,163 @@ const RightNavContent = ({
     [channel]
   )
 
-  // Fetch trending topics
-  useEffect(() => {
-    fetch('/api/users/topics-trending')
-      .then((res) => res.json())
-      .then((data) => {
-        setTrendingTopics(data.topics || [])
-        setLoading((prev) => ({ ...prev, topics: false }))
-      })
-      .catch(() => setLoading((prev) => ({ ...prev, topics: false })))
-  }, [])
-
-  // Fetch who to follow
-  useEffect(() => {
-    fetch('/api/users/people-you-may-know')
-      .then((res) => res.json())
-      .then((data) => {
-        setWhoToFollow(data.users || [])
-        setLoading((prev) => ({ ...prev, whoToFollow: false }))
-      })
-      .catch(() => setLoading((prev) => ({ ...prev, whoToFollow: false })))
-  }, [])
-
-  // Fetch trending posts
-  useEffect(() => {
-    fetch('/api/posts?limit=5&feedType=trending')
-      .then((res) => res.json())
-      .then((data) => {
-        setTrendingPosts(data.posts || [])
-        setLoading((prev) => ({ ...prev, trendingPosts: false }))
-      })
-      .catch(() => setLoading((prev) => ({ ...prev, trendingPosts: false })))
-  }, [])
-
-  // Fetch recent activities
-  useEffect(() => {
-    fetch('/api/activities?limit=10')
-      .then((res) => res.json())
-      .then((data) => {
-        setActivities(data.activities || [])
-        setLoading((prev) => ({ ...prev, activities: false }))
-      })
-      .catch(() => setLoading((prev) => ({ ...prev, activities: false })))
-  }, [])
-
   const handleTopicClick = useCallback((tag: string) => {
     // Navigate to filtered feed
     window.location.href = `/?topic=${encodeURIComponent(tag)}`
   }, [])
 
   // Filter out users that are already in the discover section to avoid duplicates
-  const filteredWhoToFollow = whoToFollow.filter(
-    (user) => !discoverUsers.some((otherUser) => otherUser._id === user._id)
+  const filteredWhoToFollow = (whoToFollow || []).filter(
+    (user: any) =>
+      !discoverUsers.some((otherUser: any) => otherUser._id === user._id)
   )
 
   return (
-    <aside className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-200 sticky top-14 hidden h-[calc(100vh-3.5rem)] w-[280px] flex-shrink-0 overflow-y-auto lg:block xl:w-[320px]">
-      <div className="flex h-full flex-col gap-4 py-4">
-        {/* Discover People - Real-time */}
-        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-5 text-base font-semibold text-gray-900">
-            Discover People
-          </h2>
-          <div className="flex flex-col gap-4">
-            {discoverUsers.slice(0, 5).map((user) => (
-              <UserSuggestion
-                key={`discover-${user._id}`}
-                user={user}
-                onFollowChange={handleFollowChange}
-              />
-            ))}
-            {discoverUsers.length === 0 && (
-              <p className="py-4 text-center text-sm text-gray-500">
-                No new people to discover right now
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Trending Topics */}
-        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-5 text-base font-semibold text-gray-900">
-            Trending Topics
-          </h2>
-          <div className="flex flex-col gap-2">
-            {loading.topics ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="h-10 animate-pulse rounded bg-gray-200"
-                  ></div>
-                ))}
+    <div className="tablet:flex hidden w-80 flex-col gap-y-4 pl-8">
+      {/* Discover People Section */}
+      <div className="flex flex-col gap-y-4 rounded-lg border border-solid border-neutral-200 bg-white p-4 drop-shadow-md">
+        <h3 className="text-lg font-semibold text-gray-800">Discover People</h3>
+        {discoverUsers.length === 0 ? (
+          <p className="text-sm text-gray-500">No new people to discover!</p>
+        ) : (
+          discoverUsers.slice(0, 3).map((user: UserInterface) => (
+            <div
+              key={`discover-${user._id}`}
+              className="flex items-center justify-between"
+            >
+              <div className="flex items-center space-x-3">
+                <Avatar
+                  gender={user.gender}
+                  src={user.profilePicture?.url || null}
+                />
+                <div>
+                  <p className="text-sm font-medium text-gray-800">
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <p className="text-xs text-gray-500">@{user.username}</p>
+                </div>
               </div>
-            ) : trendingTopics.length > 0 ? (
-              trendingTopics
-                .slice(0, 5)
-                .map((topic) => (
-                  <TrendingTopic
-                    key={topic.tag}
-                    topic={topic}
-                    onClick={handleTopicClick}
-                  />
-                ))
-            ) : (
-              <p className="py-4 text-center text-sm text-gray-500">
-                No trending topics
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Who to Follow */}
-        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-5 text-base font-semibold text-gray-900">
-            Who to Follow
-          </h2>
-          <div className="flex flex-col gap-4">
-            {loading.whoToFollow ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="h-11 w-11 animate-pulse rounded-full bg-gray-200"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 w-24 animate-pulse rounded bg-gray-200"></div>
-                      <div className="h-3 w-32 animate-pulse rounded bg-gray-200"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : filteredWhoToFollow.length > 0 ? (
-              filteredWhoToFollow
-                .slice(0, 3)
-                .map((user) => (
-                  <UserSuggestion
-                    key={`follow-${user._id}`}
-                    user={user}
-                    onFollowChange={handleFollowChange}
-                  />
-                ))
-            ) : (
-              <p className="py-4 text-center text-sm text-gray-500">
-                No suggestions available
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Trending Posts Preview */}
-        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-5 text-base font-semibold text-gray-900">
-            Trending Posts
-          </h2>
-          <div className="flex flex-col gap-3">
-            {loading.trendingPosts ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex gap-3">
-                    <div className="h-12 w-12 animate-pulse rounded bg-gray-200"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 w-full animate-pulse rounded bg-gray-200"></div>
-                      <div className="h-3 w-24 animate-pulse rounded bg-gray-200"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : trendingPosts.length > 0 ? (
-              trendingPosts
-                .slice(0, 3)
-                .map((post) => (
-                  <TrendingPostPreview key={post._id} post={post} />
-                ))
-            ) : (
-              <p className="py-4 text-center text-sm text-gray-500">
-                No trending posts
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Activity Feed */}
-        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-5 text-base font-semibold text-gray-900">
-            Recent Activity
-          </h2>
-          <div className="flex flex-col gap-3">
-            {loading.activities ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex gap-3">
-                    <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 w-full animate-pulse rounded bg-gray-200"></div>
-                      <div className="h-3 w-24 animate-pulse rounded bg-gray-200"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : activities.length > 0 ? (
-              activities
-                .slice(0, 5)
-                .map((activity, index) => (
-                  <ActivityItem
-                    key={`activity-${activity._id || index}`}
-                    activity={activity}
-                  />
-                ))
-            ) : (
-              <p className="py-4 text-center text-sm text-gray-500">
-                No recent activity
-              </p>
-            )}
-          </div>
-        </div>
+              <Button
+                onClick={() => handleFollowChange(user._id, true)}
+                className="rounded-md bg-blue-500 px-3 py-1 text-xs text-white hover:bg-blue-600"
+              >
+                Follow
+              </Button>
+            </div>
+          ))
+        )}
       </div>
-    </aside>
+
+      {/* Trending Topics Section */}
+      <div className="flex flex-col gap-y-4 rounded-lg border border-solid border-neutral-200 bg-white p-4 drop-shadow-md">
+        <h3 className="text-lg font-semibold text-gray-800">Trending Topics</h3>
+        {topicsLoading ? (
+          <div className="text-sm text-gray-500">Loading topics...</div>
+        ) : trendingTopics.length === 0 ? (
+          <p className="text-sm text-gray-500">No trending topics</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {(trendingTopics || []).slice(0, 6).map((topic: any) => (
+              <span
+                key={`topic-${topic.tag}`}
+                className="cursor-pointer rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-700 hover:bg-blue-200"
+                onClick={() => handleTopicClick(topic.tag)}
+              >
+                #{topic.tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Who to Follow Section */}
+      {filteredWhoToFollow.length > 0 && (
+        <div className="flex flex-col gap-y-4 rounded-lg border border-solid border-neutral-200 bg-white p-4 drop-shadow-md">
+          <h3 className="text-lg font-semibold text-gray-800">Who to Follow</h3>
+          {filteredWhoToFollow.slice(0, 3).map((user: UserInterface) => (
+            <div
+              key={`follow-${user._id}`}
+              className="flex items-center justify-between"
+            >
+              <div className="flex items-center space-x-3">
+                <Avatar
+                  gender={user.gender}
+                  src={user.profilePicture?.url || null}
+                />
+                <div>
+                  <p className="text-sm font-medium text-gray-800">
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <p className="text-xs text-gray-500">@{user.username}</p>
+                </div>
+              </div>
+              <Button
+                onClick={() => handleFollowChange(user._id, true)}
+                className="rounded-md bg-blue-500 px-3 py-1 text-xs text-white hover:bg-blue-600"
+              >
+                Follow
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Trending Posts Section */}
+      <div className="flex flex-col gap-y-4 rounded-lg border border-solid border-neutral-200 bg-white p-4 drop-shadow-md">
+        <h3 className="text-lg font-semibold text-gray-800">Trending Posts</h3>
+        {trendingPostsLoading ? (
+          <div className="text-sm text-gray-500">Loading posts...</div>
+        ) : trendingPosts.length === 0 ? (
+          <p className="text-sm text-gray-500">No trending posts</p>
+        ) : (
+          (trendingPosts || []).slice(0, 3).map((post: any) => (
+            <div
+              key={`trending-post-${post._id || post.data?._id}`}
+              className="border-b border-gray-100 pb-2 last:border-b-0"
+            >
+              <p className="line-clamp-2 text-sm text-gray-800">
+                {post.type === 'post'
+                  ? post.data?.content || post.content
+                  : post.type === 'share'
+                    ? post.data?.originalPost?.content
+                    : post.content || 'No content'}
+              </p>
+              <p className="mt-1 text-xs text-gray-500">
+                by{' '}
+                {post.type === 'post'
+                  ? post.data?.author?.firstName || post.author?.firstName
+                  : post.type === 'share'
+                    ? post.data?.originalPost?.author?.firstName
+                    : 'Unknown'}
+              </p>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Recent Activity Section */}
+      <div className="flex flex-col gap-y-4 rounded-lg border border-solid border-neutral-200 bg-white p-4 drop-shadow-md">
+        <h3 className="text-lg font-semibold text-gray-800">Recent Activity</h3>
+        {activitiesLoading ? (
+          <div className="text-sm text-gray-500">Loading activities...</div>
+        ) : activities.length === 0 ? (
+          <p className="text-sm text-gray-500">No recent activity</p>
+        ) : (
+          (activities || []).slice(0, 5).map((activity: any, index: number) => (
+            <div
+              key={`activity-${activity._id || activity.id || index}`}
+              className="text-sm text-gray-600"
+            >
+              {activity.message || 'Activity update'}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
   )
 }
 
-// Main component with Ably provider
+// Main component - simplified since we use global AblyProvider
 const RightNavWithAbly = ({
   otherUsers,
   currentUserId
@@ -421,48 +257,10 @@ const RightNavWithAbly = ({
   otherUsers: UserInterface[]
   currentUserId: string
 }) => {
-  const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
-  const [ablyError, setAblyError] = useState(false)
-
-  useEffect(() => {
-    let client: Ably.Realtime | null = null
-    const initAbly = async () => {
-      try {
-        client = new Ably.Realtime({ authUrl: '/api/token' })
-        client.connection.on('connected', () => {
-          setAblyClient(client)
-        })
-        client.connection.on('failed', () => {
-          setAblyError(true)
-        })
-        client.connection.on('suspended', () => {
-          setAblyError(true)
-        })
-      } catch (error) {
-        setAblyError(true)
-      }
-    }
-    initAbly()
-    return () => {
-      if (client) client.close()
-    }
-  }, [])
-
-  if (ablyError || !ablyClient) {
-    return (
-      <RightNavNoAbly otherUsers={otherUsers} currentUserId={currentUserId} />
-    )
-  }
-
   return (
-    <AblyProvider client={ablyClient}>
-      <ChannelProvider channelName="user-interactions">
-        <RightNavContent
-          otherUsers={otherUsers}
-          currentUserId={currentUserId}
-        />
-      </ChannelProvider>
-    </AblyProvider>
+    <ChannelProvider channelName="user-interactions">
+      <RightNavContent otherUsers={otherUsers} currentUserId={currentUserId} />
+    </ChannelProvider>
   )
 }
 

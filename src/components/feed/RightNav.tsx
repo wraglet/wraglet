@@ -1,10 +1,11 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { UserInterface } from '@/interfaces'
 import { useFollow } from '@/lib/hooks/useFollow'
+import { useQuery } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { FaHashtag } from 'react-icons/fa'
 
@@ -112,6 +113,29 @@ const TrendingTopic = ({
 
 // Trending post preview
 const TrendingPostPreview = ({ post }: { post: any }) => {
+  // Safely get the content as a string
+  const getPostContent = (post: any): string => {
+    if (!post.content) return 'No content'
+
+    // If content is a string, return it
+    if (typeof post.content === 'string') {
+      return post.content
+    }
+
+    // If content is an object with text property, return the text
+    if (typeof post.content === 'object' && post.content.text) {
+      return post.content.text
+    }
+
+    // If content is an object but no text property, return a fallback
+    if (typeof post.content === 'object') {
+      return 'Rich content post'
+    }
+
+    // Fallback for any other type
+    return String(post.content)
+  }
+
   return (
     <Link
       href={`/post/${post._id}`}
@@ -127,14 +151,20 @@ const TrendingPostPreview = ({ post }: { post: any }) => {
         />
       )}
       <div className="min-w-0 flex-1">
-        <p className="line-clamp-2 text-sm text-gray-900">{post.content}</p>
+        <p className="line-clamp-2 text-sm text-gray-900">
+          {getPostContent(post)}
+        </p>
         <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
           <span>
-            {post.author.firstName} {post.author.lastName}
+            {post.author?.firstName || 'Unknown'} {post.author?.lastName || ''}
           </span>
           <span>•</span>
           <span>
-            {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+            {post.createdAt
+              ? formatDistanceToNow(new Date(post.createdAt), {
+                  addSuffix: true
+                })
+              : 'Recently'}
           </span>
         </div>
       </div>
@@ -144,25 +174,33 @@ const TrendingPostPreview = ({ post }: { post: any }) => {
 
 // Activity item
 const ActivityItem = ({ activity }: { activity: any }) => {
+  // Ensure we have valid activity data
+  if (!activity || !activity.user) {
+    return null
+  }
+
   return (
     <div className="flex items-start gap-3 rounded-lg p-3 transition-all duration-200 hover:bg-sky-50">
       <Avatar
         gender={activity.user.gender}
         className="h-8 w-8"
-        alt={`${activity.user.firstName}'s Profile`}
-        src={activity.user.profilePicture?.url!}
+        alt={`${activity.user.firstName || 'User'}'s Profile`}
+        src={activity.user.profilePicture?.url || null}
       />
       <div className="min-w-0 flex-1">
         <p className="text-sm text-gray-900">
           <span className="font-medium">
-            {activity.user.firstName} {activity.user.lastName}
+            {activity.user.firstName || 'Unknown'}{' '}
+            {activity.user.lastName || ''}
           </span>{' '}
-          {activity.action}
+          {activity.action || 'did something'}
         </p>
         <p className="text-xs text-gray-500">
-          {formatDistanceToNow(new Date(activity.timestamp), {
-            addSuffix: true
-          })}
+          {activity.timestamp
+            ? formatDistanceToNow(new Date(activity.timestamp), {
+                addSuffix: true
+              })
+            : 'Recently'}
         </p>
       </div>
     </div>
@@ -171,47 +209,43 @@ const ActivityItem = ({ activity }: { activity: any }) => {
 
 // Main RightNav component (simplified - no Ably for now)
 const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
-  const [trendingTopics, setTrendingTopics] = useState<any[]>([])
-  const [trendingPosts, setTrendingPosts] = useState<any[]>([])
-  const [activities, setActivities] = useState<any[]>([])
-  const [loading, setLoading] = useState({
-    topics: true,
-    trendingPosts: true,
-    activities: true
+  const { data: trendingTopics, isLoading: topicsLoading } = useQuery({
+    queryKey: ['trendingTopics'],
+    queryFn: async () => {
+      const res = await fetch('/api/users/topics-trending')
+      const data = await res.json()
+      return data.topics || []
+    }
   })
 
-  // Fetch trending topics
-  useEffect(() => {
-    fetch('/api/users/topics-trending')
-      .then((res) => res.json())
-      .then((data) => {
-        setTrendingTopics(data.topics || [])
-        setLoading((prev) => ({ ...prev, topics: false }))
-      })
-      .catch(() => setLoading((prev) => ({ ...prev, topics: false })))
-  }, [])
+  const { data: trendingPosts, isLoading: trendingPostsLoading } = useQuery({
+    queryKey: ['trendingPosts'],
+    queryFn: async () => {
+      const res = await fetch('/api/posts?limit=5&feedType=trending')
+      const data = await res.json()
+      const posts = data.posts || []
 
-  // Fetch trending posts
-  useEffect(() => {
-    fetch('/api/posts?limit=5&feedType=trending')
-      .then((res) => res.json())
-      .then((data) => {
-        setTrendingPosts(data.posts || [])
-        setLoading((prev) => ({ ...prev, trendingPosts: false }))
+      // Deduplicate posts by _id to prevent duplicates from API
+      const seen = new Set()
+      const uniquePosts = posts.filter((post: any) => {
+        const id = post._id || post.data?._id
+        if (!id || seen.has(id)) return false
+        seen.add(id)
+        return true
       })
-      .catch(() => setLoading((prev) => ({ ...prev, trendingPosts: false })))
-  }, [])
 
-  // Fetch recent activities
-  useEffect(() => {
-    fetch('/api/activities?limit=10')
-      .then((res) => res.json())
-      .then((data) => {
-        setActivities(data.activities || [])
-        setLoading((prev) => ({ ...prev, activities: false }))
-      })
-      .catch(() => setLoading((prev) => ({ ...prev, activities: false })))
-  }, [])
+      return uniquePosts
+    }
+  })
+
+  const { data: activities, isLoading: activitiesLoading } = useQuery({
+    queryKey: ['activities'],
+    queryFn: async () => {
+      const res = await fetch('/api/activities?limit=10')
+      const data = await res.json()
+      return data.activities || []
+    }
+  })
 
   const handleTopicClick = useCallback((tag: string) => {
     window.location.href = `/?topic=${encodeURIComponent(tag)}`
@@ -241,8 +275,11 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
             Discover People
           </h2>
           <div className="flex flex-col gap-4">
-            {otherUsers.slice(0, 5).map((user) => (
-              <UserSuggestion key={`discover-${user._id}`} user={user} />
+            {otherUsers.slice(0, 5).map((user, index) => (
+              <UserSuggestion
+                key={`rightnav-discover-${user._id}-${index}`}
+                user={user}
+              />
             ))}
             {otherUsers.length === 0 && (
               <p className="py-4 text-center text-sm text-gray-500">
@@ -263,21 +300,21 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
             Trending Topics
           </h2>
           <div className="flex flex-col gap-2">
-            {loading.topics ? (
+            {topicsLoading ? (
               <div className="space-y-2">
                 {[1, 2, 3].map((i) => (
                   <div
-                    key={i}
+                    key={`topic-loading-${i}`}
                     className="h-10 animate-pulse rounded bg-gray-200"
                   ></div>
                 ))}
               </div>
             ) : trendingTopics.length > 0 ? (
-              trendingTopics
+              (trendingTopics || [])
                 .slice(0, 5)
-                .map((topic) => (
+                .map((topic: any, index: number) => (
                   <TrendingTopic
-                    key={topic.tag}
+                    key={`rightnav-topic-${topic.tag}-${index}`}
                     topic={topic}
                     onClick={handleTopicClick}
                   />
@@ -296,10 +333,10 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
             Trending Posts
           </h2>
           <div className="flex flex-col gap-3">
-            {loading.trendingPosts ? (
+            {trendingPostsLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex gap-3">
+                  <div key={`trending-loading-${i}`} className="flex gap-3">
                     <div className="h-12 w-12 animate-pulse rounded bg-gray-200"></div>
                     <div className="flex-1 space-y-2">
                       <div className="h-4 w-full animate-pulse rounded bg-gray-200"></div>
@@ -309,10 +346,13 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
                 ))}
               </div>
             ) : trendingPosts.length > 0 ? (
-              trendingPosts
+              (trendingPosts || [])
                 .slice(0, 3)
-                .map((post) => (
-                  <TrendingPostPreview key={post._id} post={post} />
+                .map((post: any) => (
+                  <TrendingPostPreview
+                    key={`rightnav-trending-${post._id}`}
+                    post={post}
+                  />
                 ))
             ) : (
               <p className="py-4 text-center text-sm text-gray-500">
@@ -328,10 +368,10 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
             Recent Activity
           </h2>
           <div className="flex flex-col gap-3">
-            {loading.activities ? (
+            {activitiesLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex gap-3">
+                  <div key={`activity-loading-${i}`} className="flex gap-3">
                     <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200"></div>
                     <div className="flex-1 space-y-2">
                       <div className="h-4 w-full animate-pulse rounded bg-gray-200"></div>
@@ -341,11 +381,11 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
                 ))}
               </div>
             ) : activities.length > 0 ? (
-              activities
+              (activities || [])
                 .slice(0, 5)
-                .map((activity, index) => (
+                .map((activity: any, index: number) => (
                   <ActivityItem
-                    key={`activity-${activity._id || index}`}
+                    key={`rightnav-activity-${activity._id || activity.id || index}`}
                     activity={activity}
                   />
                 ))

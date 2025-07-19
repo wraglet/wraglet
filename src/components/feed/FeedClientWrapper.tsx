@@ -3,7 +3,9 @@
 import { FormEvent, useEffect, useReducer, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { IPost } from '@/models/Post'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import axios from 'axios'
+import toast from 'react-hot-toast'
 
 const FeedAbly = dynamic(() => import('@/components/feed/FeedAbly'), {
   ssr: false
@@ -21,11 +23,7 @@ const getLimit = () => {
 
 const FeedClientWrapper = () => {
   const [limit, setLimit] = useState(getLimit())
-  const [showTrending, setShowTrending] = useState(false)
-  const [trendingPosts, setTrendingPosts] = useState<IPost[]>([])
-  const [loadingTrending, setLoadingTrending] = useState(false)
-  const [trendingTopics, setTrendingTopics] = useState<any[]>([])
-  const [loadingTopics, setLoadingTopics] = useState(false)
+
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null)
 
   // CreatePost state/logic
@@ -39,22 +37,20 @@ const FeedClientWrapper = () => {
     initialState
   )
 
-  // Post submit handler (calls API, resets state, triggers refetch)
+  // Post submit handler (calls API, resets state, real-time handles feed update)
   const submitPost = async (e: FormEvent) => {
     e.preventDefault()
     dispatchState({ isLoading: true })
     try {
-      const res = await fetch('/api/posts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, image })
-      })
-      if (!res.ok) throw new Error('Failed to create post')
+      const res = await axios.post('/api/posts', { text, image })
+
+      // Reset form state
       dispatchState({ text: '', image: null })
-      refetch() // Refetch feed after posting
+
+      // Show success message - the real-time Ably update will add the post to feed
+      toast.success('Post created successfully!')
     } catch (error) {
-      // Optionally show toast
-      // toast.error('An error occurred when creating a post')
+      toast.error('An error occurred when creating a post')
       console.error('Post creation error:', error)
     } finally {
       dispatchState({ isLoading: false })
@@ -90,52 +86,72 @@ const FeedClientWrapper = () => {
   // Flatten all posts from all pages
   const posts: IPost[] = data?.pages?.flatMap((page) => page.posts ?? []) ?? []
 
-  // If feed is empty, fetch trending/discover posts
-  useEffect(() => {
-    if (posts.length === 0 && status === 'success') {
-      setShowTrending(true)
-      setLoadingTrending(true)
-      fetch(`/api/posts?limit=${limit}&feedType=trending`)
-        .then((res) => res.json())
-        .then((data) => {
-          setTrendingPosts(data.posts ?? [])
-        })
-        .finally(() => setLoadingTrending(false))
-    } else {
-      setShowTrending(false)
-      setTrendingPosts([])
-    }
-  }, [posts.length, status, limit])
+  // Use React Query for trending posts when feed is empty
+  const shouldFetchTrending = posts.length === 0 && status === 'success'
 
-  // Fetch trending posts for a selected topic
-  useEffect(() => {
-    if (selectedTopic) {
-      setLoadingTrending(true)
-      fetch(
-        `/api/posts?limit=${limit}&feedType=trending&tag=${encodeURIComponent(selectedTopic)}`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          setTrendingPosts(data.posts ?? [])
-        })
-        .finally(() => setLoadingTrending(false))
-    }
-  }, [selectedTopic, limit])
+  const { data: trendingPostsData, isLoading: loadingTrending } = useQuery({
+    queryKey: ['trendingPosts', limit],
+    queryFn: async () => {
+      const res = await fetch(`/api/posts?limit=${limit}&feedType=trending`)
+      const data = await res.json()
+      const posts = data.posts ?? []
 
-  // Fetch suggested users, trending topics, and people you may know for onboarding
-  useEffect(() => {
-    if (showTrending && trendingPosts.length === 0 && !loadingTrending) {
-      setLoadingTopics(true)
-      fetch('/api/users/topics-trending')
-        .then((res) => res.json())
-        .then((data) => {
-          setTrendingTopics(data.topics ?? [])
+      // Deduplicate posts by _id to prevent duplicates from API
+      const seen = new Set()
+      const uniquePosts = posts.filter((post: any) => {
+        const id = post._id || post.data?._id
+        if (!id || seen.has(id)) return false
+        seen.add(id)
+        return true
+      })
+
+      return uniquePosts
+    },
+    enabled: shouldFetchTrending
+  })
+
+  // Use React Query for trending posts by topic
+  const { data: topicTrendingPosts, isLoading: loadingTopicTrending } =
+    useQuery({
+      queryKey: ['trendingPosts', limit, selectedTopic],
+      queryFn: async () => {
+        const res = await fetch(
+          `/api/posts?limit=${limit}&feedType=trending&tag=${encodeURIComponent(selectedTopic!)}`
+        )
+        const data = await res.json()
+        const posts = data.posts ?? []
+
+        // Deduplicate posts by _id to prevent duplicates from API
+        const seen = new Set()
+        const uniquePosts = posts.filter((post: any) => {
+          const id = post._id || post.data?._id
+          if (!id || seen.has(id)) return false
+          seen.add(id)
+          return true
         })
-        .finally(() => setLoadingTopics(false))
-    } else {
-      setTrendingTopics([])
-    }
-  }, [showTrending, trendingPosts.length, loadingTrending])
+
+        return uniquePosts
+      },
+      enabled: !!selectedTopic
+    })
+
+  // Use React Query for trending topics
+  const { data: trendingTopicsData } = useQuery({
+    queryKey: ['trendingTopics'],
+    queryFn: async () => {
+      const res = await fetch('/api/users/topics-trending')
+      const data = await res.json()
+      return data.topics ?? []
+    },
+    enabled: shouldFetchTrending
+  })
+
+  // Determine what to show
+  const showTrending = shouldFetchTrending
+  const trendingPosts = selectedTopic
+    ? topicTrendingPosts || []
+    : trendingPostsData || []
+  const trendingTopics = trendingTopicsData || []
 
   // Optionally, onboarding/suggestions if both are empty
   const showOnboarding =
@@ -178,26 +194,13 @@ const FeedClientWrapper = () => {
           !loadingTrending &&
           trendingPosts.length > 0 &&
           selectedTopic && (
-            <div className="mb-4 text-center">
-              <div className="mb-2">
-                <span className="inline-block rounded-full bg-blue-200 px-3 py-1 font-semibold text-blue-800">
-                  Showing posts for #{selectedTopic}
-                </span>
-                <button
-                  className="ml-3 rounded bg-gray-200 px-2 py-1 text-xs hover:bg-gray-300"
-                  onClick={() => setSelectedTopic(null)}
-                >
-                  Clear Filter
-                </button>
-              </div>
-              <FeedAbly
-                initialPosts={trendingPosts}
-                fetchNextPage={() => {}}
-                hasNextPage={false}
-                isFetchingNextPage={false}
-                status={status}
-              />
-            </div>
+            <FeedAbly
+              initialPosts={trendingPosts}
+              fetchNextPage={() => {}}
+              hasNextPage={false}
+              isFetchingNextPage={false}
+              status={status}
+            />
           )}
         {showOnboarding && (
           <div className="mx-auto w-full max-w-2xl space-y-8 py-8 text-center">
@@ -209,10 +212,10 @@ const FeedClientWrapper = () => {
             {/* Trending Topics */}
             <div>
               <h3 className="mb-2 font-semibold">Trending Topics</h3>
-              {loadingTopics && <div>Loading topics...</div>}
-              {!loadingTopics && trendingTopics.length > 0 && (
+              {!trendingTopics && <div>Loading topics...</div>}
+              {trendingTopics && trendingTopics.length > 0 && (
                 <div className="mb-4 flex flex-wrap justify-center gap-2">
-                  {trendingTopics.map((topic) => (
+                  {trendingTopics.map((topic: any) => (
                     <span
                       key={topic.tag}
                       className={`inline-block cursor-pointer rounded-full px-3 py-1 hover:bg-blue-200 ${selectedTopic === topic.tag ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'}`}
@@ -223,7 +226,7 @@ const FeedClientWrapper = () => {
                   ))}
                 </div>
               )}
-              {!loadingTopics && trendingTopics.length === 0 && (
+              {trendingTopics && trendingTopics.length === 0 && (
                 <div>No trending topics right now.</div>
               )}
             </div>

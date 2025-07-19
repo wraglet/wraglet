@@ -1,8 +1,7 @@
 'use client'
 
 import { IPost } from '@/models/Post'
-import * as Ably from 'ably'
-import { AblyProvider, ChannelProvider } from 'ably/react'
+import { ChannelProvider } from 'ably/react'
 
 import ProfileBody from '@/components/profile/ProfileBody'
 
@@ -13,13 +12,11 @@ const ProfilePostsAbly = ({
   username: string
   initialPosts: IPost[]
 }) => {
-  const client = new Ably.Realtime({ authUrl: '/api/token' })
+  // Use the existing global AblyProvider from layout, just wrap with ChannelProvider
   return (
-    <AblyProvider client={client}>
-      <ChannelProvider channelName="post-channel">
-        <ProfileBody username={username} initialPosts={initialPosts} />
-      </ChannelProvider>
-    </AblyProvider>
+    <ChannelProvider channelName="post-channel">
+      <ProfileBody username={username} initialPosts={initialPosts} />
+    </ChannelProvider>
   )
 }
 

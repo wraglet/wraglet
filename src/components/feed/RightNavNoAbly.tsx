@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback } from 'react'
 import Image from 'next/image'
 import { UserInterface } from '@/interfaces'
 import { useFollow } from '@/lib/hooks/useFollow'
+import { useQuery } from '@tanstack/react-query'
 
 import Avatar from '@/components/shared/Avatar'
 
@@ -152,78 +153,73 @@ const RightNavNoAbly = ({
   otherUsers: UserInterface[]
   currentUserId: string
 }) => {
-  const [trendingTopics, setTrendingTopics] = useState<any[]>([])
-  const [whoToFollow, setWhoToFollow] = useState<UserInterface[]>([])
-  const [trendingPosts, setTrendingPosts] = useState<any[]>([])
-  const [activities, setActivities] = useState<any[]>([])
-  const [loading, setLoading] = useState({
-    topics: true,
-    whoToFollow: true,
-    trendingPosts: true,
-    activities: true
+  const { data: trendingTopics, isLoading: topicsLoading } = useQuery({
+    queryKey: ['trendingTopics'],
+    queryFn: async () => {
+      const res = await fetch('/api/users/topics-trending')
+      const data = await res.json()
+      return data.topics || []
+    }
   })
 
-  // Fetch trending topics
-  useEffect(() => {
-    fetch('/api/users/topics-trending')
-      .then((res) => res.json())
-      .then((data) => {
-        setTrendingTopics(data.topics || [])
-        setLoading((prev) => ({ ...prev, topics: false }))
-      })
-      .catch(() => setLoading((prev) => ({ ...prev, topics: false })))
-  }, [])
+  const { data: whoToFollow, isLoading: whoToFollowLoading } = useQuery({
+    queryKey: ['whoToFollow'],
+    queryFn: async () => {
+      const res = await fetch('/api/users/people-you-may-know')
+      const data = await res.json()
+      return data.users || []
+    }
+  })
 
-  // Fetch who to follow
-  useEffect(() => {
-    fetch('/api/users/people-you-may-know')
-      .then((res) => res.json())
-      .then((data) => {
-        setWhoToFollow(data.users || [])
-        setLoading((prev) => ({ ...prev, whoToFollow: false }))
-      })
-      .catch(() => setLoading((prev) => ({ ...prev, whoToFollow: false })))
-  }, [])
+  const { data: trendingPosts, isLoading: trendingPostsLoading } = useQuery({
+    queryKey: ['trendingPosts'],
+    queryFn: async () => {
+      const res = await fetch('/api/posts?limit=5&feedType=trending')
+      const data = await res.json()
+      const posts = data.posts || []
 
-  // Fetch trending posts
-  useEffect(() => {
-    fetch('/api/posts?limit=5&feedType=trending')
-      .then((res) => res.json())
-      .then((data) => {
-        setTrendingPosts(data.posts || [])
-        setLoading((prev) => ({ ...prev, trendingPosts: false }))
+      // Deduplicate posts by _id to prevent duplicates from API
+      const seen = new Set()
+      const uniquePosts = posts.filter((post: any) => {
+        const id = post._id || post.data?._id
+        if (!id || seen.has(id)) return false
+        seen.add(id)
+        return true
       })
-      .catch(() => setLoading((prev) => ({ ...prev, trendingPosts: false })))
-  }, [])
 
-  // Fetch recent activities (mock data for now)
-  useEffect(() => {
-    // Mock activities since we don't have an activities API yet
-    const mockActivities = [
-      {
-        user: {
-          firstName: 'John',
-          lastName: 'Doe',
-          gender: 'male',
-          profilePicture: { url: null }
+      return uniquePosts
+    }
+  })
+
+  const { data: activities, isLoading: activitiesLoading } = useQuery({
+    queryKey: ['activities'],
+    queryFn: async () => {
+      // Mock activities since we don't have an activities API yet
+      const mockActivities = [
+        {
+          user: {
+            firstName: 'John',
+            lastName: 'Doe',
+            gender: 'male',
+            profilePicture: { url: null }
+          },
+          action: 'posted a new update',
+          timestamp: new Date(Date.now() - 1000 * 60 * 30) // 30 minutes ago
         },
-        action: 'posted a new update',
-        timestamp: new Date(Date.now() - 1000 * 60 * 30) // 30 minutes ago
-      },
-      {
-        user: {
-          firstName: 'Jane',
-          lastName: 'Smith',
-          gender: 'female',
-          profilePicture: { url: null }
-        },
-        action: 'started following you',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60) // 1 hour ago
-      }
-    ]
-    setActivities(mockActivities)
-    setLoading((prev) => ({ ...prev, activities: false }))
-  }, [])
+        {
+          user: {
+            firstName: 'Jane',
+            lastName: 'Smith',
+            gender: 'female',
+            profilePicture: { url: null }
+          },
+          action: 'started following you',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60) // 1 hour ago
+        }
+      ]
+      return mockActivities
+    }
+  })
 
   const handleTopicClick = useCallback((tag: string) => {
     // Navigate to filtered feed
@@ -256,7 +252,7 @@ const RightNavNoAbly = ({
             Trending Topics
           </h2>
           <div className="flex flex-col gap-2">
-            {loading.topics ? (
+            {topicsLoading ? (
               <div className="space-y-2">
                 {[1, 2, 3].map((i) => (
                   <div
@@ -266,9 +262,9 @@ const RightNavNoAbly = ({
                 ))}
               </div>
             ) : trendingTopics.length > 0 ? (
-              trendingTopics
+              (trendingTopics || [])
                 .slice(0, 5)
-                .map((topic) => (
+                .map((topic: any) => (
                   <TrendingTopic
                     key={topic.tag}
                     topic={topic}
@@ -289,7 +285,7 @@ const RightNavNoAbly = ({
             Who to Follow
           </h2>
           <div className="flex flex-col gap-4">
-            {loading.whoToFollow ? (
+            {whoToFollowLoading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex items-center gap-3">
@@ -302,9 +298,9 @@ const RightNavNoAbly = ({
                 ))}
               </div>
             ) : whoToFollow.length > 0 ? (
-              whoToFollow
+              (whoToFollow || [])
                 .slice(0, 3)
-                .map((user) => (
+                .map((user: any) => (
                   <UserSuggestion
                     key={`noably-follow-${user._id}`}
                     user={user}
@@ -324,7 +320,7 @@ const RightNavNoAbly = ({
             Trending Posts
           </h2>
           <div className="flex flex-col gap-3">
-            {loading.trendingPosts ? (
+            {trendingPostsLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex gap-3">
@@ -337,9 +333,9 @@ const RightNavNoAbly = ({
                 ))}
               </div>
             ) : trendingPosts.length > 0 ? (
-              trendingPosts
+              (trendingPosts || [])
                 .slice(0, 3)
-                .map((post) => (
+                .map((post: any) => (
                   <TrendingPostPreview key={post._id} post={post} />
                 ))
             ) : (
@@ -356,7 +352,7 @@ const RightNavNoAbly = ({
             Recent Activity
           </h2>
           <div className="flex flex-col gap-3">
-            {loading.activities ? (
+            {activitiesLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex gap-3">
@@ -368,10 +364,10 @@ const RightNavNoAbly = ({
                   </div>
                 ))}
               </div>
-            ) : activities.length > 0 ? (
-              activities
+            ) : (activities || []).length > 0 ? (
+              (activities || [])
                 .slice(0, 5)
-                .map((activity, index) => (
+                .map((activity: any, index: number) => (
                   <ActivityItem key={index} activity={activity} />
                 ))
             ) : (

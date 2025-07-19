@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
+import { getAblyInstance } from '@/lib/ably'
 import client from '@/lib/db'
 import { createNewPostNotification } from '@/lib/notifications'
 import Follow from '@/models/Follow'
@@ -70,6 +71,38 @@ export const POST = async (request: Request) => {
       author: currentUser._id
     })
 
+    // Populate the post for real-time publishing
+    const populatedPost = await Post.findById(post._id)
+      .populate({
+        path: 'author',
+        select: 'firstName lastName username gender pronoun profilePicture'
+      })
+      .populate({
+        path: 'reactions',
+        populate: {
+          path: 'userId',
+          select: 'firstName lastName username profilePicture gender'
+        }
+      })
+      .populate({
+        path: 'comments',
+        populate: {
+          path: 'author',
+          select: 'firstName lastName username gender pronoun profilePicture'
+        }
+      })
+      .lean()
+
+    // Publish to Ably for real-time updates
+    try {
+      const ably = getAblyInstance()
+      const channel = ably.channels.get('post-channel')
+      await channel.publish('post', populatedPost)
+    } catch (ablyError) {
+      console.warn('Failed to publish post to Ably:', ablyError)
+      // Don't fail the request if Ably fails
+    }
+
     // Get user's followers to send notifications
     try {
       const followers = await Follow.find({ followingId: currentUser._id })
@@ -77,7 +110,7 @@ export const POST = async (request: Request) => {
         .lean()
 
       if (followers.length > 0) {
-        const followerIds = followers.map((f) => f.followerId.toString())
+        const followerIds = followers.map((f: any) => f.followerId.toString())
         await createNewPostNotification(
           currentUser._id.toString(),
           followerIds,
@@ -88,7 +121,7 @@ export const POST = async (request: Request) => {
       console.error('Error creating new post notifications:', error)
     }
 
-    return NextResponse.json(convertObjectIdsToStrings(post))
+    return NextResponse.json(convertObjectIdsToStrings(populatedPost))
   } catch (error) {
     console.error('Error creating post:', error)
     return new NextResponse('Internal Error', { status: 500 })

@@ -22,6 +22,12 @@ const FeedPage = async () => {
 
   const currentUser = await getCurrentUser()
 
+  // Deduplicate users by _id to prevent duplicate keys
+  const uniqueDiscoverUsers = discoverUsers.filter(
+    (user: any, index: number, array: any[]) =>
+      array.findIndex((u: any) => u._id === user._id) === index
+  )
+
   // Debug: Check for duplicates in discoverUsers
   if (discoverUsers && discoverUsers.length > 0) {
     const userIds = discoverUsers.map((user: any) => user._id)
@@ -32,6 +38,12 @@ const FeedPage = async () => {
         userIds.filter(
           (id: string, index: number) => userIds.indexOf(id) !== index
         )
+      )
+      console.warn(
+        'Duplicates removed. Original count:',
+        discoverUsers.length,
+        'Unique count:',
+        uniqueDiscoverUsers.length
       )
     }
   }
@@ -48,14 +60,14 @@ const FeedPage = async () => {
           </div>
         </div>
         <Suspense fallback={<Loading />}>
-          <RightNav otherUsers={discoverUsers} />
+          <RightNav otherUsers={uniqueDiscoverUsers} />
         </Suspense>
       </main>
 
       {/* Mobile responsive components */}
-      <MobileResponsiveWrapper otherUsers={discoverUsers} />
+      <MobileResponsiveWrapper otherUsers={uniqueDiscoverUsers} />
 
-      <FeedNewChatModalWrapper otherUsers={discoverUsers} />
+      <FeedNewChatModalWrapper otherUsers={uniqueDiscoverUsers} />
     </>
   )
 }
