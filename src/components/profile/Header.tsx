@@ -130,13 +130,12 @@ const ProfileHeader = ({ username }: { username: string }) => {
                 </button>
               ))}
             {isCurrentUser && (
-              <Link href="/settings/profile" passHref legacyBehavior>
-                <a
-                  className="self-end text-xl text-slate-700 hover:text-blue-600 focus:text-blue-700 focus:outline-none"
-                  aria-label="Edit Profile Settings"
-                >
-                  <FaUserPen />
-                </a>
+              <Link
+                href="/settings/profile"
+                className="self-end text-xl text-slate-700 hover:text-blue-600 focus:text-blue-700 focus:outline-none"
+                aria-label="Edit Profile Settings"
+              >
+                <FaUserPen />
               </Link>
             )}
           </div>

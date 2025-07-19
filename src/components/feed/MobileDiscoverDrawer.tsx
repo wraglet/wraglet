@@ -159,7 +159,10 @@ const MobileDiscoverDrawer = ({
           <div className="flex-1 overflow-y-auto p-4">
             <div className="space-y-4">
               {otherUsers.map((user) => (
-                <UserSuggestion key={user._id} user={user} />
+                <UserSuggestion
+                  key={`mobile-discover-${user._id}`}
+                  user={user}
+                />
               ))}
             </div>
           </div>

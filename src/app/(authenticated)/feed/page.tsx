@@ -10,15 +10,31 @@ import RightNav from '@/components/feed/RightNav'
 
 import Loading from '@/app/loading'
 
-const Page = async () => {
-  const otherUsers = await getOtherUsers().catch((err: any) => {
-    console.error(
-      'Error happened while getting getOtherUsers() on Feed component: ',
-      err
-    )
-  })
+const FeedPage = async () => {
+  const otherUsers =
+    (await getOtherUsers().catch((err: any) => {
+      console.error(
+        'Error happened while getting getOtherUsers() on Feed component: ',
+        err
+      )
+      return [] // Return empty array on error
+    })) || [] // Ensure it's always an array
 
   const currentUser = await getCurrentUser()
+
+  // Debug: Check for duplicates in otherUsers
+  if (otherUsers && otherUsers.length > 0) {
+    const userIds = otherUsers.map((user: any) => user._id)
+    const uniqueIds = new Set(userIds)
+    if (userIds.length !== uniqueIds.size) {
+      console.warn(
+        'Duplicate users found in otherUsers:',
+        userIds.filter(
+          (id: string, index: number) => userIds.indexOf(id) !== index
+        )
+      )
+    }
+  }
 
   return (
     <>
@@ -31,7 +47,9 @@ const Page = async () => {
             </Suspense>
           </div>
         </div>
-        <RightNav otherUsers={otherUsers} currentUserId={currentUser?._id} />
+        <Suspense fallback={<Loading />}>
+          <RightNav otherUsers={otherUsers} />
+        </Suspense>
       </main>
 
       {/* Mobile responsive components */}
@@ -45,4 +63,4 @@ const Page = async () => {
 // Move FeedNewChatModalWrapper to its own file as a client component
 // Remove it from this file and import it instead
 
-export default Page
+export default FeedPage
