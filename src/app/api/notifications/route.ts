@@ -34,7 +34,7 @@ export const GET = async (request: Request) => {
     const notifications = await Notification.find(query)
       .sort({ createdAt: -1 })
       .limit(limit + 1)
-      .populate('sender', 'firstName lastName username profilePicture')
+      .populate('sender', 'firstName lastName username profilePicture gender')
       .lean()
 
     const hasMore = notifications.length > limit

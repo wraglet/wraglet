@@ -36,7 +36,7 @@ export const GET = async (
         },
         {
           path: 'reactions.userId',
-          select: 'firstName lastName username profilePicture'
+          select: 'firstName lastName username profilePicture gender'
         }
       ])
       .lean()

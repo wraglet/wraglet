@@ -7,6 +7,7 @@ declare module 'next-auth' {
       _id: string
       firstName?: string
       lastName?: string
+      gender?: string
       email: string
       profilePicture?:
         | {
@@ -20,6 +21,7 @@ declare module 'next-auth' {
     _id: string
     firstName?: string
     lastName?: string
+    gender?: string
     profilePicture?:
       | {
           url: string
@@ -33,6 +35,7 @@ declare module 'next-auth/jwt' {
     _id: string
     firstName?: string
     lastName?: string
+    gender?: string
     email: string
     profilePicture?:
       | {

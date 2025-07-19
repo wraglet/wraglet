@@ -226,11 +226,15 @@ const ShareModalWithAbly = ({
 
                   {/* User Avatar and Message Input */}
                   <div className="mb-4 flex items-start gap-3">
-                    <Avatar
-                      gender={user?.gender}
-                      src={user?.profilePicture?.url || null}
-                      size="h-10 w-10"
-                    />
+                    {user ? (
+                      <Avatar
+                        gender={user.gender}
+                        src={user.profilePicture?.url || null}
+                        size="h-10 w-10"
+                      />
+                    ) : (
+                      <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200" />
+                    )}
                     <div className="flex-1">
                       <textarea
                         value={shareMessage}

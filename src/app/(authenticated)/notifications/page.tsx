@@ -235,6 +235,7 @@ const NotificationsPage = () => {
                   <div className="flex-shrink-0">
                     {notification.sender ? (
                       <Avatar
+                        gender={notification.sender.gender}
                         src={notification.sender.profilePicture?.url || null}
                         alt={notification.sender.firstName}
                         className="h-12 w-12"

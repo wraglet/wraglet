@@ -21,7 +21,7 @@ export const GET = async (req: Request) => {
     const users = await User.find({
       _id: { $in: userIds, $ne: currentUser._id }
     })
-      .select('firstName lastName username profilePicture')
+      .select('firstName lastName username profilePicture gender')
       .lean()
     // Attach follower count
     const usersWithCount = users.map((u) => ({

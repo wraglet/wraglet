@@ -9,7 +9,7 @@ import Header from '@/components/layout/Header'
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
 
 interface Props {
-  currentUser: IUser
+  currentUser: IUser & { _id: string }
   children: React.ReactNode
 }
 

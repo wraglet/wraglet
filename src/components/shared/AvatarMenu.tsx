@@ -37,9 +37,9 @@ const AvatarMenu = () => {
     <Menu as="li" className="inline-flex">
       <MenuButton className="relative h-8 w-8 cursor-pointer rounded-full border border-solid border-white">
         <Avatar
-          gender={user?.gender}
+          gender={user?.gender || 'Other'}
           size="h-8 w-8"
-          src={user?.profilePicture?.url!}
+          src={user?.profilePicture?.url || null}
           alt={'Avatar'}
         />
       </MenuButton>

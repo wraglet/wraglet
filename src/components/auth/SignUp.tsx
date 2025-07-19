@@ -3,6 +3,7 @@
 import { FC } from 'react'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import axios from 'axios'
@@ -23,7 +24,12 @@ import {
 import Input from '@/components/shared/Input'
 import ListBox from '@/components/shared/ListBox'
 
-const genderOptions: string[] = ['Female', 'Male', 'Others']
+const genderOptions: string[] = [
+  'Female',
+  'Male',
+  'Others',
+  'Prefer not to say'
+]
 const pronounOptions: string[] = ['She/Her', 'He/Him', 'They/Them']
 
 const signUpSchema = z.object({
@@ -50,6 +56,7 @@ const signUpSchema = z.object({
 type SignUpFormData = z.infer<typeof signUpSchema>
 
 const SignUp: FC = () => {
+  const { push } = useRouter()
   const formMethods = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -99,6 +106,7 @@ const SignUp: FC = () => {
         password: formMethods.getValues('password')
       })
       toast.success('Account created successfully!')
+      push('/feed')
     },
     onError: (error) => {
       console.error('Error while signing up:', error)

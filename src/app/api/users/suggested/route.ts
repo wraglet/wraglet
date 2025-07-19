@@ -12,7 +12,7 @@ export const GET = async (req: Request) => {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     // Fetch trending users from the new API endpoint
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+    const baseUrl = process.env.NEXTAUTH_URL
     let trendingUsers: any[] = []
     try {
       const trendingRes = await fetch(`${baseUrl}/api/users/trending`, {
@@ -40,7 +40,13 @@ export const GET = async (req: Request) => {
       },
       { $sample: { size: 10 } },
       {
-        $project: { firstName: 1, lastName: 1, username: 1, profilePicture: 1 }
+        $project: {
+          firstName: 1,
+          lastName: 1,
+          username: 1,
+          profilePicture: 1,
+          gender: 1
+        }
       }
     ])
     // Filter out current user from trendingUsers as well

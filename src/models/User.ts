@@ -45,7 +45,7 @@ const UserSchema = new Schema<IUserDocument>(
     hashedPassword: String,
     username: String,
     dob: Date,
-    gender: String,
+    gender: { type: String, default: 'Other' },
     bio: String,
     pronoun: String,
     profilePicture: { type: Object, url: String, key: String },

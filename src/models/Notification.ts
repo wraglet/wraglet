@@ -8,6 +8,7 @@ export interface INotification {
     firstName: string
     lastName: string
     username: string
+    gender: string
     profilePicture?: {
       url: string
       key: string

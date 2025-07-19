@@ -6,7 +6,7 @@ interface User {
   lastName: string
   username: string
   profilePicture?: string
-  gender?: string
+  gender: string
 }
 
 interface GroupChatHeaderProps {

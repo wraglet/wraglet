@@ -69,27 +69,27 @@ export const PATCH = async (
     const updatedShare = await Share.findById(shareId)
       .populate({
         path: 'sharedBy',
-        select: 'firstName lastName username profilePicture'
+        select: 'firstName lastName username profilePicture gender'
       })
       .populate({
         path: 'originalPost',
         populate: {
           path: 'author',
-          select: 'firstName lastName username profilePicture'
+          select: 'firstName lastName username profilePicture gender'
         }
       })
       .populate({
         path: 'reactions',
         populate: {
           path: 'userId',
-          select: 'firstName lastName username profilePicture'
+          select: 'firstName lastName username profilePicture gender'
         }
       })
       .populate({
         path: 'comments',
         populate: {
           path: 'author',
-          select: 'firstName lastName username profilePicture'
+          select: 'firstName lastName username profilePicture gender'
         }
       })
 
@@ -138,27 +138,27 @@ export const DELETE = async (
     const updatedShare = await Share.findById(shareId)
       .populate({
         path: 'sharedBy',
-        select: 'firstName lastName username profilePicture'
+        select: 'firstName lastName username profilePicture gender'
       })
       .populate({
         path: 'originalPost',
         populate: {
           path: 'author',
-          select: 'firstName lastName username profilePicture'
+          select: 'firstName lastName username profilePicture gender'
         }
       })
       .populate({
         path: 'reactions',
         populate: {
           path: 'userId',
-          select: 'firstName lastName username profilePicture'
+          select: 'firstName lastName username profilePicture gender'
         }
       })
       .populate({
         path: 'comments',
         populate: {
           path: 'author',
-          select: 'firstName lastName username profilePicture'
+          select: 'firstName lastName username profilePicture gender'
         }
       })
 

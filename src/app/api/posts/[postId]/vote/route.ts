@@ -75,7 +75,7 @@ export const PATCH = async (
         path: 'reactions',
         populate: {
           path: 'userId',
-          select: 'firstName lastName username profilePicture'
+          select: 'firstName lastName username profilePicture gender'
         }
       })
       .populate({
@@ -137,7 +137,7 @@ export const DELETE = async (
         path: 'reactions',
         populate: {
           path: 'userId',
-          select: 'firstName lastName username profilePicture'
+          select: 'firstName lastName username profilePicture gender'
         }
       })
       .populate({

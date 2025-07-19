@@ -14,16 +14,17 @@ const AuthenticatedLayout = async ({
   const session = await getSession()
   const currentUser = await getCurrentUser()
 
-  if (!session) {
+  if (!session || !currentUser) {
     redirect('/')
-  } else
-    return (
-      <div className="pb-16 lg:pb-0">
-        <AuthenticatedLayoutClientWrapper currentUser={currentUser}>
-          {children}
-        </AuthenticatedLayoutClientWrapper>
-      </div>
-    )
+  }
+
+  return (
+    <div className="pb-16 lg:pb-0">
+      <AuthenticatedLayoutClientWrapper currentUser={currentUser}>
+        {children}
+      </AuthenticatedLayoutClientWrapper>
+    </div>
+  )
 }
 
 export default AuthenticatedLayout

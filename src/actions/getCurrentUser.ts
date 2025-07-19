@@ -21,13 +21,22 @@ const getCurrentUser = async () => {
     // Find the user by email, excluding the hashed password
     const currentUser = await User.findOne({
       email: session.user.email
-    }).select('-hashedPassword')
+    }).select(
+      'firstName lastName email username gender profilePicture coverPhoto bio pronoun dob publicProfileVisible followingIds createdAt updatedAt'
+    )
 
     // Convert the Mongoose document to a plain object
     if (currentUser) {
       const userObject = currentUser.toObject()
       // Convert all ObjectIds and Dates to strings recursively
-      return convertObjectIdsToStrings(userObject)
+      const convertedUser = convertObjectIdsToStrings(userObject)
+
+      // Ensure gender field is always present and valid
+      if (!convertedUser.gender || typeof convertedUser.gender !== 'string') {
+        convertedUser.gender = 'Other'
+      }
+
+      return convertedUser
     }
 
     return null // Return null if the user is not found

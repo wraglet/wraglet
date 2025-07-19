@@ -5,6 +5,8 @@ import Image from 'next/image'
 import { UserInterface } from '@/interfaces'
 import { useFollow } from '@/lib/hooks/useFollow'
 
+import Avatar from '@/components/shared/Avatar'
+
 // User suggestion card (static version)
 const UserSuggestion = ({
   user,
@@ -35,12 +37,11 @@ const UserSuggestion = ({
     <div className="group relative flex items-center justify-between rounded-lg transition-all duration-200 hover:bg-sky-50/50">
       <div className="flex items-center gap-3">
         <div className="block overflow-hidden rounded-full transition-transform duration-200 hover:scale-105">
-          <Image
-            src={user.profilePicture?.url || '/default-avatar.png'}
+          <Avatar
+            src={user.profilePicture?.url || null}
             alt={`${user.firstName}'s Profile`}
-            width={44}
-            height={44}
-            className="h-11 w-11 rounded-full ring-2 ring-white"
+            size="h-11 w-11"
+            gender={user.gender}
           />
         </div>
         <div className="flex flex-col gap-0.5">
@@ -122,12 +123,11 @@ const TrendingPostPreview = ({ post }: { post: any }) => {
 const ActivityItem = ({ activity }: { activity: any }) => {
   return (
     <div className="flex items-start gap-3 rounded-lg p-3 transition-all duration-200 hover:bg-sky-50">
-      <Image
-        src={activity.user.profilePicture?.url || '/default-avatar.png'}
+      <Avatar
+        src={activity.user.profilePicture?.url || null}
         alt={`${activity.user.firstName}'s Profile`}
-        width={32}
-        height={32}
-        className="h-8 w-8 rounded-full"
+        size="h-8 w-8"
+        gender={activity.user.gender}
       />
       <div className="min-w-0 flex-1">
         <p className="text-sm text-gray-900">
@@ -204,7 +204,8 @@ const RightNavNoAbly = ({
         user: {
           firstName: 'John',
           lastName: 'Doe',
-          profilePicture: { url: '/default-avatar.png' }
+          gender: 'male',
+          profilePicture: { url: null }
         },
         action: 'posted a new update',
         timestamp: new Date(Date.now() - 1000 * 60 * 30) // 30 minutes ago
@@ -213,7 +214,8 @@ const RightNavNoAbly = ({
         user: {
           firstName: 'Jane',
           lastName: 'Smith',
-          profilePicture: { url: '/default-avatar.png' }
+          gender: 'female',
+          profilePicture: { url: null }
         },
         action: 'started following you',
         timestamp: new Date(Date.now() - 1000 * 60 * 60) // 1 hour ago

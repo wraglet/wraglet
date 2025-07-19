@@ -27,7 +27,7 @@ interface ShareContentProps {
       firstName: string
       lastName: string
       username: string
-      gender?: string
+      gender: string
       profilePicture?: {
         url: string
       } | null

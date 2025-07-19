@@ -524,11 +524,15 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
           onSubmit={handleCommentSubmit}
           className="flex items-center gap-2 border-t border-solid border-[#E7ECF0] pt-4"
         >
-          <Avatar
-            gender={user?.gender}
-            size="h-6 w-6"
-            src={user?.profilePicture?.url || null}
-          />
+          {user && user.gender ? (
+            <Avatar
+              gender={user.gender}
+              size="h-6 w-6"
+              src={user.profilePicture?.url || null}
+            />
+          ) : (
+            <div className="h-6 w-6 animate-pulse rounded-full bg-gray-200" />
+          )}
           <div className="flex-1">
             <input
               type="text"

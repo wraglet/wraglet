@@ -28,7 +28,7 @@ export const GET = async (req: Request) => {
     const suggestions = await User.find({
       _id: { $in: secondDegreeIds, $nin: excludeIds }
     })
-      .select('firstName lastName username profilePicture')
+      .select('firstName lastName username profilePicture gender')
       .limit(10)
       .lean()
     return NextResponse.json({ success: true, users: suggestions })

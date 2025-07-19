@@ -23,7 +23,9 @@ const getOtherUsers = async () => {
     const users = await User.find({
       email: { $ne: session.user.email }
     })
-      .select('-hashedPassword')
+      .select(
+        'firstName lastName email username gender profilePicture coverPhoto bio pronoun dob publicProfileVisible followingIds createdAt updatedAt'
+      )
       .sort({ createdAt: 'desc' })
       .exec()
 
@@ -31,8 +33,14 @@ const getOtherUsers = async () => {
     const plainUsers = users.map((user) => user.toObject())
     const convertedUsers = convertObjectIdsToStrings(plainUsers)
 
+    // Ensure all users have a gender field
+    const usersWithGender = convertedUsers.map((user: any) => ({
+      ...user,
+      gender: user.gender || 'Other'
+    }))
+
     // Debug: Check for duplicates before filtering
-    const userIds = convertedUsers.map((user: any) => user._id)
+    const userIds = usersWithGender.map((user: any) => user._id)
     const duplicateIds = userIds.filter(
       (id: string, index: number) => userIds.indexOf(id) !== index
     )
@@ -41,7 +49,7 @@ const getOtherUsers = async () => {
     }
 
     // Remove duplicates based on _id to ensure unique users
-    const uniqueUsers = convertedUsers.filter(
+    const uniqueUsers = usersWithGender.filter(
       (user: any, index: number, self: any[]) =>
         index === self.findIndex((u: any) => u._id === user._id)
     )

@@ -39,6 +39,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 email: user.email,
                 firstName: user.firstName,
                 lastName: user.lastName,
+                gender: user.gender,
                 profilePicture: user.profilePicture
               }
             }
@@ -62,6 +63,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.email = user.email as string
         token.firstName = user.firstName
         token.lastName = user.lastName
+        token.gender = user.gender
         token.profilePicture = user.profilePicture
       }
       return token
@@ -72,6 +74,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.email = token.email
         session.user.firstName = token.firstName
         session.user.lastName = token.lastName
+        session.user.gender = token.gender
         session.user.profilePicture = token.profilePicture
       }
       return session

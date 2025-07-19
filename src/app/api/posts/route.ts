@@ -140,7 +140,7 @@ export const GET = async (request: Request) => {
           path: 'reactions',
           populate: {
             path: 'userId',
-            select: 'firstName lastName username profilePicture'
+            select: 'firstName lastName username profilePicture gender'
           }
         })
         .populate({
@@ -183,7 +183,7 @@ export const GET = async (request: Request) => {
             path: 'reactions',
             populate: {
               path: 'userId',
-              select: 'firstName lastName username profilePicture'
+              select: 'firstName lastName username profilePicture gender'
             }
           })
           .populate({
@@ -254,7 +254,7 @@ export const GET = async (request: Request) => {
         path: 'reactions',
         populate: {
           path: 'userId',
-          select: 'firstName lastName username profilePicture'
+          select: 'firstName lastName username profilePicture gender'
         }
       })
       .populate({
@@ -287,27 +287,27 @@ export const GET = async (request: Request) => {
       .limit(limit + 1)
       .populate({
         path: 'sharedBy',
-        select: 'firstName lastName username profilePicture'
+        select: 'firstName lastName username profilePicture gender'
       })
       .populate({
         path: 'originalPost',
         populate: {
           path: 'author',
-          select: 'firstName lastName username profilePicture'
+          select: 'firstName lastName username profilePicture gender'
         }
       })
       .populate({
         path: 'reactions',
         populate: {
           path: 'userId',
-          select: 'firstName lastName username profilePicture'
+          select: 'firstName lastName username profilePicture gender'
         }
       })
       .populate({
         path: 'comments',
         populate: {
           path: 'author',
-          select: 'firstName lastName username profilePicture'
+          select: 'firstName lastName username profilePicture gender'
         }
       })
       .lean()
