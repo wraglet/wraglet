@@ -301,23 +301,23 @@ const SignUp: FC = () => {
         <div className="flex flex-col gap-2">
           <h3 className="font-geist-sans mb-1 text-sm text-slate-600">
             <span>By signing up, you agree to our </span>
-            <a
+            <Link
               href="/terms-of-service"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#0EA5E9] underline hover:text-[#42BBFF]"
             >
               Terms of Service
-            </a>
+            </Link>
             <span> and </span>
-            <a
+            <Link
               href="/privacy-policy"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#0EA5E9] underline hover:text-[#42BBFF]"
             >
               Privacy Policy
-            </a>
+            </Link>
             .
           </h3>
           <FormField

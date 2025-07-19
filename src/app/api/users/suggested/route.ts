@@ -13,11 +13,18 @@ export const GET = async (req: Request) => {
     }
     // Fetch trending users from the new API endpoint
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
-    const trendingRes = await fetch(`${baseUrl}/api/users/trending`, {
-      headers: req.headers
-    })
-    const trendingData = await trendingRes.json()
-    const trendingUsers = trendingData.users || []
+    let trendingUsers: any[] = []
+    try {
+      const trendingRes = await fetch(`${baseUrl}/api/users/trending`, {
+        headers: req.headers
+      })
+      if (trendingRes.ok) {
+        const trendingData = await trendingRes.json()
+        trendingUsers = trendingData.users || []
+      }
+    } catch (err) {
+      trendingUsers = []
+    }
     // Random users (excluding current and trending)
     const trendingIds = trendingUsers.map((u: any) => String(u._id))
     const randomUsers = await User.aggregate([
@@ -25,7 +32,9 @@ export const GET = async (req: Request) => {
         $match: {
           _id: {
             $ne: currentUser._id,
-            $nin: trendingIds.map((id: string) => new Types.ObjectId(id))
+            $nin: trendingIds.length
+              ? trendingIds.map((id: string) => new Types.ObjectId(id))
+              : []
           }
         }
       },
@@ -34,8 +43,12 @@ export const GET = async (req: Request) => {
         $project: { firstName: 1, lastName: 1, username: 1, profilePicture: 1 }
       }
     ])
+    // Filter out current user from trendingUsers as well
+    const filteredTrending = trendingUsers.filter(
+      (u: any) => String(u._id) !== String(currentUser._id)
+    )
     // Combine and shuffle
-    const combined = [...trendingUsers, ...randomUsers]
+    const combined = [...filteredTrending, ...randomUsers]
     for (let i = combined.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
       ;[combined[i], combined[j]] = [combined[j], combined[i]]

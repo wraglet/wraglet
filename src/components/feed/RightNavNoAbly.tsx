@@ -2,18 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { UserInterface } from '@/interfaces'
 import { useFollow } from '@/lib/hooks/useFollow'
-import useChatFloaterStore from '@/store/chatFloater'
-import { formatDistanceToNow } from 'date-fns'
-import toast from 'react-hot-toast'
-import { FaHashtag } from 'react-icons/fa'
-import { IoPersonAddSharp } from 'react-icons/io5'
 
-import Avatar from '@/components/shared/Avatar'
-
-// User suggestion card with real-time follow state
+// User suggestion card (static version)
 const UserSuggestion = ({
   user,
   onFollowChange
@@ -29,57 +21,32 @@ const UserSuggestion = ({
     followingCount,
     isInitialLoading
   } = useFollow(user._id)
-  const openChat = useChatFloaterStore((s) => s.openChat)
 
   const handleFollow = useCallback(async () => {
     try {
       await follow()
       onFollowChange?.(user._id, !isFollowing)
-      toast.success(isFollowing ? 'Unfollowed' : 'Following')
     } catch (error) {
-      toast.error('Failed to follow user')
+      console.error('Failed to follow user:', error)
     }
   }, [follow, isFollowing, onFollowChange, user._id])
-
-  const handleMessage = useCallback(async () => {
-    try {
-      const res = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ participantIds: [user._id] })
-      })
-      const json = await res.json()
-      if (json.success && json.data?._id) {
-        openChat(json.data._id)
-      } else {
-        toast.error('Failed to start chat')
-      }
-    } catch {
-      toast.error('Failed to start chat')
-    }
-  }, [user._id, openChat])
 
   return (
     <div className="group relative flex items-center justify-between rounded-lg transition-all duration-200 hover:bg-sky-50/50">
       <div className="flex items-center gap-3">
-        <Link
-          href={`/${user.username}`}
-          className="block overflow-hidden rounded-full transition-transform duration-200 hover:scale-105"
-        >
-          <Avatar
-            gender={user.gender}
-            className="h-11 w-11 ring-2 ring-white"
+        <div className="block overflow-hidden rounded-full transition-transform duration-200 hover:scale-105">
+          <Image
+            src={user.profilePicture?.url || '/default-avatar.png'}
             alt={`${user.firstName}'s Profile`}
-            src={user.profilePicture?.url!}
+            width={44}
+            height={44}
+            className="h-11 w-11 rounded-full ring-2 ring-white"
           />
-        </Link>
+        </div>
         <div className="flex flex-col gap-0.5">
-          <Link
-            href={`/${user.username}`}
-            className="text-sm font-semibold text-gray-900 hover:text-sky-500"
-          >
+          <span className="text-sm font-semibold text-gray-900">
             {user.firstName} {user.lastName}
-          </Link>
+          </span>
           {isInitialLoading ? (
             <div className="h-4 w-32 animate-pulse rounded bg-gray-200"></div>
           ) : (
@@ -91,34 +58,21 @@ const UserSuggestion = ({
       </div>
       <div className="flex items-center gap-2">
         {isInitialLoading ? (
-          <>
-            <div className="h-6 w-16 animate-pulse rounded-full bg-gray-200"></div>
-            <div className="h-6 w-16 animate-pulse rounded-full bg-gray-200"></div>
-          </>
+          <div className="h-6 w-16 animate-pulse rounded-full bg-gray-200"></div>
         ) : (
-          <>
-            <button
-              className="flex w-fit items-center gap-1 rounded-full bg-sky-100 px-2 py-1 text-xs font-medium text-sky-600 transition-all duration-200 hover:bg-sky-500 hover:text-white disabled:opacity-60"
-              onClick={handleFollow}
-              disabled={loading}
-            >
-              <IoPersonAddSharp className="h-4 w-4" aria-hidden="true" />
-              {isFollowing ? 'Following' : loading ? 'Following...' : 'Follow'}
-            </button>
-            <button
-              className="flex w-fit items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600 transition-all duration-200 hover:bg-blue-500 hover:text-white"
-              onClick={handleMessage}
-            >
-              💬 Message
-            </button>
-          </>
+          <button
+            className="flex w-fit items-center gap-1 rounded-full bg-sky-100 px-2 py-1 text-xs font-medium text-sky-600 transition-all duration-200 hover:bg-sky-500 hover:text-white disabled:opacity-60"
+            onClick={handleFollow}
+            disabled={loading}
+          >
+            {isFollowing ? 'Following' : loading ? 'Following...' : 'Follow'}
+          </button>
         )}
       </div>
     </div>
   )
 }
 
-// Trending topic card
 const TrendingTopic = ({
   topic,
   onClick
@@ -132,7 +86,6 @@ const TrendingTopic = ({
       className="flex w-full items-center justify-between rounded-lg p-3 transition-all duration-200 hover:bg-sky-50"
     >
       <div className="flex items-center gap-2">
-        <FaHashtag className="h-4 w-4 text-sky-500" />
         <span className="text-sm font-medium text-gray-900">#{topic.tag}</span>
       </div>
       <span className="text-xs text-gray-500">{topic.count} posts</span>
@@ -140,20 +93,16 @@ const TrendingTopic = ({
   )
 }
 
-// Trending post preview
 const TrendingPostPreview = ({ post }: { post: any }) => {
   return (
-    <Link
-      href={`/post/${post._id}`}
-      className="flex items-start gap-3 rounded-lg p-3 transition-all duration-200 hover:bg-sky-50"
-    >
+    <div className="flex items-start gap-3 rounded-lg p-3 transition-all duration-200 hover:bg-sky-50">
       {post.images?.[0] && (
         <Image
           src={post.images[0].url}
           alt="Post preview"
           width={48}
           height={48}
-          className="rounded object-cover"
+          className="h-12 w-12 rounded object-cover"
         />
       )}
       <div className="min-w-0 flex-1">
@@ -163,24 +112,22 @@ const TrendingPostPreview = ({ post }: { post: any }) => {
             {post.author.firstName} {post.author.lastName}
           </span>
           <span>•</span>
-          <span>
-            {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
-          </span>
+          <span>{new Date(post.createdAt).toLocaleDateString()}</span>
         </div>
       </div>
-    </Link>
+    </div>
   )
 }
 
-// Activity item
 const ActivityItem = ({ activity }: { activity: any }) => {
   return (
     <div className="flex items-start gap-3 rounded-lg p-3 transition-all duration-200 hover:bg-sky-50">
-      <Avatar
-        gender={activity.user.gender}
-        className="h-8 w-8"
+      <Image
+        src={activity.user.profilePicture?.url || '/default-avatar.png'}
         alt={`${activity.user.firstName}'s Profile`}
-        src={activity.user.profilePicture?.url!}
+        width={32}
+        height={32}
+        className="h-8 w-8 rounded-full"
       />
       <div className="min-w-0 flex-1">
         <p className="text-sm text-gray-900">
@@ -190,17 +137,21 @@ const ActivityItem = ({ activity }: { activity: any }) => {
           {activity.action}
         </p>
         <p className="text-xs text-gray-500">
-          {formatDistanceToNow(new Date(activity.timestamp), {
-            addSuffix: true
-          })}
+          {new Date(activity.timestamp).toLocaleDateString()}
         </p>
       </div>
     </div>
   )
 }
 
-// Main RightNav component (simplified - no Ably for now)
-const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
+// Static content component (no real-time features)
+const RightNavNoAbly = ({
+  otherUsers,
+  currentUserId
+}: {
+  otherUsers: UserInterface[]
+  currentUserId: string
+}) => {
   const [trendingTopics, setTrendingTopics] = useState<any[]>([])
   const [whoToFollow, setWhoToFollow] = useState<UserInterface[]>([])
   const [trendingPosts, setTrendingPosts] = useState<any[]>([])
@@ -245,52 +196,49 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
       .catch(() => setLoading((prev) => ({ ...prev, trendingPosts: false })))
   }, [])
 
-  // Fetch recent activities
+  // Fetch recent activities (mock data for now)
   useEffect(() => {
-    fetch('/api/activities?limit=10')
-      .then((res) => res.json())
-      .then((data) => {
-        setActivities(data.activities || [])
-        setLoading((prev) => ({ ...prev, activities: false }))
-      })
-      .catch(() => setLoading((prev) => ({ ...prev, activities: false })))
+    // Mock activities since we don't have an activities API yet
+    const mockActivities = [
+      {
+        user: {
+          firstName: 'John',
+          lastName: 'Doe',
+          profilePicture: { url: '/default-avatar.png' }
+        },
+        action: 'posted a new update',
+        timestamp: new Date(Date.now() - 1000 * 60 * 30) // 30 minutes ago
+      },
+      {
+        user: {
+          firstName: 'Jane',
+          lastName: 'Smith',
+          profilePicture: { url: '/default-avatar.png' }
+        },
+        action: 'started following you',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60) // 1 hour ago
+      }
+    ]
+    setActivities(mockActivities)
+    setLoading((prev) => ({ ...prev, activities: false }))
   }, [])
 
   const handleTopicClick = useCallback((tag: string) => {
+    // Navigate to filtered feed
     window.location.href = `/?topic=${encodeURIComponent(tag)}`
   }, [])
-
-  // Filter out users that are already in the discover section to avoid duplicates
-  const filteredWhoToFollow = whoToFollow.filter(
-    (user) => !otherUsers.some((otherUser) => otherUser._id === user._id)
-  )
-
-  // Debug: Check for duplicates in otherUsers
-  useEffect(() => {
-    if (otherUsers && otherUsers.length > 0) {
-      const userIds = otherUsers.map((user) => user._id)
-      const uniqueIds = new Set(userIds)
-      if (userIds.length !== uniqueIds.size) {
-        console.warn(
-          'Duplicate users found in otherUsers:',
-          userIds.filter((id, index) => userIds.indexOf(id) !== index)
-        )
-        console.warn('otherUsers:', otherUsers)
-      }
-    }
-  }, [otherUsers])
 
   return (
     <aside className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-200 sticky top-14 hidden h-[calc(100vh-3.5rem)] w-[280px] flex-shrink-0 overflow-y-auto lg:block xl:w-[320px]">
       <div className="flex h-full flex-col gap-4 py-4">
-        {/* Discover People */}
+        {/* Discover People - Static */}
         <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
           <h2 className="mb-5 text-base font-semibold text-gray-900">
             Discover People
           </h2>
           <div className="flex flex-col gap-4">
             {otherUsers.slice(0, 5).map((user) => (
-              <UserSuggestion key={`discover-${user._id}`} user={user} />
+              <UserSuggestion key={`noably-discover-${user._id}`} user={user} />
             ))}
             {otherUsers.length === 0 && (
               <p className="py-4 text-center text-sm text-gray-500">
@@ -351,11 +299,14 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
                   </div>
                 ))}
               </div>
-            ) : filteredWhoToFollow.length > 0 ? (
-              filteredWhoToFollow
+            ) : whoToFollow.length > 0 ? (
+              whoToFollow
                 .slice(0, 3)
                 .map((user) => (
-                  <UserSuggestion key={`follow-${user._id}`} user={user} />
+                  <UserSuggestion
+                    key={`noably-follow-${user._id}`}
+                    user={user}
+                  />
                 ))
             ) : (
               <p className="py-4 text-center text-sm text-gray-500">
@@ -419,10 +370,7 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
               activities
                 .slice(0, 5)
                 .map((activity, index) => (
-                  <ActivityItem
-                    key={`activity-${activity._id || index}`}
-                    activity={activity}
-                  />
+                  <ActivityItem key={index} activity={activity} />
                 ))
             ) : (
               <p className="py-4 text-center text-sm text-gray-500">
@@ -436,4 +384,4 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
   )
 }
 
-export default RightNav
+export default RightNavNoAbly

@@ -63,7 +63,7 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({
             )}
             {filtered.map((u) => (
               <li
-                key={u._id}
+                key={`new-chat-${u._id}`}
                 className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-3 transition hover:bg-blue-50"
                 onClick={() => onSelectUser(u)}
               >
