@@ -2,6 +2,7 @@
 
 import { ChangeEvent, FormEvent, useReducer } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import useUserStore from '@/store/user'
 import { BsSend } from 'react-icons/bs'
 import { HiOutlinePlayCircle } from 'react-icons/hi2'
@@ -10,6 +11,9 @@ import UploadPostImage from '@/components/feed/UploadPostImage'
 import Avatar from '@/components/shared/Avatar'
 import Button from '@/components/shared/Button'
 import { GalleryIcon, TerminalIcon } from '@/components/shared/Icons'
+
+// Constants for character limits
+const MAX_POST_CHARACTERS = 280
 
 type Props = {
   submitPost: (e: FormEvent) => Promise<void>
@@ -38,6 +42,18 @@ const CreatePost = ({
 
   const [{ openUploadModal }, dispatchState] = useReducer(reducer, initialState)
 
+  const characterCount = text.length
+  const charactersRemaining = MAX_POST_CHARACTERS - characterCount
+  const isOverLimit = characterCount > MAX_POST_CHARACTERS
+  const isNearLimit = charactersRemaining <= 20 && charactersRemaining > 0
+
+  // Get character counter color based on remaining characters
+  const getCharacterCounterColor = () => {
+    if (isOverLimit) return 'text-red-500'
+    if (isNearLimit) return 'text-orange-500'
+    return 'text-gray-500'
+  }
+
   return (
     <>
       <UploadPostImage
@@ -63,13 +79,32 @@ const CreatePost = ({
             onSubmit={submitPost}
             className="flex grow flex-col justify-start gap-y-1.5"
           >
-            <input
-              type="text"
-              value={text}
-              className="h-[30px] w-full rounded-2xl border border-solid border-[#E5E5E5] bg-[#E7ECF0] px-2 text-sm text-[#333333] drop-shadow-md focus:outline-hidden"
-              placeholder="Wanna share something up?"
-              onChange={setText}
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={text}
+                className={`h-[30px] w-full rounded-2xl border border-solid px-2 text-sm drop-shadow-md focus:outline-hidden ${
+                  isOverLimit
+                    ? 'border-red-300 bg-red-50 text-red-700'
+                    : 'border-[#E5E5E5] bg-[#E7ECF0] text-[#333333]'
+                }`}
+                placeholder="Wanna share something up?"
+                onChange={setText}
+                maxLength={MAX_POST_CHARACTERS + 50} // Allow typing beyond limit for visual feedback
+              />
+              {characterCount > 0 && (
+                <div className="mt-1 flex items-center justify-between">
+                  <div></div>
+                  <span
+                    className={`text-xs font-medium ${getCharacterCounterColor()}`}
+                  >
+                    {isOverLimit
+                      ? `-${Math.abs(charactersRemaining)}`
+                      : charactersRemaining}
+                  </span>
+                </div>
+              )}
+            </div>
             {postImage && (
               <div className="my-3 block overflow-hidden rounded-md">
                 <Image
@@ -96,12 +131,17 @@ const CreatePost = ({
             <div className="flex items-center">
               <p className="flex-1 text-xs font-medium text-[#333333]">
                 Wanna write lengthier posts? Write a{' '}
-                <span className="cursor-pointer text-violet-600">Blog</span>{' '}
+                <Link
+                  href="/blog/create"
+                  className="cursor-pointer text-violet-600 underline hover:text-violet-800"
+                >
+                  Blog
+                </Link>{' '}
                 instead.
               </p>
               <Button
                 type="submit"
-                disabled={text === '' && postImage === null}
+                disabled={(text === '' && postImage === null) || isOverLimit}
                 className="flex items-center gap-x-1.5 rounded-full bg-sky-500 px-4 py-1.5 text-white shadow-sm transition-all duration-200 hover:bg-sky-600 active:bg-sky-700 disabled:bg-gray-200 disabled:text-gray-400"
               >
                 {isLoading ? (
