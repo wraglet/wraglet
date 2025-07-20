@@ -14,7 +14,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     CredentialsProvider({
       credentials: {
-        email: { label: 'Email', type: 'email' },
+        email: { label: 'Email or Username', type: 'text' },
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
@@ -22,9 +22,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           await client()
           console.log('Connected to MongoDB')
 
-          const user = (await User.findOne({
-            email: (credentials?.email as string).toLowerCase()
-          }).lean()) as UserWithId | null
+          const emailOrUsername = (credentials?.email as string).toLowerCase()
+
+          // Check if the input is an email (contains @ but not at the start, and has a domain)
+          const isEmail =
+            emailOrUsername.includes('@') &&
+            !emailOrUsername.startsWith('@') &&
+            emailOrUsername.includes('.')
+
+          // Create query to search by either email or username
+          let searchQuery
+          if (isEmail) {
+            searchQuery = { email: emailOrUsername }
+          } else {
+            // For usernames, if it doesn't start with @, add it
+            // If it already starts with @, keep it as is
+            const username = emailOrUsername.startsWith('@')
+              ? emailOrUsername
+              : `@${emailOrUsername}`
+            searchQuery = { username: username }
+          }
+
+          console.log('Search query:', searchQuery)
+          const user = (await User.findOne(
+            searchQuery
+          ).lean()) as UserWithId | null
 
           if (user) {
             const isPasswordCorrect = await bcrypt.compare(
@@ -44,7 +66,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               }
             }
           } else {
-            console.log('User not found with email:', credentials?.email)
+            console.log('User not found with email/username:', emailOrUsername)
           }
         } catch (error) {
           console.error('Error during authorization:', error)
