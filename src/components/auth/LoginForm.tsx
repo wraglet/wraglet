@@ -13,7 +13,7 @@ import Button from '@/components/shared/Button'
 import { ShadcnInput } from '@/components/shared/ShadcnInput'
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  emailOrUsername: z.string().min(1, 'Email or username is required'),
   password: z.string().min(1, 'Password is required')
 })
 
@@ -28,7 +28,7 @@ const LoginForm: FC<LoginFormProps> = ({ buttonIcon }) => {
   const formMethods = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      emailOrUsername: '',
       password: ''
     }
   })
@@ -41,7 +41,7 @@ const LoginForm: FC<LoginFormProps> = ({ buttonIcon }) => {
   const mutation = useMutation({
     mutationFn: async (data: LoginFormData) => {
       const response = await signIn('credentials', {
-        email: data.email.toLowerCase(),
+        email: data.emailOrUsername.toLowerCase(),
         password: data.password,
         redirect: false
       })
@@ -73,12 +73,12 @@ const LoginForm: FC<LoginFormProps> = ({ buttonIcon }) => {
         className="flex w-full flex-col gap-4"
       >
         <ShadcnInput
-          {...formMethods.register('email')}
-          placeholder="Email"
-          type="email"
+          {...formMethods.register('emailOrUsername')}
+          placeholder="Email or Username"
+          type="text"
           autoFocus
-          error={errors.email?.message}
-          aria-label="Email"
+          error={errors.emailOrUsername?.message}
+          aria-label="Email or Username"
           className="relative w-full cursor-default appearance-none rounded-lg border border-neutral-200 bg-white py-2 pr-3 pl-3 text-left shadow-md focus:outline-hidden focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm"
         />
         <ShadcnInput
