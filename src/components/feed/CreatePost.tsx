@@ -2,7 +2,6 @@
 
 import { ChangeEvent, FormEvent, useReducer } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import useUserStore from '@/store/user'
 import { BsSend } from 'react-icons/bs'
 import { HiOutlinePlayCircle } from 'react-icons/hi2'
@@ -131,12 +130,18 @@ const CreatePost = ({
             <div className="flex items-center">
               <p className="flex-1 text-xs font-medium text-[#333333]">
                 Wanna write lengthier posts? Write a{' '}
-                <Link
-                  href="/blog/create"
+                <button
+                  onClick={() => {
+                    const url = new URL(window.location.href)
+                    url.searchParams.set('tab', 'blogs')
+                    url.searchParams.set('modal', 'create')
+                    window.history.pushState({}, '', url.toString())
+                    window.dispatchEvent(new PopStateEvent('popstate'))
+                  }}
                   className="cursor-pointer text-violet-600 underline hover:text-violet-800"
                 >
                   Blog
-                </Link>{' '}
+                </button>{' '}
                 instead.
               </p>
               <Button

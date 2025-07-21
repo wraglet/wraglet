@@ -2,6 +2,7 @@
 
 // Import all models to ensure they're registered
 
+import Blog from '@/models/Blog'
 import Comment from '@/models/Comment'
 import Conversation from '@/models/Conversation'
 import Follow from '@/models/Follow'
@@ -15,6 +16,7 @@ import mongoose from 'mongoose'
 
 // Export all models for convenience
 export {
+  Blog,
   Comment,
   Conversation,
   Follow,
@@ -30,6 +32,7 @@ export {
 export const initModels = () => {
   // Return the registered models for verification
   return {
+    Blog: !!mongoose.models.Blog,
     Comment: !!mongoose.models.Comment,
     Post: !!mongoose.models.Post,
     PostReaction: !!mongoose.models.PostReaction,

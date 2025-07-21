@@ -17,7 +17,9 @@ import { FaCircleUser } from 'react-icons/fa6'
 import {
   HiCog,
   HiOutlineArrowRightOnRectangle,
-  HiOutlineCog
+  HiOutlineCog,
+  HiOutlineDocumentText,
+  HiOutlinePencilSquare
 } from 'react-icons/hi2'
 
 import Avatar from '@/components/shared/Avatar'
@@ -80,6 +82,35 @@ const AvatarMenu = () => {
               </Link>
             </MenuItem>
           </div>
+
+          {/* Blog Section */}
+          <div className="px-1 py-1">
+            <MenuItem>
+              <Link
+                href="/blog/dashboard"
+                className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 transition-colors hover:bg-purple-50 focus:bg-purple-100 focus:text-purple-700"
+              >
+                <HiOutlineDocumentText
+                  className="mr-2 h-5 w-5"
+                  aria-hidden="true"
+                />
+                My Blogs
+              </Link>
+            </MenuItem>
+            <MenuItem>
+              <Link
+                href="/blog/create"
+                className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 transition-colors hover:bg-green-50 focus:bg-green-100 focus:text-green-700"
+              >
+                <HiOutlinePencilSquare
+                  className="mr-2 h-5 w-5"
+                  aria-hidden="true"
+                />
+                Write Blog
+              </Link>
+            </MenuItem>
+          </div>
+
           <div className="px-1 py-1">
             <MenuItem>
               <button
