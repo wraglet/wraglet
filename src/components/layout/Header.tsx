@@ -11,6 +11,7 @@ import useUserStore, { User } from '@/store/user'
 import HeaderMessagesIconClientWrapper from '@/components/chat/HeaderMessagesIconClientWrapper'
 import HeaderNotificationsIconClientWrapper from '@/components/chat/HeaderNotificationsIconClientWrapper'
 import AvatarMenu from '@/components/shared/AvatarMenu'
+import { BlogOutlineIcon } from '@/components/shared/Icons'
 import { ChatIcon, HomeIcon } from '@/components/shared/NavIcons'
 import SearchBar from '@/components/shared/SearchBar'
 
@@ -77,6 +78,11 @@ const Header = ({ currentUser }: { currentUser: IUser & { _id: string } }) => {
         <li className="hidden cursor-pointer md:block">
           <Link href={'/feed'}>
             <HomeIcon className="text-white" />
+          </Link>
+        </li>
+        <li className="hidden cursor-pointer md:block">
+          <Link href={'/blog'} title="Blogs">
+            <BlogOutlineIcon className="h-6 w-6 text-white transition-colors hover:text-blue-200" />
           </Link>
         </li>
         <li className="relative cursor-pointer">

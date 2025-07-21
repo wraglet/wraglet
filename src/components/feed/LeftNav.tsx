@@ -2,22 +2,42 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import useUserStore from '@/store/user'
 
 import Avatar from '@/components/shared/Avatar'
-import { BlogOutlineIcon, VideoIcon } from '@/components/shared/Icons'
+import {
+  AllIcon,
+  BlogOutlineIcon,
+  EventsIcon,
+  VideoIcon
+} from '@/components/shared/Icons'
 
 const LeftSideNav = () => {
   const { user } = useUserStore()
   const [hydrated, setHydrated] = useState(false)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const currentTab = searchParams.get('tab') || 'all'
 
   useEffect(() => {
     setHydrated(true)
   }, [])
 
+  const handleTabClick = (tab: string) => {
+    router.push(`/feed?tab=${tab}`)
+  }
+
   if (!hydrated) {
     return null
   }
+
+  const navItems = [
+    { key: 'all', label: 'All', icon: AllIcon },
+    { key: 'blogs', label: 'Blogs', icon: BlogOutlineIcon },
+    { key: 'videos', label: 'Videos', icon: VideoIcon },
+    { key: 'events', label: 'Events', icon: EventsIcon }
+  ]
 
   return (
     <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-[280px] flex-shrink-0 lg:block xl:w-[320px]">
@@ -45,29 +65,44 @@ const LeftSideNav = () => {
           </Link>
 
           <nav className="flex flex-col rounded-lg border border-neutral-200 bg-white">
-            <Link
-              href="/blog"
-              className="group h-12 w-full rounded-t-lg hover:bg-gray-400"
-            >
-              <div className="flex h-full items-center space-x-3 px-3">
-                <BlogOutlineIcon className="h-6 w-6 text-[#536471] group-hover:text-white" />
-                <span className="text-sm font-semibold text-[#333333] group-hover:text-white">
-                  Blog
-                </span>
-              </div>
-            </Link>
+            {navItems.map((item, index) => {
+              const isActive = currentTab === item.key
+              const isFirst = index === 0
+              const isLast = index === navItems.length - 1
 
-            <Link
-              href="/videos"
-              className="group h-12 w-full rounded-b-lg hover:bg-gray-400"
-            >
-              <div className="flex h-full items-center space-x-3 px-3">
-                <VideoIcon className="h-6 w-6 text-[#536471] group-hover:text-white" />
-                <span className="text-sm font-semibold text-[#333333] group-hover:text-white">
-                  Videos
-                </span>
-              </div>
-            </Link>
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => handleTabClick(item.key)}
+                  className={`group h-12 w-full transition ${
+                    isFirst ? 'rounded-t-lg' : isLast ? 'rounded-b-lg' : ''
+                  } ${
+                    isActive
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-white hover:bg-gray-400'
+                  }`}
+                >
+                  <div className="flex h-full items-center space-x-3 px-3">
+                    <item.icon
+                      className={`h-6 w-6 ${
+                        isActive
+                          ? 'text-white'
+                          : 'text-[#536471] group-hover:text-white'
+                      }`}
+                    />
+                    <span
+                      className={`text-sm font-semibold ${
+                        isActive
+                          ? 'text-white'
+                          : 'text-[#333333] group-hover:text-white'
+                      }`}
+                    >
+                      {item.label}
+                    </span>
+                  </div>
+                </button>
+              )
+            })}
           </nav>
         </div>
 
