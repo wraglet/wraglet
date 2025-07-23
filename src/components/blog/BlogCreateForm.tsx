@@ -22,6 +22,8 @@ import StarterKit from '@tiptap/starter-kit'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 
+import BlogImageUpload from '@/components/blog/BlogImageUpload'
+
 // Dynamic import for TipTap to avoid SSR issues
 const TipTapEditor = dynamic(() => Promise.resolve(EditorContent), {
   ssr: false
@@ -58,6 +60,7 @@ type ContentBlock = {
     caption?: string // for images/videos
     url?: string // for images/videos
     alt?: string // for images
+    key?: string // for R2 storage key
   }
 }
 
@@ -342,14 +345,14 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
             {/* Cover Image */}
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-700">
-                Cover Image URL
+                Cover Image
               </label>
-              <input
-                type="url"
+              <BlogImageUpload
                 value={coverImageUrl}
-                onChange={(e) => setCoverImageUrl(e.target.value)}
-                className="w-full rounded-lg border border-neutral-200 px-4 py-3 text-sm transition-colors focus:border-sky-500 focus:ring-2 focus:ring-sky-500 focus:outline-none"
-                placeholder="https://example.com/your-cover-image.jpg"
+                onChange={(url) => setCoverImageUrl(url)}
+                placeholder="Upload your blog cover image..."
+                className="w-full"
+                uploadType="cover"
               />
               <p className="mt-1 text-xs text-gray-500">
                 Optional: Add a cover image to make your blog more engaging
@@ -561,7 +564,7 @@ const ContentBlockEditor = ({
             )}
             {block.type === 'image' && (
               <p className="text-xs text-gray-500">
-                Images with captions and alt text
+                Upload images with captions and alt text
               </p>
             )}
             {block.type === 'video' && (
@@ -812,21 +815,21 @@ const ContentBlockEditor = ({
         )}
 
         {block.type === 'image' && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
-                Image URL
+              <label className="mb-2 block text-xs font-medium text-gray-700">
+                Image
               </label>
-              <input
-                type="url"
+              <BlogImageUpload
                 value={block.metadata?.url || ''}
-                onChange={(e) =>
+                onChange={(url) =>
                   onUpdate({
-                    metadata: { ...block.metadata, url: e.target.value }
+                    metadata: { ...block.metadata, url }
                   })
                 }
-                className="w-full rounded border border-neutral-200 p-3 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500 focus:outline-none"
-                placeholder="https://example.com/image.jpg"
+                placeholder="Upload an image for your blog..."
+                className="w-full"
+                uploadType="content"
               />
             </div>
             <div>
@@ -861,19 +864,6 @@ const ContentBlockEditor = ({
                 placeholder="Add a caption for this image..."
               />
             </div>
-            {block.metadata?.url && (
-              <div className="mt-3 rounded-lg border border-neutral-200 bg-gray-50 p-3">
-                <p className="mb-2 text-xs text-gray-600">Preview:</p>
-                <img
-                  src={block.metadata.url}
-                  alt={block.metadata.alt || 'Preview'}
-                  className="h-auto max-w-full rounded-lg border"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                  }}
-                />
-              </div>
-            )}
           </div>
         )}
 
