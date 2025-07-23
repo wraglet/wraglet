@@ -2,6 +2,7 @@
 
 import { ChangeEvent, FormEvent, useReducer } from 'react'
 import Image from 'next/image'
+import useBlogModalStore from '@/store/blogModal'
 import useUserStore from '@/store/user'
 import { BsSend } from 'react-icons/bs'
 import { HiOutlinePlayCircle } from 'react-icons/hi2'
@@ -32,6 +33,7 @@ const CreatePost = ({
   setPostImage
 }: Props) => {
   const { user } = useUserStore()
+  const { openModal: openBlogModal } = useBlogModalStore()
 
   const reducer = (state: any, action: any) => ({ ...state, ...action })
 
@@ -119,25 +121,22 @@ const CreatePost = ({
                 />
               </div>
             )}
-            <div className="flex items-center gap-x-1">
-              <HiOutlinePlayCircle className="h-6 w-6 text-sky-500" />
-              <GalleryIcon
-                className="h-6 w-auto cursor-pointer text-sky-500"
-                onClick={() => dispatchState({ openUploadModal: true })}
-              />
-              <TerminalIcon className="h-6 w-auto text-sky-500" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-x-2">
+                <HiOutlinePlayCircle className="h-6 w-6 text-sky-500" />
+                <GalleryIcon
+                  className="h-6 w-auto cursor-pointer text-sky-500"
+                  onClick={() => dispatchState({ openUploadModal: true })}
+                />
+                <TerminalIcon className="h-6 w-auto text-sky-500" />
+              </div>
             </div>
             <div className="flex items-center">
               <p className="flex-1 text-xs font-medium text-[#333333]">
                 Wanna write lengthier posts? Write a{' '}
                 <button
-                  onClick={() => {
-                    const url = new URL(window.location.href)
-                    url.searchParams.set('tab', 'blogs')
-                    url.searchParams.set('modal', 'create')
-                    window.history.pushState({}, '', url.toString())
-                    window.dispatchEvent(new PopStateEvent('popstate'))
-                  }}
+                  type="button"
+                  onClick={openBlogModal}
                   className="cursor-pointer text-violet-600 underline hover:text-violet-800"
                 >
                   Blog
