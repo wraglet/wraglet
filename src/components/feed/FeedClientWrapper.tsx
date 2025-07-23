@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { IBlog } from '@/models/Blog'
 import { IPost } from '@/models/Post'
+import useBlogModalStore from '@/store/blogModal'
 import {
   Dialog,
   DialogPanel,
@@ -42,10 +43,13 @@ const FeedClientWrapper = () => {
   const [limit, setLimit] = useState(getLimit())
   const searchParams = useSearchParams()
   const currentTab = searchParams.get('tab') || 'all'
-  const showModal = searchParams.get('modal') === 'create'
 
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null)
-  const [showBlogModal, setShowBlogModal] = useState(false)
+  const {
+    isOpen: showBlogModal,
+    openModal: openBlogModal,
+    closeModal: closeBlogModal
+  } = useBlogModalStore()
 
   // CreatePost state/logic
   const initialState = {
@@ -57,24 +61,6 @@ const FeedClientWrapper = () => {
     (state: any, action: any) => ({ ...state, ...action }),
     initialState
   )
-
-  // Handle modal state from URL
-  useEffect(() => {
-    setShowBlogModal(showModal && currentTab === 'blogs')
-  }, [showModal, currentTab])
-
-  // Listen for URL changes triggered by the CreatePost button
-  useEffect(() => {
-    const handlePopState = () => {
-      const searchParams = new URLSearchParams(window.location.search)
-      const tab = searchParams.get('tab') || 'all'
-      const modal = searchParams.get('modal') === 'create'
-      setShowBlogModal(modal && tab === 'blogs')
-    }
-
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
-  }, [])
 
   // Fetch blogs when on blogs tab
   const { data: blogs = [], isLoading: isBlogsLoading } = useQuery({
@@ -106,20 +92,39 @@ const FeedClientWrapper = () => {
     }
   }
 
-  // Blog modal handlers
-  const openBlogModal = () => {
-    const url = new URL(window.location.href)
-    url.searchParams.set('modal', 'create')
-    window.history.pushState({}, '', url.toString())
-    setShowBlogModal(true)
-  }
+  // Fetch posts data
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
+    useInfiniteQuery({
+      queryKey: ['posts', limit],
+      queryFn: async ({ pageParam = 1 }) => {
+        const response = await fetch(
+          `/api/posts?page=${pageParam}&limit=${limit}`
+        )
+        return response.json()
+      },
+      getNextPageParam: (lastPage) => {
+        return lastPage.hasNextPage ? lastPage.nextPage : undefined
+      },
+      initialPageParam: 1
+    })
 
-  const closeBlogModal = () => {
-    const url = new URL(window.location.href)
-    url.searchParams.delete('modal')
-    window.history.pushState({}, '', url.toString())
-    setShowBlogModal(false)
-  }
+  // Flatten all posts from all pages
+  const posts: IPost[] = data?.pages?.flatMap((page) => page.posts ?? []) ?? []
+
+  // Ensure posts is always an array to prevent runtime errors
+  const safePosts = Array.isArray(posts) ? posts : []
+
+  // Get trending data
+  const { data: trendingTopics } = useQuery({
+    queryKey: ['trending'],
+    queryFn: async () => {
+      const response = await axios.get('/api/users/topics-trending')
+      return response.data
+    }
+  })
+
+  const [showTrending, setShowTrending] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   // Render content based on current tab
   const renderTabContent = () => {
@@ -268,9 +273,9 @@ const FeedClientWrapper = () => {
             {/* Combined Feed: Posts and Blogs */}
             {!showTrending && (
               <FeedAbly
-                initialPosts={posts}
+                initialPosts={safePosts}
                 fetchNextPage={fetchNextPage}
-                hasNextPage={hasNextPage}
+                hasNextPage={hasNextPage || false}
                 isFetchingNextPage={isFetchingNextPage}
                 status={status}
               />
@@ -317,33 +322,16 @@ const FeedClientWrapper = () => {
                     </div>
                   </div>
                 ))}
+                <div className="text-center">
+                  <Link href="?tab=blogs">
+                    <button className="text-blue-600 hover:text-blue-800">
+                      View all blogs →
+                    </button>
+                  </Link>
+                </div>
               </div>
             )}
 
-            {showTrending &&
-              !loadingTrending &&
-              trendingPosts.length > 0 &&
-              !selectedTopic && (
-                <FeedAbly
-                  initialPosts={trendingPosts}
-                  fetchNextPage={() => {}}
-                  hasNextPage={false}
-                  isFetchingNextPage={false}
-                  status={status}
-                />
-              )}
-            {showTrending &&
-              !loadingTrending &&
-              trendingPosts.length > 0 &&
-              selectedTopic && (
-                <FeedAbly
-                  initialPosts={trendingPosts}
-                  fetchNextPage={() => {}}
-                  hasNextPage={false}
-                  isFetchingNextPage={false}
-                  status={status}
-                />
-              )}
             {showOnboarding && (
               <div className="mx-auto w-full max-w-2xl space-y-8 py-8 text-center">
                 <h2 className="mb-2 text-xl font-semibold">
@@ -383,100 +371,6 @@ const FeedClientWrapper = () => {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
-
-  // Infinite query for pagination
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    status,
-    refetch
-  } = useInfiniteQuery({
-    queryKey: ['feed-posts', limit],
-    queryFn: async ({ pageParam }) => {
-      const res = await fetch(
-        `/api/posts?limit=${limit}&cursor=${pageParam || ''}`
-      )
-      return res.json()
-    },
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
-    initialPageParam: null
-  })
-
-  // Flatten all posts from all pages
-  const posts: IPost[] = data?.pages?.flatMap((page) => page.posts ?? []) ?? []
-
-  // Use React Query for trending posts when feed is empty
-  const shouldFetchTrending = posts.length === 0 && status === 'success'
-
-  const { data: trendingPostsData, isLoading: loadingTrending } = useQuery({
-    queryKey: ['trendingPosts', limit],
-    queryFn: async () => {
-      const res = await fetch(`/api/posts?limit=${limit}&feedType=trending`)
-      const data = await res.json()
-      const posts = data.posts ?? []
-
-      // Deduplicate posts by _id to prevent duplicates from API
-      const seen = new Set()
-      const uniquePosts = posts.filter((post: any) => {
-        const id = post._id || post.data?._id
-        if (!id || seen.has(id)) return false
-        seen.add(id)
-        return true
-      })
-
-      return uniquePosts
-    },
-    enabled: shouldFetchTrending
-  })
-
-  // Use React Query for trending posts by topic
-  const { data: topicTrendingPosts, isLoading: loadingTopicTrending } =
-    useQuery({
-      queryKey: ['trendingPosts', limit, selectedTopic],
-      queryFn: async () => {
-        const res = await fetch(
-          `/api/posts?limit=${limit}&feedType=trending&tag=${encodeURIComponent(selectedTopic!)}`
-        )
-        const data = await res.json()
-        const posts = data.posts ?? []
-
-        // Deduplicate posts by _id to prevent duplicates from API
-        const seen = new Set()
-        const uniquePosts = posts.filter((post: any) => {
-          const id = post._id || post.data?._id
-          if (!id || seen.has(id)) return false
-          seen.add(id)
-          return true
-        })
-
-        return uniquePosts
-      },
-      enabled: !!selectedTopic
-    })
-
-  // Use React Query for trending topics
-  const { data: trendingTopicsData } = useQuery({
-    queryKey: ['trendingTopics'],
-    queryFn: async () => {
-      const res = await fetch('/api/users/topics-trending')
-      const data = await res.json()
-      return data.topics ?? []
-    },
-    enabled: shouldFetchTrending
-  })
-
-  // Determine what to show
-  const showTrending = shouldFetchTrending
-  const trendingPosts = selectedTopic
-    ? topicTrendingPosts || []
-    : trendingPostsData || []
-  const trendingTopics = trendingTopicsData || []
-
-  // Optionally, onboarding/suggestions if both are empty
-  const showOnboarding =
-    showTrending && !loadingTrending && trendingPosts.length === 0
 
   return (
     <>
