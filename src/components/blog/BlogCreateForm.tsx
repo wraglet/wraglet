@@ -198,7 +198,7 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
   return (
     <div className="flex h-full flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-4 shadow-sm">
+      <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-4 pr-16 shadow-sm">
         <h1 className="text-lg font-medium text-gray-900">Create New Blog</h1>
         <div className="flex items-center gap-3">
           <button
