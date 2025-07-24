@@ -23,6 +23,7 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 
 import BlogImageUpload from '@/components/blog/BlogImageUpload'
+import ImageUploadCropModal from '@/components/profile/ImageUploadCropModal'
 
 // Dynamic import for TipTap to avoid SSR issues
 const TipTapEditor = dynamic(() => Promise.resolve(EditorContent), {
@@ -76,12 +77,42 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
   const [summary, setSummary] = useState('')
   const [category, setCategory] = useState(CATEGORIES[0])
   const [tags, setTags] = useState('')
-  const [coverImageUrl, setCoverImageUrl] = useState('')
+  // Change coverImage state to string | undefined
+  const [coverImage, setCoverImage] = useState<string | undefined>(undefined)
   const [status, setStatus] = useState<'draft' | 'published'>('draft')
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([
     { id: '1', type: 'text', content: '', order: 0 }
   ])
   const [isLoading, setIsLoading] = useState(false)
+  const [showCoverCrop, setShowCoverCrop] = useState(false)
+  const [pendingCoverFile, setPendingCoverFile] = useState<File | null>(null)
+  // Add state for cropping modal for image blocks
+  const [pendingBlockId, setPendingBlockId] = useState<string | null>(null)
+  const [pendingBlockFile, setPendingBlockFile] = useState<File | null>(null)
+
+  // Helper to upload a single image file to R2
+  const uploadImageToR2 = async (file: File, type: 'cover' | 'content') => {
+    const reader = new FileReader()
+    return new Promise<string>((resolve, reject) => {
+      reader.onload = async () => {
+        try {
+          const base64Data = reader.result as string
+          const response = await fetch('/api/blogs/upload-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64Data, type })
+          })
+          if (!response.ok) throw new Error('Failed to upload image')
+          const data = await response.json()
+          resolve(data.url)
+        } catch (err) {
+          reject(err)
+        }
+      }
+      reader.onerror = () => reject(new Error('Failed to read file'))
+      reader.readAsDataURL(file)
+    })
+  }
 
   // Character counts
   const titleCount = title.length
@@ -146,6 +177,62 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
     setContentBlocks(reorderedBlocks)
   }
 
+  // Handler for selecting a cover image file
+  const handleCoverFileSelect = (fileOrUrl: string | File | undefined) => {
+    if (fileOrUrl && typeof fileOrUrl === 'object' && 'name' in fileOrUrl) {
+      setPendingCoverFile(fileOrUrl)
+      setShowCoverCrop(true)
+    } else if (typeof fileOrUrl === 'string') {
+      setCoverImage(fileOrUrl)
+    } else {
+      setCoverImage(undefined)
+    }
+  }
+
+  // Handler for cropping modal result
+  const handleCoverCrop = (croppedDataUrl: string) => {
+    setCoverImage(croppedDataUrl)
+    setShowCoverCrop(false)
+    setPendingCoverFile(null)
+  }
+
+  // Handler for selecting an image for a block
+  const handleBlockImageChange =
+    (blockId: string) => (fileOrUrl: string | File | undefined) => {
+      if (fileOrUrl && typeof fileOrUrl === 'object' && 'name' in fileOrUrl) {
+        setPendingBlockFile(fileOrUrl)
+        setPendingBlockId(blockId)
+      } else if (typeof fileOrUrl === 'string') {
+        updateContentBlock(blockId, {
+          metadata: {
+            ...contentBlocks.find((b) => b.id === blockId)?.metadata,
+            url: fileOrUrl
+          }
+        })
+      } else {
+        updateContentBlock(blockId, {
+          metadata: {
+            ...contentBlocks.find((b) => b.id === blockId)?.metadata,
+            url: undefined
+          }
+        })
+      }
+    }
+
+  // Handler for cropping modal result for block
+  const handleBlockCrop = (croppedDataUrl: string) => {
+    if (pendingBlockId) {
+      updateContentBlock(pendingBlockId, {
+        metadata: {
+          ...contentBlocks.find((b) => b.id === pendingBlockId)?.metadata,
+          url: croppedDataUrl
+        }
+      })
+    }
+    setPendingBlockId(null)
+    setPendingBlockFile(null)
+  }
+
   // Submit handler
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -153,10 +240,43 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
 
     setIsLoading(true)
     try {
+      // 1. Upload cover image if it's a File
+      let coverImageUrl: string | undefined = undefined
+      if (
+        typeof window !== 'undefined' &&
+        coverImage &&
+        typeof coverImage === 'object' &&
+        'name' in coverImage
+      ) {
+        coverImageUrl = await uploadImageToR2(coverImage, 'cover')
+      } else if (typeof coverImage === 'string') {
+        coverImageUrl = coverImage
+      }
+
+      // 2. Upload image blocks if any
+      const updatedBlocks = await Promise.all(
+        contentBlocks.map(async (block) => {
+          if (
+            block.type === 'image' &&
+            typeof window !== 'undefined' &&
+            block.metadata?.url &&
+            typeof block.metadata.url === 'object' &&
+            'name' in block.metadata.url
+          ) {
+            const url = await uploadImageToR2(block.metadata.url, 'content')
+            return {
+              ...block,
+              metadata: { ...block.metadata, url }
+            }
+          }
+          return block
+        })
+      )
+
       const blogData = {
         title: title.trim(),
         summary: summary.trim(),
-        content: contentBlocks
+        content: updatedBlocks
           .filter((block) => block.content.trim())
           .map((block) => block.content)
           .join('\n\n'),
@@ -167,7 +287,7 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
           .filter(Boolean),
         coverImageUrl: coverImageUrl || undefined,
         status,
-        contentBlocks: contentBlocks.filter((block) => block.content.trim())
+        contentBlocks: updatedBlocks.filter((block) => block.content.trim())
       }
 
       const response = await axios.post('/api/blogs', blogData)
@@ -199,7 +319,7 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
   }
 
   return (
-    <div className="flex h-full flex-col bg-white">
+    <div className="z-40 flex h-full flex-col bg-white">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-4 pr-16 shadow-sm">
         <h1 className="text-lg font-medium text-gray-900">Create New Blog</h1>
@@ -348,11 +468,33 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
                 Cover Image
               </label>
               <BlogImageUpload
-                value={coverImageUrl}
-                onChange={(url) => setCoverImageUrl(url)}
+                value={coverImage}
+                onChange={handleCoverFileSelect}
                 placeholder="Upload your blog cover image..."
                 className="w-full"
                 uploadType="cover"
+              />
+              <ImageUploadCropModal
+                show={showCoverCrop}
+                close={() => {
+                  setShowCoverCrop(false)
+                  setPendingCoverFile(null)
+                }}
+                title="Crop Blog Cover Image"
+                description="Choose and crop your blog cover image. For best results, use a wide image at least 1600x600 pixels."
+                defaultImage={''}
+                image={
+                  pendingCoverFile
+                    ? URL.createObjectURL(pendingCoverFile)
+                    : undefined
+                }
+                aspect={16 / 6}
+                cropShape="rect"
+                previewStyle="rect"
+                minWidth={1600}
+                minHeight={600}
+                onCrop={handleCoverCrop}
+                apiLabel="Crop & Use Image"
               />
               <p className="mt-1 text-xs text-gray-500">
                 Optional: Add a cover image to make your blog more engaging
@@ -425,6 +567,7 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
                         ? () => moveBlock(index, index + 1)
                         : undefined
                     }
+                    onImageChange={handleBlockImageChange}
                   />
                 ))}
               </div>
@@ -457,6 +600,26 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
           </form>
         </div>
       </div>
+      <ImageUploadCropModal
+        show={!!pendingBlockId}
+        close={() => {
+          setPendingBlockId(null)
+          setPendingBlockFile(null)
+        }}
+        title="Crop Blog Content Image"
+        description="Choose and crop your blog content image. For best results, use an image at least 800x450 pixels."
+        defaultImage={''}
+        image={
+          pendingBlockFile ? URL.createObjectURL(pendingBlockFile) : undefined
+        }
+        aspect={16 / 9}
+        cropShape="rect"
+        previewStyle="rect"
+        minWidth={800}
+        minHeight={450}
+        onCrop={handleBlockCrop}
+        apiLabel="Crop & Use Image"
+      />
     </div>
   )
 }
@@ -469,6 +632,9 @@ interface ContentBlockEditorProps {
   onRemove: () => void
   onMoveUp?: () => void
   onMoveDown?: () => void
+  onImageChange: (
+    blockId: string
+  ) => (fileOrUrl: string | File | undefined) => void
 }
 
 const ContentBlockEditor = ({
@@ -477,7 +643,8 @@ const ContentBlockEditor = ({
   onUpdate,
   onRemove,
   onMoveUp,
-  onMoveDown
+  onMoveDown,
+  onImageChange
 }: ContentBlockEditorProps) => {
   // TipTap editor for text blocks
   const editor = useEditor({
@@ -821,12 +988,8 @@ const ContentBlockEditor = ({
                 Image
               </label>
               <BlogImageUpload
-                value={block.metadata?.url || ''}
-                onChange={(url) =>
-                  onUpdate({
-                    metadata: { ...block.metadata, url }
-                  })
-                }
+                value={block.metadata?.url}
+                onChange={onImageChange(block.id)}
                 placeholder="Upload an image for your blog..."
                 className="w-full"
                 uploadType="content"

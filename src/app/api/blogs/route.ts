@@ -8,6 +8,7 @@ import Blog from '@/models/Blog'
 import Follow from '@/models/Follow'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import slugify from 'slugify'
 import { v4 as uuidv4 } from 'uuid'
 
 export const POST = async (request: Request) => {
@@ -81,6 +82,17 @@ export const POST = async (request: Request) => {
       )
     }
 
+    // Generate a unique slug from the title
+    const baseSlug = slugify(title, { lower: true, strict: true })
+    let slug = baseSlug
+    let suffix = ''
+    let exists = await Blog.findOne({ slug })
+    while (exists) {
+      suffix = '-' + uuidv4().slice(0, 8)
+      slug = baseSlug + suffix
+      exists = await Blog.findOne({ slug })
+    }
+
     // Handle cover image upload if it's a base64 string
     let processedCoverImage = null
     if (coverImageUrl && coverImageUrl.startsWith('data:image/')) {
@@ -122,7 +134,8 @@ export const POST = async (request: Request) => {
       coverImage: processedCoverImage,
       status,
       author: currentUser._id,
-      contentBlocks
+      contentBlocks,
+      slug
     })
 
     // Populate the blog for response
