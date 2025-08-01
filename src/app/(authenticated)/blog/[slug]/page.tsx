@@ -16,7 +16,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { formatDistanceToNow } from 'date-fns'
 
-import BlogInteractions from '@/components/blog/BlogInteractions'
+import BlogInteractionsAbly from '@/components/blog/BlogInteractionsAbly'
 import LeftNav from '@/components/feed/LeftNav'
 import MobileResponsiveWrapper from '@/components/feed/MobileResponsiveWrapper'
 import RightNav from '@/components/feed/RightNav'
@@ -208,7 +208,7 @@ const BlogPage = async ({ params }: BlogPageProps) => {
 
               {/* Blog Interactions */}
               <Suspense fallback={<Loading />}>
-                <BlogInteractions blog={blog} currentUser={currentUser} />
+                <BlogInteractionsAbly blog={blog} currentUser={currentUser} />
               </Suspense>
 
               {/* Author Card */}
