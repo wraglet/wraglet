@@ -115,102 +115,105 @@ const BlogListItem = ({ blog, onEdit, onDelete }: BlogListItemProps) => {
   }
 
   return (
-    <div className="rounded-lg bg-white p-6 shadow-sm">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="mb-2 flex items-center space-x-2">
-            <span
-              className={`inline-block rounded-full px-2 py-1 text-xs font-medium ${
-                blog.status === 'published'
-                  ? 'bg-green-100 text-green-800'
-                  : blog.status === 'draft'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-gray-100 text-gray-800'
-              }`}
-            >
-              {blog.status.charAt(0).toUpperCase() + blog.status.slice(1)}
-            </span>
-            <span className="text-xs text-gray-500">{blog.category}</span>
-          </div>
+    <div className="overflow-hidden rounded-lg bg-white shadow-sm transition-all duration-200 hover:shadow-md">
+      {/* Cover Image */}
+      {blog.coverImage?.url && (
+        <div className="aspect-[16/9] overflow-hidden">
+          <Image
+            src={blog.coverImage.url}
+            alt={blog.title}
+            width={400}
+            height={225}
+            className="h-full w-full object-cover transition-transform duration-200 hover:scale-105"
+          />
+        </div>
+      )}
 
-          <Link href={`/blog/${blog.slug}`}>
-            <h3 className="mb-2 line-clamp-1 text-lg font-semibold text-gray-900 hover:text-blue-600">
-              {blog.title}
-            </h3>
-          </Link>
-
-          <p className="mb-4 line-clamp-2 text-gray-600">{blog.summary}</p>
-
-          <div className="flex items-center space-x-4 text-xs text-gray-500">
-            <div className="flex items-center space-x-1">
-              <CalendarIcon className="h-3 w-3" />
-              <span>
-                {formatDistanceToNow(new Date(blog.createdAt || Date.now()), {
-                  addSuffix: true
-                })}
+      <div className="p-6">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="mb-2 flex items-center space-x-2">
+              <span
+                className={`inline-block rounded-full px-2 py-1 text-xs font-medium ${
+                  blog.status === 'published'
+                    ? 'bg-green-100 text-green-800'
+                    : blog.status === 'draft'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-gray-100 text-gray-800'
+                }`}
+              >
+                {blog.status.charAt(0).toUpperCase() + blog.status.slice(1)}
               </span>
+              <span className="text-xs text-gray-500">{blog.category}</span>
             </div>
-            <div className="flex items-center space-x-1">
-              <ClockIcon className="h-3 w-3" />
-              <span>{blog.readTime}m read</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <EyeIcon className="h-3 w-3" />
-              <span>{blog.views || 0}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <HeartIcon className="h-3 w-3" />
-              <span>{blog.likes || 0}</span>
+
+            <Link href={`/blog/${blog.slug}`}>
+              <h3 className="mb-2 line-clamp-1 text-lg font-semibold text-gray-900 hover:text-blue-600">
+                {blog.title}
+              </h3>
+            </Link>
+
+            <p className="mb-4 line-clamp-2 text-gray-600">{blog.summary}</p>
+
+            <div className="flex items-center space-x-4 text-xs text-gray-500">
+              <div className="flex items-center space-x-1">
+                <CalendarIcon className="h-3 w-3" />
+                <span>
+                  {formatDistanceToNow(new Date(blog.createdAt || Date.now()), {
+                    addSuffix: true
+                  })}
+                </span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <ClockIcon className="h-3 w-3" />
+                <span>{blog.readTime}m read</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <EyeIcon className="h-3 w-3" />
+                <span>{blog.views || 0}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <HeartIcon className="h-3 w-3" />
+                <span>{blog.likes || 0}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {blog.coverImage?.url && (
-          <div className="ml-6 h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
-            <Image
-              src={blog.coverImage.url}
-              alt={blog.title}
-              width={80}
-              height={80}
-              className="h-full w-full object-cover"
-            />
+        <div className="mt-4 flex items-center justify-between border-t border-gray-200 pt-4">
+          <div className="flex space-x-2">
+            <Link href={`/blog/${blog.slug}/edit`}>
+              <Button className="flex h-8 items-center space-x-1 border border-gray-300 bg-white px-3 text-xs hover:bg-gray-50">
+                <PencilIcon className="h-4 w-4" />
+                <span>Edit</span>
+              </Button>
+            </Link>
+
+            {blog.status === 'published' && (
+              <Button
+                className="flex h-8 items-center space-x-1 border border-gray-300 bg-white px-3 text-xs hover:bg-gray-50"
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    `${window.location.origin}/blog/${blog.slug}`
+                  )
+                  toast.success('Link copied to clipboard')
+                }}
+              >
+                <ShareIcon className="h-4 w-4" />
+                <span>Share</span>
+              </Button>
+            )}
           </div>
-        )}
-      </div>
 
-      <div className="mt-4 flex items-center justify-between border-t border-gray-200 pt-4">
-        <div className="flex space-x-2">
-          <Link href={`/blog/${blog.slug}/edit`}>
-            <Button className="flex h-8 items-center space-x-1 border border-gray-300 bg-white px-3 text-xs hover:bg-gray-50">
-              <PencilIcon className="h-4 w-4" />
-              <span>Edit</span>
-            </Button>
-          </Link>
-
-          {blog.status === 'published' && (
-            <Button
-              className="flex h-8 items-center space-x-1 border border-gray-300 bg-white px-3 text-xs hover:bg-gray-50"
-              onClick={() => {
-                navigator.clipboard.writeText(
-                  `${window.location.origin}/blog/${blog.slug}`
-                )
-                toast.success('Link copied to clipboard')
-              }}
-            >
-              <ShareIcon className="h-4 w-4" />
-              <span>Share</span>
-            </Button>
-          )}
+          <Button
+            className="flex h-8 items-center space-x-1 border border-red-300 bg-white px-3 text-xs text-red-600 hover:bg-red-50"
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            <TrashIcon className="h-4 w-4" />
+            <span>{isDeleting ? 'Deleting...' : 'Delete'}</span>
+          </Button>
         </div>
-
-        <Button
-          className="flex h-8 items-center space-x-1 border border-red-200 px-3 text-xs text-red-600 hover:bg-red-50"
-          onClick={handleDelete}
-          disabled={isDeleting}
-        >
-          <TrashIcon className="h-4 w-4" />
-          <span>{isDeleting ? 'Deleting...' : 'Delete'}</span>
-        </Button>
       </div>
     </div>
   )
