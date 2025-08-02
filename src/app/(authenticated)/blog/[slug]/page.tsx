@@ -103,7 +103,7 @@ const BlogPage = async ({ params }: BlogPageProps) => {
         <LeftNav />
         <div className="mx-auto flex h-[calc(100vh-3.5rem)] flex-1 px-4 md:px-8">
           <div className="w-full overflow-y-auto pt-14 pb-20 lg:pb-4">
-            <div className="mx-auto w-full max-w-4xl">
+            <div className="mx-auto w-full max-w-4xl rounded-lg bg-white p-6 shadow-sm">
               {/* Header */}
               <div className="mb-6">
                 <div className="mb-3">
@@ -299,34 +299,36 @@ const BlogPage = async ({ params }: BlogPageProps) => {
               </Suspense>
 
               {/* Author Card */}
-              <div className="mt-8 rounded-lg bg-white p-4 shadow-sm">
-                <div className="flex items-start space-x-3">
-                  <Avatar
-                    gender={blog.author.gender}
-                    src={blog.author.profilePicture?.url || null}
-                    size="h-12 w-12"
-                  />
-                  <div className="flex-1">
-                    <h3 className="text-sm font-semibold text-gray-900">
-                      {blog.author.firstName} {blog.author.lastName}
-                    </h3>
-                    <p className="text-xs text-gray-600">
-                      @{blog.author.username}
-                    </p>
-                    {blog.author.bio && (
-                      <p className="mt-1 text-xs text-gray-700">
-                        {blog.author.bio}
+              {currentUser?._id !== blog.author._id && (
+                <div className="mt-8 rounded-lg bg-white p-4 shadow-sm">
+                  <div className="flex items-start space-x-3">
+                    <Avatar
+                      gender={blog.author.gender}
+                      src={blog.author.profilePicture?.url || null}
+                      size="h-12 w-12"
+                    />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-semibold text-gray-900">
+                        {blog.author.firstName} {blog.author.lastName}
+                      </h3>
+                      <p className="text-xs text-gray-600">
+                        @{blog.author.username}
                       </p>
-                    )}
-                    <Link
-                      href={`/${blog.author.username}`}
-                      className="mt-3 inline-block rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
-                    >
-                      View Profile
-                    </Link>
+                      {blog.author.bio && (
+                        <p className="mt-1 text-xs text-gray-700">
+                          {blog.author.bio}
+                        </p>
+                      )}
+                      <Link
+                        href={`/${blog.author.username}`}
+                        className="mt-3 inline-block rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                      >
+                        View Profile
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
