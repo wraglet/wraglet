@@ -54,7 +54,25 @@ export const POST = async (request: Request) => {
       )
     }
 
-    if (!content?.trim()) {
+    if (!contentBlocks || contentBlocks.length === 0) {
+      return NextResponse.json(
+        { error: 'Content is required' },
+        { status: 400 }
+      )
+    }
+
+    // Check if at least one content block has content
+    const hasValidContent = contentBlocks.some((block: any) => {
+      if (block.type === 'text' || block.type === 'code') {
+        return block.content && block.content.trim()
+      }
+      if (block.type === 'image' || block.type === 'video') {
+        return block.metadata?.url
+      }
+      return false
+    })
+
+    if (!hasValidContent) {
       return NextResponse.json(
         { error: 'Content is required' },
         { status: 400 }
@@ -75,7 +93,15 @@ export const POST = async (request: Request) => {
       )
     }
 
-    if (content.length > 50000) {
+    // Calculate total content length for validation
+    const totalContentLength = contentBlocks
+      .filter((block: any) => block.type === 'text' || block.type === 'code')
+      .reduce(
+        (acc: number, block: any) => acc + (block.content?.length || 0),
+        0
+      )
+
+    if (totalContentLength > 50000) {
       return NextResponse.json(
         { error: 'Content must be 50,000 characters or less' },
         { status: 400 }
@@ -128,7 +154,6 @@ export const POST = async (request: Request) => {
     const blog = await Blog.create({
       title: title.trim(),
       summary: summary.trim(),
-      content: content.trim(),
       category,
       tags: Array.isArray(tags) ? tags.filter((tag) => tag.trim()) : [],
       coverImage: processedCoverImage,

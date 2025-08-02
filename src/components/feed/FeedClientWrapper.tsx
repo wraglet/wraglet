@@ -2,6 +2,7 @@
 
 import { FormEvent, Fragment, useEffect, useReducer, useState } from 'react'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { IBlog } from '@/models/Blog'
@@ -290,35 +291,50 @@ const FeedClientWrapper = () => {
                 {blogs.slice(0, 3).map((blog: IBlog) => (
                   <div
                     key={blog._id}
-                    className="rounded-lg bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+                    className="overflow-hidden rounded-lg bg-white shadow-sm transition-shadow hover:shadow-md"
                   >
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="inline-block rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
-                        Blog • {blog.category}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {new Date(
-                          blog.createdAt || Date.now()
-                        ).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <h3 className="mb-2 cursor-pointer text-lg font-semibold text-gray-900 hover:text-blue-600">
-                      <Link href={`/blog/${blog.slug}`}>{blog.title}</Link>
-                    </h3>
-                    <p className="mb-4 line-clamp-2 text-gray-600">
-                      {blog.summary}
-                    </p>
-                    <div className="flex items-center justify-between text-sm text-gray-500">
-                      <div className="flex items-center space-x-4">
-                        <span>👀 {blog.views || 0}</span>
-                        <span>❤️ {blog.likes || 0}</span>
-                        <span>📝 {blog.readTime}m read</span>
+                    {/* Cover Image */}
+                    {blog.coverImage?.url && (
+                      <div className="aspect-[16/9] overflow-hidden">
+                        <Image
+                          src={blog.coverImage.url}
+                          alt={blog.title}
+                          width={400}
+                          height={225}
+                          className="h-full w-full object-cover transition-transform duration-200 hover:scale-105"
+                        />
                       </div>
-                      <Link href={`/blog/${blog.slug}`}>
-                        <button className="text-blue-600 hover:text-blue-800">
-                          Read more
-                        </button>
-                      </Link>
+                    )}
+
+                    <div className="p-6">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="inline-block rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                          Blog • {blog.category}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {new Date(
+                            blog.createdAt || Date.now()
+                          ).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <h3 className="mb-2 cursor-pointer text-lg font-semibold text-gray-900 hover:text-blue-600">
+                        <Link href={`/blog/${blog.slug}`}>{blog.title}</Link>
+                      </h3>
+                      <p className="mb-4 line-clamp-2 text-gray-600">
+                        {blog.summary}
+                      </p>
+                      <div className="flex items-center justify-between text-sm text-gray-500">
+                        <div className="flex items-center space-x-4">
+                          <span>👀 {blog.views || 0}</span>
+                          <span>❤️ {blog.likes || 0}</span>
+                          <span>📝 {blog.readTime}m read</span>
+                        </div>
+                        <Link href={`/blog/${blog.slug}`}>
+                          <button className="text-blue-600 hover:text-blue-800">
+                            Read more
+                          </button>
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 ))}
