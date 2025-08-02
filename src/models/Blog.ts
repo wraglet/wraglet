@@ -6,7 +6,19 @@ export interface IBlog {
   _id: string
   title: string
   summary: string
-  content: string
+  contentBlocks: {
+    id: string
+    type: 'text' | 'code' | 'image' | 'video'
+    content?: string
+    order: number
+    metadata?: {
+      language?: string // for code blocks
+      caption?: string // for images/videos
+      url?: string // for images/videos
+      alt?: string // for images
+      key?: string // for R2 storage key
+    }
+  }[]
   category: string
   tags: string[]
   coverImage?: {
@@ -67,7 +79,34 @@ const BlogSchema = new Schema<IBlogDocument>(
   {
     title: { type: String, required: true, maxlength: 200 },
     summary: { type: String, required: true, maxlength: 500 },
-    content: { type: String, required: true },
+    contentBlocks: {
+      type: [
+        {
+          id: { type: String, required: true },
+          type: {
+            type: String,
+            required: true,
+            enum: ['text', 'code', 'image', 'video']
+          },
+          content: { type: String, default: '' },
+          order: { type: Number, required: true },
+          metadata: {
+            language: String,
+            caption: String,
+            url: String,
+            alt: String,
+            key: String
+          }
+        }
+      ],
+      required: true,
+      validate: {
+        validator: function (blocks: any[]) {
+          return blocks && blocks.length > 0
+        },
+        message: 'At least one content block is required'
+      }
+    },
     category: {
       type: String,
       required: true,
@@ -125,9 +164,13 @@ BlogSchema.pre('save', function (next) {
     this.slug = `${this.slug}-${timestamp}`
   }
 
-  // Calculate read time (average 200 words per minute)
-  if (this.isModified('content')) {
-    const wordCount = this.content.split(/\s+/).length
+  // Calculate read time from contentBlocks (average 200 words per minute)
+  if (this.isModified('contentBlocks') && this.contentBlocks) {
+    const textContent = this.contentBlocks
+      .filter((block) => block.type === 'text')
+      .map((block) => block.content)
+      .join(' ')
+    const wordCount = textContent.split(/\s+/).length
     this.readTime = Math.max(1, Math.ceil(wordCount / 200))
   }
 

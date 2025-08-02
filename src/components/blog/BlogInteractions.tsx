@@ -29,7 +29,7 @@ interface CommentItemProps {
 
 const CommentItem = ({ comment }: CommentItemProps) => {
   return (
-    <div className="flex space-x-3 py-4">
+    <div className="flex space-x-3 py-3">
       <Avatar
         gender={comment.author.gender}
         src={comment.author.profilePicture?.url || null}
@@ -37,16 +37,16 @@ const CommentItem = ({ comment }: CommentItemProps) => {
       />
       <div className="flex-1">
         <div className="flex items-center space-x-2">
-          <span className="font-semibold text-gray-900">
+          <span className="text-sm font-semibold text-gray-900">
             {comment.author.firstName} {comment.author.lastName}
           </span>
-          <span className="text-sm text-gray-500">
+          <span className="text-xs text-gray-500">
             {formatDistanceToNow(new Date(comment.createdAt || Date.now()), {
               addSuffix: true
             })}
           </span>
         </div>
-        <p className="mt-1 text-gray-700">{comment.content}</p>
+        <p className="mt-1 text-sm text-gray-700">{comment.content}</p>
       </div>
     </div>
   )
@@ -177,24 +177,24 @@ const BlogInteractions = ({
   }
 
   return (
-    <div className="mt-8 border-t border-gray-200 pt-8">
+    <div className="mt-6 border-t border-gray-200 pt-6">
       {/* Interaction Buttons */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center space-x-6">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center space-x-4">
           {/* Like Button */}
           <button
             onClick={handleLike}
             disabled={isLiking || !currentUser}
-            className={`flex items-center space-x-2 rounded-lg px-4 py-2 transition-colors ${
+            className={`flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
               isLiked
                 ? 'bg-red-50 text-red-600 hover:bg-red-100'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             } ${!currentUser ? 'cursor-not-allowed opacity-50' : ''}`}
           >
             {isLiked ? (
-              <HeartSolid className="h-5 w-5" />
+              <HeartSolid className="h-4 w-4" />
             ) : (
-              <HeartOutline className="h-5 w-5" />
+              <HeartOutline className="h-4 w-4" />
             )}
             <span className="font-medium">{blog.likes || 0}</span>
           </button>
@@ -202,18 +202,18 @@ const BlogInteractions = ({
           {/* Comment Button */}
           <button
             onClick={() => setShowComments(!showComments)}
-            className="flex items-center space-x-2 rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200"
+            className="flex items-center space-x-1.5 rounded-lg bg-gray-100 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200"
           >
-            <ChatBubbleLeftIcon className="h-5 w-5" />
+            <ChatBubbleLeftIcon className="h-4 w-4" />
             <span className="font-medium">{comments.length}</span>
           </button>
 
           {/* Share Button */}
           <button
             onClick={handleShare}
-            className="flex items-center space-x-2 rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200"
+            className="flex items-center space-x-1.5 rounded-lg bg-gray-100 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200"
           >
-            <ShareIcon className="h-5 w-5" />
+            <ShareIcon className="h-4 w-4" />
             <span className="font-medium">Share</span>
           </button>
         </div>
@@ -221,7 +221,7 @@ const BlogInteractions = ({
 
       {/* Comments Section */}
       {showComments && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Add Comment Form */}
           {currentUser ? (
             <form onSubmit={handleComment} className="flex space-x-3">
@@ -255,7 +255,7 @@ const BlogInteractions = ({
             </form>
           ) : (
             <div className="rounded-lg bg-gray-50 p-4 text-center">
-              <p className="text-gray-600">
+              <p className="text-sm text-gray-600">
                 Please login to comment on this blog.
               </p>
             </div>
@@ -264,12 +264,12 @@ const BlogInteractions = ({
           {/* Comments List */}
           <div className="space-y-1">
             {isLoadingComments ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="flex animate-pulse space-x-3">
                     <div className="h-8 w-8 rounded-full bg-gray-200"></div>
                     <div className="flex-1">
-                      <div className="mb-2 h-4 w-1/4 rounded bg-gray-200"></div>
+                      <div className="mb-2 h-3 w-1/4 rounded bg-gray-200"></div>
                       <div className="h-3 w-3/4 rounded bg-gray-200"></div>
                     </div>
                   </div>
@@ -282,8 +282,8 @@ const BlogInteractions = ({
                 ))}
               </div>
             ) : (
-              <div className="py-8 text-center">
-                <p className="text-gray-500">
+              <div className="py-6 text-center">
+                <p className="text-sm text-gray-500">
                   No comments yet. Be the first to comment!
                 </p>
               </div>

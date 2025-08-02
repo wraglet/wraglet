@@ -128,7 +128,17 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
   const canSubmit =
     title.trim() &&
     summary.trim() &&
-    contentBlocks.some((block) => block.content.trim()) &&
+    contentBlocks.some((block) => {
+      // Text blocks need content
+      if (block.type === 'text') return block.content && block.content.trim()
+      // Image blocks need URL (content can be empty)
+      if (block.type === 'image') return block.metadata?.url
+      // Code blocks need content
+      if (block.type === 'code') return block.content && block.content.trim()
+      // Video blocks need URL (content can be empty)
+      if (block.type === 'video') return block.metadata?.url
+      return false
+    }) &&
     !isOverTitleLimit &&
     !isOverSummaryLimit &&
     !isOverContentLimit
@@ -256,17 +266,25 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
       // 2. Upload image blocks if any
       const updatedBlocks = await Promise.all(
         contentBlocks.map(async (block) => {
-          if (
-            block.type === 'image' &&
-            typeof window !== 'undefined' &&
-            block.metadata?.url &&
-            typeof block.metadata.url === 'object' &&
-            'name' in block.metadata.url
-          ) {
-            const url = await uploadImageToR2(block.metadata.url, 'content')
-            return {
-              ...block,
-              metadata: { ...block.metadata, url }
+          if (block.type === 'image' && block.metadata?.url) {
+            // If it's a File object, upload it
+            if (
+              block.metadata.url &&
+              typeof block.metadata.url === 'object' &&
+              'name' in block.metadata.url
+            ) {
+              const url = await uploadImageToR2(
+                block.metadata.url as File,
+                'content'
+              )
+              return {
+                ...block,
+                metadata: { ...block.metadata, url }
+              }
+            }
+            // If it's already a string URL, keep it as is
+            else if (typeof block.metadata.url === 'string') {
+              return block
             }
           }
           return block
@@ -276,10 +294,6 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
       const blogData = {
         title: title.trim(),
         summary: summary.trim(),
-        content: updatedBlocks
-          .filter((block) => block.content.trim())
-          .map((block) => block.content)
-          .join('\n\n'),
         category,
         tags: tags
           .split(',')
@@ -287,7 +301,19 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
           .filter(Boolean),
         coverImageUrl: coverImageUrl || undefined,
         status,
-        contentBlocks: updatedBlocks.filter((block) => block.content.trim())
+        contentBlocks: updatedBlocks.filter((block) => {
+          // Include text blocks with content
+          if (block.type === 'text')
+            return block.content && block.content.trim()
+          // Include image blocks with URL (content can be empty)
+          if (block.type === 'image') return block.metadata?.url
+          // Include code blocks with content
+          if (block.type === 'code')
+            return block.content && block.content.trim()
+          // Include video blocks with URL (content can be empty)
+          if (block.type === 'video') return block.metadata?.url
+          return false
+        })
       }
 
       const response = await axios.post('/api/blogs', blogData)
