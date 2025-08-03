@@ -143,7 +143,7 @@ const BlogSchema = new Schema<IBlogDocument>(
     likes: { type: Number, default: 0 },
     likedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     reactions: [{ type: Schema.Types.ObjectId, ref: 'PostReaction' }],
-    comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
+    comments: [{ type: Schema.Types.ObjectId, ref: 'BlogComment' }],
     publishedAt: Date
   },
   { timestamps: true }
