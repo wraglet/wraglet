@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from 'react'
 import { IBlog } from '@/models/Blog'
-import { IComment } from '@/models/Comment'
+import { IBlogComment } from '@/models/BlogComment'
 import {
   ChatBubbleLeftIcon,
   HeartIcon as HeartOutline,
@@ -24,7 +24,7 @@ interface BlogInteractionsProps {
 }
 
 interface CommentItemProps {
-  comment: IComment
+  comment: IBlogComment
 }
 
 const CommentItem = ({ comment }: CommentItemProps) => {
@@ -88,7 +88,7 @@ const BlogInteractions = ({
       // Update the comments cache
       queryClient.setQueryData(
         ['blog-comments', blog.slug],
-        (old: IComment[] = []) => [newComment, ...old]
+        (old: IBlogComment[] = []) => [newComment, ...old]
       )
       if (!showComments) {
         setShowComments(true)
@@ -117,7 +117,7 @@ const BlogInteractions = ({
       // Update comments cache with real-time data
       queryClient.setQueryData(
         ['blog-comments', blog.slug],
-        (old: IComment[] = []) => [message.data.comment, ...old]
+        (old: IBlogComment[] = []) => [message.data.comment, ...old]
       )
     }
   })
@@ -277,7 +277,7 @@ const BlogInteractions = ({
               </div>
             ) : comments.length > 0 ? (
               <div className="divide-y divide-gray-200">
-                {comments.map((comment: IComment) => (
+                {comments.map((comment: IBlogComment) => (
                   <CommentItem key={comment._id} comment={comment} />
                 ))}
               </div>

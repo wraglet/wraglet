@@ -4,7 +4,7 @@ import { getAblyInstance } from '@/lib/ably'
 import client from '@/lib/db'
 import { initModels } from '@/lib/models'
 import Blog from '@/models/Blog'
-import Comment, { ICommentDocument } from '@/models/Comment'
+import BlogComment, { IBlogCommentDocument } from '@/models/BlogComment'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 
 export const POST = async (
@@ -37,11 +37,11 @@ export const POST = async (
     }
 
     // Create the comment
-    const comment = (await Comment.create({
+    const comment = (await BlogComment.create({
       content: content.trim(),
       author: currentUser._id,
-      post: blog._id // Note: we're reusing the Comment model that references 'post'
-    })) as ICommentDocument
+      blog: blog._id
+    })) as IBlogCommentDocument
 
     // Populate the comment with author details
     await comment.populate({
@@ -54,13 +54,16 @@ export const POST = async (
       $push: { comments: comment._id }
     })
 
+    // Convert to plain object and handle ObjectIds safely
+    const commentObj = comment.toObject()
+
     // Real-time update via Ably
     try {
       const ably = getAblyInstance()
       const channel = ably.channels.get(`blog-${blog._id}`)
       await channel.publish('comment', {
         blogId: blog._id,
-        comment: convertObjectIdsToStrings(comment),
+        comment: convertObjectIdsToStrings(commentObj),
         user: {
           _id: currentUser._id,
           firstName: currentUser.firstName,
@@ -73,7 +76,7 @@ export const POST = async (
       // Don't fail the request if real-time fails
     }
 
-    return NextResponse.json(convertObjectIdsToStrings(comment))
+    return NextResponse.json(convertObjectIdsToStrings(commentObj))
   } catch (error: any) {
     console.error('Error creating comment:', error)
     return NextResponse.json(
@@ -103,13 +106,13 @@ export const GET = async (
     }
 
     // Build query for comments
-    let query: any = { post: blog._id }
+    let query: any = { blog: blog._id }
     if (cursor) {
       query.createdAt = { $lt: new Date(cursor) }
     }
 
     // Get comments
-    const comments = await Comment.find(query)
+    const comments = await BlogComment.find(query)
       .sort({ createdAt: -1 })
       .limit(limit + 1)
       .populate({
@@ -125,8 +128,11 @@ export const GET = async (
         ? commentsToReturn[commentsToReturn.length - 1].createdAt.toISOString()
         : null
 
+    // Convert to plain objects and handle ObjectIds safely
+    const convertedComments = convertObjectIdsToStrings(commentsToReturn)
+
     return NextResponse.json({
-      comments: convertObjectIdsToStrings(commentsToReturn),
+      comments: convertedComments,
       nextCursor,
       hasMore
     })
