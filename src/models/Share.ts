@@ -47,8 +47,8 @@ export interface IShareDocument
     Document {
   originalPost: Types.ObjectId
   sharedBy: Types.ObjectId | AuthorInterface
-  reactions: Types.ObjectId[] | any[]
-  comments: Types.ObjectId[] | any[]
+  reactions: Types.ObjectId[]
+  comments: Types.ObjectId[]
   createdAt?: Date
   updatedAt?: Date
 }

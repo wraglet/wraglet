@@ -1,25 +1,31 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
+import { safeApiError } from '@/lib/apiError'
 import { getAblyInstance } from '@/lib/ably'
 import client from '@/lib/db'
 import { initModels } from '@/lib/models'
-import { createNewPostNotification } from '@/lib/notifications'
-import Blog from '@/models/Blog'
+import { createR2S3Client } from '@/lib/r2S3Client'
+import { escapeRegExp } from '@/lib/escapeRegExp'
+import { createNewBlogNotification } from '@/lib/notifications'
+import Blog, {
+  BLOG_CATEGORIES,
+  type BlogCategory,
+  type IBlogDocument
+} from '@/models/Blog'
 import Follow from '@/models/Follow'
+import {
+  MAX_BLOG_CONTENT_BLOCKS,
+  MAX_FILE_SIZE
+} from '@/data/constants'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { PutObjectCommand } from '@aws-sdk/client-s3'
+import type { FilterQuery } from 'mongoose'
+import { isValidObjectId } from 'mongoose'
 import slugify from 'slugify'
 import { v4 as uuidv4 } from 'uuid'
 
 export const POST = async (request: Request) => {
-  const s3Client = new S3Client({
-    endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    region: 'auto',
-    credentials: {
-      accessKeyId: process.env.CLOUDFLARE_ACCESS_KEY_ID ?? '',
-      secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY ?? ''
-    }
-  })
+  const s3Client = createR2S3Client()
 
   try {
     await client()
@@ -30,7 +36,6 @@ export const POST = async (request: Request) => {
     const {
       title,
       summary,
-      content,
       category,
       tags = [],
       coverImageUrl,
@@ -42,7 +47,6 @@ export const POST = async (request: Request) => {
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
-    // Validation
     if (!title?.trim()) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 })
     }
@@ -54,6 +58,13 @@ export const POST = async (request: Request) => {
       )
     }
 
+    if (
+      typeof category !== 'string' ||
+      !(BLOG_CATEGORIES as readonly string[]).includes(category)
+    ) {
+      return NextResponse.json({ error: 'Invalid category' }, { status: 400 })
+    }
+
     if (!contentBlocks || contentBlocks.length === 0) {
       return NextResponse.json(
         { error: 'Content is required' },
@@ -61,7 +72,15 @@ export const POST = async (request: Request) => {
       )
     }
 
-    // Check if at least one content block has content
+    if (contentBlocks.length > MAX_BLOG_CONTENT_BLOCKS) {
+      return NextResponse.json(
+        {
+          error: `At most ${MAX_BLOG_CONTENT_BLOCKS} content blocks allowed`
+        },
+        { status: 400 }
+      )
+    }
+
     const hasValidContent = contentBlocks.some((block: any) => {
       if (block.type === 'text' || block.type === 'code') {
         return block.content && block.content.trim()
@@ -93,7 +112,6 @@ export const POST = async (request: Request) => {
       )
     }
 
-    // Calculate total content length for validation
     const totalContentLength = contentBlocks
       .filter((block: any) => block.type === 'text' || block.type === 'code')
       .reduce(
@@ -108,18 +126,14 @@ export const POST = async (request: Request) => {
       )
     }
 
-    // Generate a unique slug from the title
     const baseSlug = slugify(title, { lower: true, strict: true })
     let slug = baseSlug
-    let suffix = ''
     let exists = await Blog.findOne({ slug })
     while (exists) {
-      suffix = '-' + uuidv4().slice(0, 8)
-      slug = baseSlug + suffix
+      slug = `${baseSlug}-${uuidv4().slice(0, 8)}`
       exists = await Blog.findOne({ slug })
     }
 
-    // Handle cover image upload if it's a base64 string
     let processedCoverImage = null
     if (coverImageUrl && coverImageUrl.startsWith('data:image/')) {
       try {
@@ -127,6 +141,12 @@ export const POST = async (request: Request) => {
           coverImageUrl.replace(/^data:image\/\w+;base64,/, ''),
           'base64'
         )
+        if (base64Data.length > MAX_FILE_SIZE) {
+          return NextResponse.json(
+            { error: 'Cover image exceeds maximum file size' },
+            { status: 400 }
+          )
+        }
         const type = coverImageUrl.split(';')[0].split('/')[1]
         const key = `blogs/covers/${uuidv4()}.${type}`
         const bucketName = process.env.CLOUDFLARE_R2_USERS_BUCKET_NAME
@@ -143,14 +163,11 @@ export const POST = async (request: Request) => {
         processedCoverImage = { url, key }
       } catch (error) {
         console.error('Error uploading cover image:', error)
-        // Continue without cover image rather than failing
       }
     } else if (coverImageUrl) {
-      // External URL
       processedCoverImage = { url: coverImageUrl, key: '' }
     }
 
-    // Create the blog
     const blog = await Blog.create({
       title: title.trim(),
       summary: summary.trim(),
@@ -163,7 +180,6 @@ export const POST = async (request: Request) => {
       slug
     })
 
-    // Populate the blog for response
     const populatedBlog = await Blog.findById(blog._id)
       .populate({
         path: 'author',
@@ -192,29 +208,25 @@ export const POST = async (request: Request) => {
       )
     }
 
-    // Convert ObjectIds to strings for JSON serialization
     const convertedBlog = convertObjectIdsToStrings(populatedBlog)
 
-    // Real-time notification if published
     if (status === 'published') {
       try {
-        // Get followers
         const followers = await Follow.find({ followingId: currentUser._id })
           .select('followerId')
           .lean()
 
         const followerIds = followers.map((f) => f.followerId.toString())
 
-        // Create notifications for followers
         if (followerIds.length > 0) {
-          await createNewPostNotification(
+          await createNewBlogNotification(
             currentUser._id.toString(),
             followerIds,
-            convertedBlog._id
+            convertedBlog._id,
+            slug
           )
         }
 
-        // Publish to Ably for real-time updates
         const ably = getAblyInstance()
         const channel = ably.channels.get('feed-updates')
         await channel.publish('new-blog', {
@@ -228,15 +240,14 @@ export const POST = async (request: Request) => {
         })
       } catch (error) {
         console.error('Error with real-time notifications:', error)
-        // Don't fail the request if notifications fail
       }
     }
 
     return NextResponse.json(convertedBlog, { status: 201 })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating blog:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: safeApiError(error, 'Internal server error') },
       { status: 500 }
     )
   }
@@ -247,21 +258,50 @@ export const GET = async (request: Request) => {
     await client()
     await initModels()
 
+    const currentUser = await getCurrentUser()
+    const me = currentUser?._id?.toString()
+
     const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const rawLimit = parseInt(searchParams.get('limit') || '10', 10)
+    const limit = Math.min(
+      Math.max(Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 10, 1),
+      50
+    )
     const cursor = searchParams.get('cursor')
     const category = searchParams.get('category')
     const tag = searchParams.get('tag')
-    const author = searchParams.get('author')
+    const authorFilter = searchParams.get('author')
     const search = searchParams.get('search')
-    const status = searchParams.get('status') || 'published'
+    const statusParam = (searchParams.get('status') || 'published').toLowerCase()
 
-    // Build query
-    let query: any = {}
+    const query: FilterQuery<IBlogDocument> = {}
 
-    // Handle status filter - 'all' means no status filter, otherwise filter by status
-    if (status !== 'all') {
-      query.status = status
+    if (authorFilter && !isValidObjectId(authorFilter)) {
+      return NextResponse.json({ error: 'Invalid author id' }, { status: 400 })
+    }
+
+    if (!me) {
+      query.status = 'published'
+      if (authorFilter) query.author = authorFilter
+    } else if (statusParam === 'published') {
+      query.status = 'published'
+      if (authorFilter) query.author = authorFilter
+    } else if (statusParam === 'draft' || statusParam === 'archived') {
+      query.status = statusParam
+      query.author = me
+      if (authorFilter && authorFilter !== me) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    } else if (statusParam === 'all') {
+      if (!authorFilter || authorFilter === me) {
+        query.author = me
+      } else {
+        query.status = 'published'
+        query.author = authorFilter
+      }
+    } else {
+      query.status = 'published'
+      if (authorFilter) query.author = authorFilter
     }
 
     if (cursor) {
@@ -269,28 +309,33 @@ export const GET = async (request: Request) => {
     }
 
     if (category) {
-      query.category = category
+      if (!(BLOG_CATEGORIES as readonly string[]).includes(category)) {
+        return NextResponse.json({ error: 'Invalid category' }, { status: 400 })
+      }
+      query.category = category as BlogCategory
     }
 
     if (tag) {
       query.tags = { $in: [tag] }
     }
 
-    if (author) {
-      query.author = author
-    }
-
-    // Add search functionality
-    if (search) {
+    if (search?.trim()) {
+      const safe = escapeRegExp(search.trim())
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { summary: { $regex: search, $options: 'i' } },
-        { content: { $regex: search, $options: 'i' } },
-        { tags: { $in: [new RegExp(search, 'i')] } }
+        { title: { $regex: safe, $options: 'i' } },
+        { summary: { $regex: safe, $options: 'i' } },
+        { tags: { $regex: safe, $options: 'i' } },
+        {
+          contentBlocks: {
+            $elemMatch: {
+              type: { $in: ['text', 'code'] },
+              content: { $regex: safe, $options: 'i' }
+            }
+          }
+        }
       ]
     }
 
-    // Get blogs
     const blogs = await Blog.find(query)
       .sort({ createdAt: -1 })
       .limit(limit + 1)
@@ -303,13 +348,6 @@ export const GET = async (request: Request) => {
         populate: {
           path: 'userId',
           select: 'firstName lastName username profilePicture gender'
-        }
-      })
-      .populate({
-        path: 'comments',
-        populate: {
-          path: 'author',
-          select: 'firstName lastName username gender pronoun profilePicture'
         }
       })
       .lean()
@@ -326,10 +364,10 @@ export const GET = async (request: Request) => {
       nextCursor,
       hasMore
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching blogs:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: safeApiError(error, 'Internal server error') },
       { status: 500 }
     )
   }

@@ -1,6 +1,24 @@
 import { AuthorInterface } from '@/interfaces'
 import { Document, model, models, Schema, Types } from 'mongoose'
 
+export const BLOG_CATEGORIES = [
+  'Technology',
+  'Design',
+  'Business',
+  'Lifestyle',
+  'Health',
+  'Travel',
+  'Food',
+  'Fashion',
+  'Sports',
+  'Entertainment',
+  'Science',
+  'Education',
+  'Other'
+] as const
+
+export type BlogCategory = (typeof BLOG_CATEGORIES)[number]
+
 // Base interface for Blog data (for UI consumption)
 export interface IBlog {
   _id: string
@@ -30,8 +48,10 @@ export interface IBlog {
   slug: string
   readTime: number // estimated read time in minutes
   views: number
+  /** Denormalized count of PostReaction docs (all types); kept in sync by API. */
   likes: number
-  likedBy: string[]
+  /** User ids with a legacy row before PostReaction migration; usually empty. */
+  reactedBy?: string[]
   comments: {
     _id: string
     content: string
@@ -60,16 +80,16 @@ export interface IBlogDocument
       | 'author'
       | 'reactions'
       | 'comments'
-      | 'likedBy'
+      | 'reactedBy'
       | 'createdAt'
       | 'updatedAt'
       | 'publishedAt'
     >,
     Document {
   author: Types.ObjectId | AuthorInterface
-  reactions: Types.ObjectId[] | any[]
-  comments: Types.ObjectId[] | any[]
-  likedBy: Types.ObjectId[]
+  reactions: Types.ObjectId[]
+  comments: Types.ObjectId[]
+  reactedBy: Types.ObjectId[]
   publishedAt?: Date
   createdAt?: Date
   updatedAt?: Date
@@ -101,7 +121,7 @@ const BlogSchema = new Schema<IBlogDocument>(
       ],
       required: true,
       validate: {
-        validator: function (blocks: any[]) {
+        validator: function (blocks: IBlog['contentBlocks']) {
           return blocks && blocks.length > 0
         },
         message: 'At least one content block is required'
@@ -110,21 +130,7 @@ const BlogSchema = new Schema<IBlogDocument>(
     category: {
       type: String,
       required: true,
-      enum: [
-        'Technology',
-        'Design',
-        'Business',
-        'Lifestyle',
-        'Health',
-        'Travel',
-        'Food',
-        'Fashion',
-        'Sports',
-        'Entertainment',
-        'Science',
-        'Education',
-        'Other'
-      ]
+      enum: [...BLOG_CATEGORIES]
     },
     tags: [{ type: String, maxlength: 50 }],
     coverImage: {
@@ -141,7 +147,7 @@ const BlogSchema = new Schema<IBlogDocument>(
     readTime: { type: Number, default: 1 },
     views: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
-    likedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    reactedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     reactions: [{ type: Schema.Types.ObjectId, ref: 'PostReaction' }],
     comments: [{ type: Schema.Types.ObjectId, ref: 'BlogComment' }],
     publishedAt: Date
@@ -149,21 +155,9 @@ const BlogSchema = new Schema<IBlogDocument>(
   { timestamps: true }
 )
 
-// Create slug from title before saving
+// Slug is set by API routes (stable URLs); do not rewrite on title change here.
+
 BlogSchema.pre('save', function (next) {
-  if (this.isModified('title')) {
-    this.slug = this.title
-      .toLowerCase()
-      .replace(/[^a-zA-Z0-9\s]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim()
-
-    // Add timestamp if slug already exists
-    const timestamp = Date.now()
-    this.slug = `${this.slug}-${timestamp}`
-  }
-
   // Calculate read time from contentBlocks (average 200 words per minute)
   if (this.isModified('contentBlocks') && this.contentBlocks) {
     const textContent = this.contentBlocks

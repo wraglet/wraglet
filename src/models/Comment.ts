@@ -1,3 +1,4 @@
+import type { Gender, Pronoun } from '@/interfaces'
 import { Document, model, models, Schema, Types } from 'mongoose'
 
 // Base interface for Comment data (for UI consumption)
@@ -9,12 +10,12 @@ export interface IComment {
     firstName: string
     lastName: string
     username: string
-    gender: string
-    pronoun: string
+    gender: Gender
+    pronoun: Pronoun
     profilePicture?: {
       url: string
       key: string
-    }
+    } | null
   }
   post: string
   createdAt?: string

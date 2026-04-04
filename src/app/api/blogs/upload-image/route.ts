@@ -1,19 +1,15 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
+import { safeApiError } from '@/lib/apiError'
 import client from '@/lib/db'
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { createR2S3Client } from '@/lib/r2S3Client'
+import { MAX_FILE_SIZE } from '@/data/constants'
+import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { v4 as uuidv4 } from 'uuid'
 
-const s3Client = new S3Client({
-  endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  region: 'auto',
-  credentials: {
-    accessKeyId: process.env.CLOUDFLARE_ACCESS_KEY_ID ?? '',
-    secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY ?? ''
-  }
-})
-
 export const POST = async (request: Request) => {
+  const s3Client = createR2S3Client()
+
   try {
     await client()
 
@@ -36,44 +32,41 @@ export const POST = async (request: Request) => {
       )
     }
 
-    // Upload image to R2
-    const uploadImageToR2 = async (
-      image: string,
-      type: string
-    ): Promise<{ url: string; key: string }> => {
-      const base64Data = Buffer.from(
-        image.replace(/^data:image\/\w+;base64,/, ''),
-        'base64'
+    const base64Data = Buffer.from(
+      image.replace(/^data:image\/\w+;base64,/, ''),
+      'base64'
+    )
+
+    if (base64Data.length > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: 'Image exceeds maximum file size' },
+        { status: 400 }
       )
-      const imageType = image.split(';')[0].split('/')[1]
-
-      // Organize images by type in R2
-      const folder = type === 'cover' ? 'blogs/covers' : 'blogs/content'
-      const key = `${folder}/${uuidv4()}.${imageType}`
-      const bucketName = process.env.CLOUDFLARE_R2_USERS_BUCKET_NAME
-
-      const command = new PutObjectCommand({
-        Bucket: bucketName,
-        Key: key,
-        Body: base64Data,
-        ContentType: `image/${imageType}`
-      })
-
-      await s3Client.send(command)
-      const url = `${process.env.NEXT_PUBLIC_R2_USERS_URL}/${key}`
-      return { url, key }
     }
 
-    const uploadedImage = await uploadImageToR2(image, type)
+    const imageType = image.split(';')[0].split('/')[1]
+    const folder = type === 'cover' ? 'blogs/covers' : 'blogs/content'
+    const key = `${folder}/${uuidv4()}.${imageType}`
+    const bucketName = process.env.CLOUDFLARE_R2_USERS_BUCKET_NAME
+
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+      Body: base64Data,
+      ContentType: `image/${imageType}`
+    })
+
+    await s3Client.send(command)
+    const url = `${process.env.NEXT_PUBLIC_R2_USERS_URL}/${key}`
 
     return NextResponse.json({
-      url: uploadedImage.url,
-      key: uploadedImage.key
+      url,
+      key
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error uploading blog image:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to upload image' },
+      { error: safeApiError(error, 'Failed to upload image') },
       { status: 500 }
     )
   }
