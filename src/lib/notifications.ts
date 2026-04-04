@@ -193,6 +193,35 @@ export const createReactionNotification = async (
   })
 }
 
+export const createBlogReactionNotification = async (
+  reactorId: string,
+  blogAuthorId: string,
+  blogId: string,
+  slug: string,
+  reactionType: string
+) => {
+  if (reactorId === blogAuthorId) return null
+
+  const reactor = (await User.findById(reactorId)
+    .select('firstName lastName')
+    .lean()) as any
+  if (!reactor) return null
+
+  return createNotification({
+    recipient: blogAuthorId,
+    sender: reactorId,
+    type: 'reaction',
+    title: 'New Reaction',
+    message: `${reactor.firstName} ${reactor.lastName} reacted to your blog`,
+    data: {
+      blogId,
+      slug,
+      reactionType,
+      userId: reactorId
+    }
+  })
+}
+
 export const createNewPostNotification = async (
   authorId: string,
   followerIds: string[],
@@ -212,6 +241,31 @@ export const createNewPostNotification = async (
       title: 'New Post',
       message: `${author.firstName} ${author.lastName} shared a new post`,
       data: { postId, userId: authorId }
+    })
+  )
+
+  return Promise.all(notifications)
+}
+
+export const createNewBlogNotification = async (
+  authorId: string,
+  followerIds: string[],
+  blogId: string,
+  slug: string
+) => {
+  const author = (await User.findById(authorId)
+    .select('firstName lastName')
+    .lean()) as any
+  if (!author) return null
+
+  const notifications = followerIds.map((followerId) =>
+    createNotification({
+      recipient: followerId,
+      sender: authorId,
+      type: 'new_blog',
+      title: 'New blog',
+      message: `${author.firstName} ${author.lastName} published a new blog`,
+      data: { blogId, slug, userId: authorId }
     })
   )
 

@@ -1,14 +1,20 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
+import { safeApiError } from '@/lib/apiError'
+import {
+  blogR2KeysRemovedSinceUpdate,
+  collectBlogR2Keys,
+  deleteBlogKeysFromR2,
+  isSafeBlogR2Key
+} from '@/lib/blogR2Cleanup'
 import client from '@/lib/db'
 import { initModels } from '@/lib/models'
-import Blog from '@/models/Blog'
+import { createR2S3Client } from '@/lib/r2S3Client'
+import Blog, { BLOG_CATEGORIES } from '@/models/Blog'
+import BlogComment from '@/models/BlogComment'
+import { MAX_BLOG_CONTENT_BLOCKS, MAX_FILE_SIZE } from '@/data/constants'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
-import {
-  DeleteObjectCommand,
-  PutObjectCommand,
-  S3Client
-} from '@aws-sdk/client-s3'
+import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
 import { v4 as uuidv4 } from 'uuid'
 
 export const GET = async (
@@ -19,6 +25,7 @@ export const GET = async (
     await client()
     await initModels()
 
+    const currentUser = await getCurrentUser()
     const { slug } = await params
 
     const blog = (await Blog.findOne({ slug })
@@ -46,16 +53,30 @@ export const GET = async (
       return NextResponse.json({ error: 'Blog not found' }, { status: 404 })
     }
 
+    const authorRef = blog.author as
+      | { _id: { toString: () => string } }
+      | { toString: () => string }
+    const authorId =
+      authorRef && typeof authorRef === 'object' && '_id' in authorRef
+        ? authorRef._id.toString()
+        : String(authorRef)
+    const isAuthor =
+      !!currentUser?._id && authorId === currentUser._id.toString()
+
+    if (blog.status !== 'published' && !isAuthor) {
+      return NextResponse.json({ error: 'Blog not found' }, { status: 404 })
+    }
+
     // Increment view count (only for published blogs)
     if (blog.status === 'published') {
       await Blog.findByIdAndUpdate(blog._id, { $inc: { views: 1 } })
     }
 
     return NextResponse.json(convertObjectIdsToStrings(blog))
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching blog:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: safeApiError(error, 'Internal server error') },
       { status: 500 }
     )
   }
@@ -65,14 +86,7 @@ export const PUT = async (
   request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) => {
-  const s3Client = new S3Client({
-    endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    region: 'auto',
-    credentials: {
-      accessKeyId: process.env.CLOUDFLARE_ACCESS_KEY_ID ?? '',
-      secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY ?? ''
-    }
-  })
+  const s3Client = createR2S3Client()
 
   try {
     await client()
@@ -103,13 +117,15 @@ export const PUT = async (
     const {
       title,
       summary,
-      content,
       category,
-      tags = [],
+      tags: rawTags,
       coverImageUrl,
       status = existingBlog.status,
-      contentBlocks = []
+      contentBlocks: rawContentBlocks
     } = body
+
+    const patchContentBlocks = Object.hasOwn(body, 'contentBlocks')
+    const patchTags = Object.hasOwn(body, 'tags')
 
     // Validation
     if (title && title.length > 200) {
@@ -126,11 +142,42 @@ export const PUT = async (
       )
     }
 
-    if (content && content.length > 50000) {
-      return NextResponse.json(
-        { error: 'Content must be 50,000 characters or less' },
-        { status: 400 }
-      )
+    if (
+      category !== undefined &&
+      (typeof category !== 'string' ||
+        !(BLOG_CATEGORIES as readonly string[]).includes(category))
+    ) {
+      return NextResponse.json({ error: 'Invalid category' }, { status: 400 })
+    }
+
+    if (patchContentBlocks) {
+      if (!Array.isArray(rawContentBlocks)) {
+        return NextResponse.json(
+          { error: 'contentBlocks must be an array' },
+          { status: 400 }
+        )
+      }
+      if (rawContentBlocks.length > MAX_BLOG_CONTENT_BLOCKS) {
+        return NextResponse.json(
+          {
+            error: `At most ${MAX_BLOG_CONTENT_BLOCKS} content blocks allowed`
+          },
+          { status: 400 }
+        )
+      }
+      const textLen = rawContentBlocks
+        .filter((b: { type?: string }) => b.type === 'text' || b.type === 'code')
+        .reduce(
+          (acc: number, b: { content?: string }) =>
+            acc + (b.content?.length || 0),
+          0
+        )
+      if (textLen > 50000) {
+        return NextResponse.json(
+          { error: 'Content must be 50,000 characters or less' },
+          { status: 400 }
+        )
+      }
     }
 
     // Handle cover image upload if it's a new base64 string
@@ -138,7 +185,7 @@ export const PUT = async (
     if (coverImageUrl && coverImageUrl.startsWith('data:image/')) {
       try {
         // Delete old image if it exists
-        if (existingBlog.coverImage?.key) {
+        if (isSafeBlogR2Key(existingBlog.coverImage?.key)) {
           const deleteCommand = new DeleteObjectCommand({
             Bucket: process.env.CLOUDFLARE_R2_USERS_BUCKET_NAME,
             Key: existingBlog.coverImage.key
@@ -151,6 +198,12 @@ export const PUT = async (
           coverImageUrl.replace(/^data:image\/\w+;base64,/, ''),
           'base64'
         )
+        if (base64Data.length > MAX_FILE_SIZE) {
+          return NextResponse.json(
+            { error: 'Cover image exceeds maximum file size' },
+            { status: 400 }
+          )
+        }
         const type = coverImageUrl.split(';')[0].split('/')[1]
         const key = `blogs/covers/${uuidv4()}.${type}`
         const bucketName = process.env.CLOUDFLARE_R2_USERS_BUCKET_NAME
@@ -177,25 +230,40 @@ export const PUT = async (
       processedCoverImage = { url: coverImageUrl, key: '' }
     }
 
-    // Prepare update data
-    const updateData: any = {}
+    // Prepare update data (body lives in contentBlocks, not a top-level content field)
+    const updateData: Record<string, unknown> = {}
     if (title !== undefined) updateData.title = title.trim()
     if (summary !== undefined) updateData.summary = summary.trim()
-    if (content !== undefined) updateData.content = content.trim()
     if (category !== undefined) updateData.category = category
-    if (tags !== undefined)
-      updateData.tags = Array.isArray(tags)
-        ? tags.filter((tag) => tag.trim())
+    if (patchTags) {
+      updateData.tags = Array.isArray(rawTags)
+        ? rawTags.filter((tag: string) => String(tag).trim())
         : []
+    }
     if (processedCoverImage !== existingBlog.coverImage)
       updateData.coverImage = processedCoverImage
     if (status !== undefined) updateData.status = status
-    if (contentBlocks !== undefined) updateData.contentBlocks = contentBlocks
+    if (patchContentBlocks) updateData.contentBlocks = rawContentBlocks
 
     // Set publishedAt if status changes to published
     if (status === 'published' && existingBlog.status !== 'published') {
       updateData.publishedAt = new Date()
     }
+
+    const nextContentBlocks = patchContentBlocks
+      ? rawContentBlocks
+      : existingBlog.contentBlocks
+
+    const r2KeysToDrop = blogR2KeysRemovedSinceUpdate(
+      {
+        coverImage: existingBlog.coverImage,
+        contentBlocks: existingBlog.contentBlocks
+      },
+      {
+        coverImage: processedCoverImage,
+        contentBlocks: nextContentBlocks
+      }
+    )
 
     // Update the blog
     const updatedBlog = await Blog.findOneAndUpdate({ slug }, updateData, {
@@ -228,11 +296,15 @@ export const PUT = async (
       )
     }
 
+    if (r2KeysToDrop.length > 0) {
+      await deleteBlogKeysFromR2(s3Client, r2KeysToDrop)
+    }
+
     return NextResponse.json(convertObjectIdsToStrings(updatedBlog))
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating blog:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: safeApiError(error, 'Internal server error') },
       { status: 500 }
     )
   }
@@ -242,14 +314,7 @@ export const DELETE = async (
   request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) => {
-  const s3Client = new S3Client({
-    endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    region: 'auto',
-    credentials: {
-      accessKeyId: process.env.CLOUDFLARE_ACCESS_KEY_ID ?? '',
-      secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY ?? ''
-    }
-  })
+  const s3Client = createR2S3Client()
 
   try {
     await client()
@@ -276,28 +341,18 @@ export const DELETE = async (
       )
     }
 
-    // Delete cover image from R2 if it exists
-    if (blog.coverImage?.key) {
-      try {
-        const deleteCommand = new DeleteObjectCommand({
-          Bucket: process.env.CLOUDFLARE_R2_USERS_BUCKET_NAME,
-          Key: blog.coverImage.key
-        })
-        await s3Client.send(deleteCommand)
-      } catch (error) {
-        console.error('Error deleting cover image:', error)
-        // Continue with blog deletion even if image deletion fails
-      }
-    }
+    const r2Keys = collectBlogR2Keys(blog)
+    await deleteBlogKeysFromR2(s3Client, r2Keys)
 
-    // Delete the blog
+    await BlogComment.deleteMany({ blog: blog._id })
+
     await Blog.findOneAndDelete({ slug })
 
     return NextResponse.json({ message: 'Blog deleted successfully' })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting blog:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: safeApiError(error, 'Internal server error') },
       { status: 500 }
     )
   }

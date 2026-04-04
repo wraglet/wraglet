@@ -1,3 +1,4 @@
+import { Gender, Pronoun } from '@/interfaces'
 import { Document, model, models, Schema, Types } from 'mongoose'
 
 // Base interface for BlogComment data (for UI consumption)
@@ -9,8 +10,8 @@ export interface IBlogComment {
     firstName: string
     lastName: string
     username: string
-    gender: string
-    pronoun: string
+    gender: Gender
+    pronoun: Pronoun
     profilePicture?: {
       url: string
       key: string
