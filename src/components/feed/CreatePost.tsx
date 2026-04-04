@@ -11,6 +11,7 @@ import UploadPostImage from '@/components/feed/UploadPostImage'
 import Avatar from '@/components/shared/Avatar'
 import Button from '@/components/shared/Button'
 import { GalleryIcon, TerminalIcon } from '@/components/shared/Icons'
+import type { Gender } from '@/interfaces'
 
 // Constants for character limits
 const MAX_POST_CHARACTERS = 280
@@ -21,7 +22,7 @@ type Props = {
   setText: (e: ChangeEvent<HTMLInputElement>) => void
   setPostImage: (postImage: string) => void
   text: string
-  postImage: string
+  postImage: string | null
 }
 
 const CreatePost = ({
@@ -35,9 +36,15 @@ const CreatePost = ({
   const { user } = useUserStore()
   const { openModal: openBlogModal } = useBlogModalStore()
 
-  const reducer = (state: any, action: any) => ({ ...state, ...action })
+  type UploadModalState = { openUploadModal: boolean }
+  type UploadModalAction = Partial<UploadModalState>
 
-  const initialState = {
+  const reducer = (state: UploadModalState, action: UploadModalAction) => ({
+    ...state,
+    ...action
+  })
+
+  const initialState: UploadModalState = {
     openUploadModal: false
   }
 
@@ -58,7 +65,7 @@ const CreatePost = ({
   return (
     <>
       <UploadPostImage
-        postImage={postImage}
+        postImage={postImage ?? ''}
         show={openUploadModal}
         close={() => dispatchState({ openUploadModal: false })}
         setPostImage={setPostImage}
@@ -68,7 +75,7 @@ const CreatePost = ({
           <div className="relative block">
             {user && user.gender ? (
               <Avatar
-                gender={user.gender}
+                gender={user.gender as Gender}
                 alt={`${user.firstName}'s photo`}
                 src={user.profilePicture?.url || null}
               />

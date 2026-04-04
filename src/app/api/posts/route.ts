@@ -4,11 +4,20 @@ import { getAblyInstance } from '@/lib/ably'
 import client from '@/lib/db'
 import { createNewPostNotification } from '@/lib/notifications'
 import Follow from '@/models/Follow'
-import Post from '@/models/Post'
+import Post, { type IPost, type IPostDocument } from '@/models/Post'
 import Share from '@/models/Share'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import type { FilterQuery } from 'mongoose'
 import { v4 as uuidv4 } from 'uuid'
+
+type LeanPost = IPost & {
+  _id: unknown
+  createdAt: Date
+  reactions?: unknown[]
+  comments?: unknown[]
+  shareCount?: number
+}
 
 export const POST = async (request: Request) => {
   const s3Client = new S3Client({
@@ -25,7 +34,7 @@ export const POST = async (request: Request) => {
 
     const currentUser = await getCurrentUser()
     const body = await request.json()
-    const { text, audience = 'public', image } = body
+    const { text, audience = 'public', image, isBlogShare, blogCoverImage, blogUrl, blogSlug, blogTitle, blogSummary, blogCategory } = body
 
     if (!currentUser?._id || !currentUser?.email) {
       return new NextResponse('Unauthorized', { status: 401 })
@@ -54,7 +63,7 @@ export const POST = async (request: Request) => {
       return { url, key }
     }
 
-    let content = {}
+    let content: Partial<IPost['content']> = {}
 
     if (text) {
       content = { ...content, text }
@@ -63,6 +72,29 @@ export const POST = async (request: Request) => {
     if (image) {
       const uploadedImage = await uploadImageToR2(image)
       content = { ...content, images: [uploadedImage] }
+    }
+
+    // Handle blog share with preview
+    if (isBlogShare && blogUrl && blogSlug && blogTitle) {
+      // Store blog metadata in content for rendering preview card
+      // Always include preview data, even if no cover image
+      content.blogPreview = {
+        url: blogUrl,
+        slug: blogSlug,
+        title: blogTitle || 'Untitled Blog',
+        summary: blogSummary || '',
+        category: blogCategory || '',
+        coverImage: blogCoverImage || null
+      }
+    } else if (isBlogShare) {
+      console.warn('Blog share missing required fields:', {
+        blogUrl,
+        blogSlug,
+        blogTitle,
+        blogSummary,
+        blogCategory,
+        blogCoverImage
+      })
     }
 
     const post = await Post.create({
@@ -110,7 +142,7 @@ export const POST = async (request: Request) => {
         .lean()
 
       if (followers.length > 0) {
-        const followerIds = followers.map((f: any) => f.followerId.toString())
+        const followerIds = followers.map((f) => f.followerId.toString())
         await createNewPostNotification(
           currentUser._id.toString(),
           followerIds,
@@ -157,7 +189,7 @@ export const GET = async (request: Request) => {
       // Trending: posts with most reactions/comments/shares in last 48h, fallback to recent public posts
       const trendingWindow = new Date(Date.now() - 1000 * 60 * 60 * 48) // 48 hours
       // Find posts created in the last 48h, sorted by (reactions + comments + shareCount)
-      const trendingQuery: any = {
+      const trendingQuery: FilterQuery<IPostDocument> = {
         createdAt: { $gte: trendingWindow },
         audience: 'public'
       }
@@ -186,8 +218,8 @@ export const GET = async (request: Request) => {
         .lean()
 
       // Add a score for trending
-      const scoredTrending: any[] = trendingPosts.map((post) => ({
-        ...post,
+      const scoredTrending = trendingPosts.map((post) => ({
+        ...(post as LeanPost),
         _trendingScore:
           (post.reactions?.length || 0) +
           (post.comments?.length || 0) +
@@ -200,12 +232,12 @@ export const GET = async (request: Request) => {
       )
 
       // Remove _trendingScore before returning
-      let postsToReturn: any[] = scoredTrending
-        .map(({ _trendingScore, ...rest }) => rest)
+      let postsToReturn: LeanPost[] = scoredTrending
+        .map(({ _trendingScore, ...rest }) => rest as LeanPost)
         .filter((p) => p.createdAt) // Only keep posts with createdAt
         .slice(0, limit + 1)
       if (postsToReturn.length < limit + 1) {
-        const recentPublic: any[] = await Post.find({ audience: 'public' })
+        const recentPublic = (await Post.find({ audience: 'public' })
           .sort({ createdAt: -1 })
           .limit(limit + 1 - postsToReturn.length)
           .populate({
@@ -227,14 +259,14 @@ export const GET = async (request: Request) => {
                 'firstName lastName username gender pronoun profilePicture'
             }
           })
-          .lean()
+          .lean()) as LeanPost[]
         // Map recentPublic to the same structure (in case trending was empty)
         postsToReturn = postsToReturn.concat(
           recentPublic.filter((p) => p.createdAt).map((p) => ({ ...p }))
         )
       }
       const hasMore = postsToReturn.length > limit
-      const contentToReturn: any[] = hasMore
+      const contentToReturn: LeanPost[] = hasMore
         ? postsToReturn.slice(0, limit)
         : postsToReturn
       // Find the last post with a valid createdAt for nextCursor
@@ -242,11 +274,12 @@ export const GET = async (request: Request) => {
       if (hasMore && contentToReturn.length > 0) {
         for (let i = contentToReturn.length - 1; i >= 0; i--) {
           const c = contentToReturn[i]
-          if (c.createdAt) {
+          const created = c.createdAt as string | Date | undefined
+          if (created) {
             nextCursor =
-              typeof c.createdAt === 'string'
-                ? c.createdAt
-                : c.createdAt.toISOString?.() || c.createdAt
+              typeof created === 'string'
+                ? created
+                : new Date(created).toISOString()
             break
           }
         }
@@ -259,9 +292,8 @@ export const GET = async (request: Request) => {
 
     // Otherwise, show personalized feed (following + mutual shares + public shares)
     // Build query for pagination
-    let query: any = {}
-    let shareQuery: any = {}
-    const cursor = searchParams.get('cursor')
+    let query: FilterQuery<IPostDocument> = {}
+    let shareQuery: Record<string, unknown> = {}
     if (cursor) {
       query.createdAt = { $lt: new Date(cursor) }
       shareQuery.createdAt = { $lt: new Date(cursor) }
@@ -367,7 +399,7 @@ export const GET = async (request: Request) => {
       .slice(0, limit + 1)
 
     const hasMore = allContent.length > limit
-    const contentToReturn: any[] = hasMore
+    const contentToReturn = hasMore
       ? allContent.slice(0, limit)
       : allContent
     const nextCursor =

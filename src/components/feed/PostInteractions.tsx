@@ -1,6 +1,7 @@
 'use client'
 
 import { FormEvent, useEffect, useRef, useState } from 'react'
+import type { Gender } from '@/interfaces'
 import { IPost } from '@/models/Post'
 import useUserStore from '@/store/user'
 import {
@@ -20,6 +21,10 @@ import { LuArrowBigDown, LuArrowBigUp } from 'react-icons/lu'
 import CommentComponent from '@/components/feed/Comment'
 import Avatar from '@/components/shared/Avatar'
 import ReactionIcon from '@/components/shared/ReactionIcon'
+import {
+  mergePostClientUpdate,
+  mergePostFromFeedProp
+} from '@/utils/mergePostClientUpdate'
 
 interface PostInteractionsProps {
   post: IPost
@@ -41,6 +46,16 @@ interface ReactionGroup {
   users: User[]
 }
 
+type PostCommentDoc = Exclude<
+  NonNullable<IPost['comments']>[number],
+  string | undefined
+>
+
+const isPopulatedComment = (
+  comment: NonNullable<IPost['comments']>[number]
+): comment is PostCommentDoc =>
+  typeof comment !== 'string' && '_id' in comment
+
 const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
   useEffect(() => {
     import('@lottiefiles/lottie-player')
@@ -50,12 +65,24 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
   const [post, setPost] = useState<IPost>(initialPost)
   const [showCommentInput, setShowCommentInput] = useState(false)
   const [comment, setComment] = useState('')
-  const [postComments, setPostComments] = useState(
-    (initialPost.comments || []).filter(
-      (comment): comment is any =>
-        typeof comment !== 'string' && '_id' in comment
-    )
+  const [postComments, setPostComments] = useState<PostCommentDoc[]>(
+    (initialPost.comments || []).filter(isPopulatedComment)
   )
+
+  const initialPostIdRef = useRef(String(initialPost._id))
+
+  useEffect(() => {
+    const id = String(initialPost._id)
+    if (initialPostIdRef.current !== id) {
+      initialPostIdRef.current = id
+      setPost(initialPost)
+      setPostComments(
+        (initialPost.comments || []).filter(isPopulatedComment)
+      )
+      return
+    }
+    setPost((prev) => mergePostFromFeedProp(prev, initialPost))
+  }, [initialPost])
 
   // Try to use Ably channel for both comments and reactions
   const channel = useChannel(`post-${post._id}`, (message) => {
@@ -75,10 +102,9 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
       })
       setShowCommentInput(true)
     } else if (message.name === 'reaction') {
-      // Update the post with new reaction data
-      setPost(message.data)
+      setPost((prev) => mergePostClientUpdate(prev, message.data as IPost))
     } else if (message.name === 'vote') {
-      setPost(message.data)
+      setPost((prev) => mergePostClientUpdate(prev, message.data as IPost))
     }
   })
 
@@ -201,8 +227,8 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
           throw new Error('Failed to update reaction')
         }
 
-        const updatedPost = response.data
-        setPost(updatedPost)
+        const updatedPost = response.data as IPost
+        setPost((prev) => mergePostClientUpdate(prev, updatedPost))
 
         if (channel && channel.publish) {
           await channel.publish({
@@ -231,8 +257,8 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
         throw new Error('Failed to remove reaction')
       }
 
-      const updatedPost = response.data
-      setPost(updatedPost)
+      const updatedPost = response.data as IPost
+      setPost((prev) => mergePostClientUpdate(prev, updatedPost))
 
       if (channel && channel.publish) {
         await channel.publish({
@@ -266,8 +292,8 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
         throw new Error('Failed to vote')
       }
 
-      const updatedPost = await response.json()
-      setPost(updatedPost)
+      const updatedPost = (await response.json()) as IPost
+      setPost((prev) => mergePostClientUpdate(prev, updatedPost))
 
       // Publish vote update to Ably
       try {
@@ -312,15 +338,12 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
     }
   }
 
-  const isCommentDocument = (comment: any): comment is any => {
-    return (
-      typeof comment === 'object' &&
-      comment !== null &&
-      '_id' in comment &&
-      'content' in comment &&
-      'author' in comment
-    )
-  }
+  const isCommentDocument = (comment: unknown): comment is PostCommentDoc =>
+    typeof comment === 'object' &&
+    comment !== null &&
+    '_id' in comment &&
+    'content' in comment &&
+    'author' in comment
 
   // Get current user's vote
   const userVote = post.votes?.find(
@@ -526,7 +549,7 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
         >
           {user && user.gender ? (
             <Avatar
-              gender={user.gender}
+              gender={user.gender as Gender}
               size="h-6 w-6"
               src={user.profilePicture?.url || null}
             />

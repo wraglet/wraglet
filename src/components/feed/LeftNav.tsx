@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import useUserStore from '@/store/user'
@@ -12,17 +11,15 @@ import {
   EventsIcon,
   VideoIcon
 } from '@/components/shared/Icons'
+import type { Gender } from '@/interfaces'
+import { useIsClient } from '@/lib/hooks/useIsClient'
 
 const LeftSideNav = () => {
   const { user } = useUserStore()
-  const [hydrated, setHydrated] = useState(false)
+  const hydrated = useIsClient()
   const router = useRouter()
   const searchParams = useSearchParams()
   const currentTab = searchParams.get('tab') || 'all'
-
-  useEffect(() => {
-    setHydrated(true)
-  }, [])
 
   const handleTabClick = (tab: string) => {
     router.push(`/feed?tab=${tab}`)
@@ -50,7 +47,7 @@ const LeftSideNav = () => {
             <div className="flex items-center space-x-3">
               {user && user.gender ? (
                 <Avatar
-                  gender={user.gender}
+                  gender={user.gender as Gender}
                   className="group-hover:border-white"
                   alt={`${user.firstName}'s Profile`}
                   src={user.profilePicture?.url || null}

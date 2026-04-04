@@ -1,6 +1,6 @@
 'use client'
 
-import { FC, useEffect, useState } from 'react'
+import { FC, startTransition, useEffect, useState } from 'react'
 import { IPost } from '@/models/Post'
 import { ChannelProvider, useChannel } from 'ably/react'
 
@@ -37,7 +37,6 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
   })
 
   useEffect(() => {
-    // Deduplicate when initialPosts change
     const seen = new Set()
     const deduplicatedPosts = initialPosts.filter((post: any) => {
       const id = post._id || post.data?._id
@@ -45,7 +44,9 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
       seen.add(id)
       return true
     })
-    setPosts(deduplicatedPosts)
+    startTransition(() => {
+      setPosts(deduplicatedPosts)
+    })
   }, [initialPosts])
 
   // Use Ably channel for real-time updates
