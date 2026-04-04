@@ -56,8 +56,7 @@ const LoginForm: FC<LoginFormProps> = ({ buttonIcon }) => {
       toast.success('Logged in!')
       push('/feed')
     },
-    onError: (error) => {
-      console.error('Error during login:', error)
+    onError: () => {
       toast.error('Invalid credentials')
     }
   })

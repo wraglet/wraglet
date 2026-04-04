@@ -40,9 +40,7 @@ const HeaderMessagesIcon = ({
     enabled: dropdownOpen
   })
 
-  console.log('HeaderMessagesIcon subscribing to:', `user-${userId}-messages`)
   useChannel(`user-${userId}-messages`, (message) => {
-    console.log('Ably event:', message)
     setUnreadCount((prev) =>
       typeof message.data?.unreadCount === 'number'
         ? message.data.unreadCount

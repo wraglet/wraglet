@@ -1,6 +1,12 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  startTransition,
+  useState
+} from 'react'
 import { useSession } from 'next-auth/react'
 import { ChatClient } from '@ably/chat'
 import { ChatClientProvider } from '@ably/chat/react'
@@ -27,20 +33,27 @@ export const AblyProvider = ({ children }: { children: React.ReactNode }) => {
   const [chatClient, setChatClient] = useState<ChatClient | null>(null)
 
   useEffect(() => {
-    if (session?.user?._id) {
-      const client = new Ably.Realtime({
-        authUrl: '/api/token',
-        clientId: session.user._id
+    if (!session?.user?._id) {
+      startTransition(() => {
+        setAblyClient(null)
+        setChatClient(null)
       })
+      return
+    }
+
+    const client = new Ably.Realtime({
+      authUrl: '/api/token',
+      clientId: session.user._id
+    })
+    const chat = new ChatClient(client)
+    startTransition(() => {
       setAblyClient(client)
-
-      const chat = new ChatClient(client)
       setChatClient(chat)
+    })
 
-      return () => {
-        if (client.connection.state === 'connected') {
-          client.close()
-        }
+    return () => {
+      if (client.connection.state === 'connected') {
+        client.close()
       }
     }
   }, [session])

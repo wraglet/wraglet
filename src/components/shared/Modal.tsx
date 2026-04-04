@@ -1,4 +1,4 @@
-import React, { Fragment, ReactNode } from 'react'
+import { Fragment, ReactNode } from 'react'
 import {
   Dialog,
   DialogPanel,
@@ -18,7 +18,7 @@ interface ModalProps {
 const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-20" onClose={onClose}>
+      <Dialog as="div" className="relative z-50" onClose={onClose}>
         <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
@@ -46,7 +46,7 @@ const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
                 <div className="flex w-full items-center justify-between border-b border-solid border-[#DFE4EA] p-5">
                   <DialogTitle
                     as="h3"
-                    className="text-lg font-medium leading-6 text-gray-900"
+                    className="text-lg leading-6 font-medium text-gray-900"
                   >
                     {title}
                   </DialogTitle>

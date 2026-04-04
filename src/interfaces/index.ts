@@ -1,3 +1,9 @@
+// Gender type for consistency across the application
+export type Gender = 'Female' | 'Male' | 'Others' | 'Prefer not to say'
+
+// Pronoun type for consistency across the application
+export type Pronoun = 'She/Her' | 'He/Him' | 'They/Them' | 'Prefer not to say'
+
 export interface PostInterface {
   _id: string
   content: {
@@ -32,7 +38,8 @@ export interface PostInterface {
 export interface PostReactionInterface {
   _id: string
   type: string
-  postId: string
+  postId?: string
+  blogId?: string
   userId: AuthorInterface
   createdAt: Date
   updatedAt: Date
@@ -47,9 +54,9 @@ export interface UserInterface {
   hashedPassword: string
   username: string
   dob: Date
-  gender: string
+  gender: Gender
   bio?: string | null
-  pronoun: string
+  pronoun: Pronoun
   profilePicture?: {
     url: string
     key: string
@@ -69,8 +76,9 @@ export interface AuthorInterface {
   firstName: string
   lastName: string
   username: string
-  gender: string
-  pronoun: string
+  gender: Gender
+  pronoun: Pronoun
+  bio?: string | null
   profilePicture?: {
     url: string
     key: string
@@ -94,7 +102,7 @@ export interface SearchResultItem {
   title: string
   subtitle?: string
   avatar?: string
-  gender: string
+  gender: Gender
   url: string
   relevanceScore?: number
 }
@@ -112,4 +120,47 @@ export interface SearchSuggestion {
   type: 'user' | 'post' | 'blog' | 'video' | 'recent'
   avatar?: string
   url: string
+}
+
+/** Fields returned by getCurrentUser, getOtherUsers, and similar server actions (no password). */
+export interface PublicUser {
+  _id: string
+  firstName: string
+  lastName: string
+  email?: string
+  username: string
+  gender: Gender
+  pronoun: Pronoun
+  bio?: string | null
+  profilePicture?: {
+    url: string
+    key: string
+  } | null
+  coverPhoto?: {
+    url: string
+    key: string
+  } | null
+  dob?: string | Date
+  publicProfileVisible?: boolean
+  followingIds?: string[]
+  createdAt?: string | Date
+  updatedAt?: string | Date
+}
+
+export interface TrendingTopic {
+  tag: string
+  count: number
+}
+
+/** Body for POST /api/posts when sharing a blog to the feed. */
+export interface BlogShareFeedPayload {
+  text: string
+  audience: 'public' | 'mutuals' | 'only_me'
+  isBlogShare: true
+  blogUrl: string
+  blogSlug: string
+  blogTitle: string
+  blogSummary: string
+  blogCategory: string
+  blogCoverImage?: string
 }

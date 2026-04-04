@@ -1,6 +1,8 @@
 'use client'
 
 import { Fragment, useState } from 'react'
+import type { Gender } from '@/interfaces'
+import type { IPost } from '@/models/Post'
 import useUserStore from '@/store/user'
 import {
   Dialog,
@@ -49,7 +51,7 @@ const ExternalShareButton = ({
 interface ShareModalProps {
   isOpen: boolean
   onClose: () => void
-  post: any
+  post: IPost
   onShareToFeed?: () => void
 }
 
@@ -228,7 +230,7 @@ const ShareModalWithAbly = ({
                   <div className="mb-4 flex items-start gap-3">
                     {user ? (
                       <Avatar
-                        gender={user.gender}
+                        gender={user.gender as Gender}
                         src={user.profilePicture?.url || null}
                         size="h-10 w-10"
                       />

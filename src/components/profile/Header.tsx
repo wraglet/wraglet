@@ -75,6 +75,7 @@ const ProfileHeader = ({ username }: { username: string }) => {
           <div className="group relative block h-[114px] w-full md:h-[284px] lg:h-[360px]">
             <Image
               fill
+              sizes="(min-width: 1280px) 1250px, 100vw"
               src={
                 user?.coverPhoto?.url ??
                 `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/cover-photo-default.jpg`

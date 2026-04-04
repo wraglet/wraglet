@@ -3,7 +3,6 @@ import useUserStore, { User } from '@/store/user'
 import { type ChatMessageEvent, type Message } from '@ably/chat'
 import {
   useMessages,
-  usePresence,
   usePresenceListener,
   useRoom,
   useTyping
@@ -11,6 +10,7 @@ import {
 import axios from 'axios'
 
 import Avatar from '@/components/shared/Avatar'
+import type { Gender } from '@/interfaces'
 
 const ChatWindow = ({ conversationId }: { conversationId: string }) => {
   const { user: currentUser } = useUserStore()
@@ -21,18 +21,11 @@ const ChatWindow = ({ conversationId }: { conversationId: string }) => {
   const { room } = useRoom()
   const isRoomAttached = room?.status === 'attached'
 
-  usePresence({
-    enterWithData: currentUser
-      ? {
-          _id: currentUser._id,
-          firstName: currentUser.firstName,
-          lastName: currentUser.lastName,
-          profilePicture: currentUser.profilePicture,
-          gender: currentUser.gender
-        }
-      : undefined
-  })
-
+  // Do not use usePresence() here: on chat window close, ChatRoomProvider tears down
+  // the room while usePresence cleanup still calls presence.leave(), which hits Ably
+  // error 90001 (leave while channel is detaching / wrong state). useTyping and
+  // useMessages work without a local presence enter; usePresenceListener still
+  // receives others' presence for typing labels and sender fallback.
   const { presenceData } = usePresenceListener()
 
   const { send: sendMessage } = useMessages({
@@ -59,12 +52,13 @@ const ChatWindow = ({ conversationId }: { conversationId: string }) => {
 
   useEffect(() => {
     if (!conversationId) return
-    setMessages([])
+    let cancelled = false
     axios
       .get(`/api/messages`, {
         headers: { 'x-conversation-id': conversationId }
       })
       .then((res) => {
+        if (cancelled) return
         const historicalMessages = res.data.data.map(
           (m: any): Partial<Message> => ({
             serial: m.id || m._id,
@@ -79,6 +73,9 @@ const ChatWindow = ({ conversationId }: { conversationId: string }) => {
         )
         setMessages(historicalMessages as Message[])
       })
+    return () => {
+      cancelled = true
+    }
   }, [conversationId])
 
   useEffect(() => {
@@ -122,13 +119,11 @@ const ChatWindow = ({ conversationId }: { conversationId: string }) => {
     (clientId) => clientId !== currentUser?._id
   )
 
-  const typingUsers = typingClientIds
-    .map((clientId) => {
-      const member = presenceData.find((m) => m.clientId === clientId)
-      const data = member?.data as any
-      return data?.firstName
-    })
-    .filter(Boolean)
+  const typingUsers = typingClientIds.map((clientId) => {
+    const member = presenceData.find((m) => m.clientId === clientId)
+    const data = member?.data as { firstName?: string } | undefined
+    return data?.firstName ?? 'Someone'
+  })
 
   return (
     <div className="flex h-full flex-col bg-white">
@@ -166,7 +161,7 @@ const ChatWindow = ({ conversationId }: { conversationId: string }) => {
                       senderProfile.gender && (
                         <Avatar
                           src={senderProfile.profilePicture?.url || null}
-                          gender={senderProfile.gender}
+                          gender={senderProfile.gender as Gender}
                           alt={senderProfile.firstName}
                           className="h-7 w-7"
                         />

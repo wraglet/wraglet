@@ -150,7 +150,7 @@ const ImageUploadCropModal: FC<ImageUploadCropModalProps> = ({
   return (
     <Modal isOpen={show} onClose={close} title={title}>
       <div
-        className={`flex w-full flex-col items-center gap-4 p-2 ${aspect > 2 ? 'max-w-2xl' : 'max-w-md'}`}
+        className={`relative z-50 flex w-full flex-col items-center gap-4 p-2 ${aspect > 2 ? 'max-w-2xl' : 'max-w-md'}`}
       >
         <p className="mb-2 text-sm text-gray-500">{description}</p>
         {step === 'select' && (
@@ -173,14 +173,16 @@ const ImageUploadCropModal: FC<ImageUploadCropModalProps> = ({
                       }
                 }
               >
-                <Image
-                  src={imageSrc}
-                  alt="Preview"
-                  width={previewStyle === 'circle' ? 160 : 600}
-                  height={previewStyle === 'circle' ? 160 : 180}
-                  className="h-full w-full object-cover"
-                  style={{ width: '100%', height: '100%' }}
-                />
+                {image && (
+                  <Image
+                    src={image}
+                    alt="Preview"
+                    width={previewStyle === 'circle' ? 160 : 600}
+                    height={previewStyle === 'circle' ? 160 : 180}
+                    className="h-full w-full object-cover"
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                )}
               </div>
             </div>
             <div

@@ -1,6 +1,8 @@
 'use client'
 
 import { Fragment, useState } from 'react'
+import type { Gender } from '@/interfaces'
+import type { IPost } from '@/models/Post'
 import useUserStore from '@/store/user'
 import {
   Dialog,
@@ -26,7 +28,7 @@ import Button from '@/components/shared/Button'
 interface ShareModalProps {
   isOpen: boolean
   onClose: () => void
-  post: any
+  post: IPost
   onShareToFeed?: () => void
 }
 
@@ -82,9 +84,12 @@ const ShareModal = ({
         setShareMessage('')
         setSelectedVisibility('public')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error sharing post:', error)
-      if (error.response?.status === 409) {
+      if (
+        axios.isAxiosError(error) &&
+        error.response?.status === 409
+      ) {
         toast.error('You have already shared this post')
       } else {
         toast.error('Failed to share post')
@@ -190,7 +195,7 @@ const ShareModal = ({
                   <div className="mb-4 flex items-start gap-3">
                     {user && user.gender ? (
                       <Avatar
-                        gender={user.gender}
+                        gender={user.gender as Gender}
                         src={user.profilePicture?.url || null}
                         size="h-10 w-10"
                       />
