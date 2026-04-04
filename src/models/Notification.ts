@@ -19,6 +19,7 @@ export interface INotification {
     | 'comment'
     | 'reaction'
     | 'new_post'
+    | 'new_blog'
     | 'share'
     | 'admin'
     | 'system'
@@ -27,6 +28,8 @@ export interface INotification {
   read: boolean
   data?: {
     postId?: string
+    blogId?: string
+    slug?: string
     commentId?: string
     userId?: string
     [key: string]: any
@@ -54,6 +57,7 @@ const NotificationSchema = new Schema<INotificationDocument>(
         'comment',
         'reaction',
         'new_post',
+        'new_blog',
         'share',
         'admin',
         'system'

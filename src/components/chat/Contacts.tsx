@@ -104,18 +104,6 @@ const Contacts = ({
     setLocalConvos(conversations)
   }, [conversations])
 
-  // Render a ConversationChannelListener for each conversation (up to 10)
-  localConvos.slice(0, 10).forEach((c) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    ;<ConversationChannelListener
-      key={c._id}
-      convoId={c._id}
-      selectedId={selectedId}
-      setLocalConvos={setLocalConvos}
-      setHighlighted={setHighlighted}
-    />
-  })
-
   return (
     <aside className="max-w-xs flex-shrink-0 overflow-y-auto bg-white">
       {localConvos.length === 0 ? (

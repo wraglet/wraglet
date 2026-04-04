@@ -247,6 +247,7 @@ export default function AddPhotoModal({
                               src={photo.url}
                               alt="Existing photo"
                               fill
+                              sizes="(max-width: 768px) 33vw, 200px"
                               className="object-cover"
                             />
                           </div>

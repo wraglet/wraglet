@@ -11,6 +11,8 @@ interface ChatFloaterStore {
   closeChat: (conversationId: string) => void
   minimizeChat: (conversationId: string) => void
   restoreChat: (conversationId: string) => void
+  /** Adds a chat head for an incoming message if the window is not already open/minimized */
+  pinIncomingChat: (conversationId: string) => void
 }
 
 const useChatFloaterStore = create<ChatFloaterStore>((set) => ({
@@ -65,6 +67,19 @@ const useChatFloaterStore = create<ChatFloaterStore>((set) => ({
           (c) => c.conversationId !== conversationId
         ),
         openChats: [...state.openChats, chat]
+      }
+    }),
+  pinIncomingChat: (conversationId) =>
+    set((state) => {
+      const inOpen = state.openChats.some(
+        (c) => c.conversationId === conversationId
+      )
+      const inMinimized = state.minimizedChats.some(
+        (c) => c.conversationId === conversationId
+      )
+      if (inOpen || inMinimized) return {}
+      return {
+        minimizedChats: [...state.minimizedChats, { conversationId }]
       }
     })
 }))

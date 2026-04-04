@@ -1,0 +1,195 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
+import type { PublicUser } from '@/interfaces'
+import type { IBlog } from '@/models/Blog'
+import {
+  arrow,
+  flip,
+  FloatingArrow,
+  offset,
+  shift,
+  useFloating
+} from '@floating-ui/react'
+import { useChannel } from 'ably/react'
+import axios from 'axios'
+import toast from 'react-hot-toast'
+import { FaRegHeart } from 'react-icons/fa6'
+
+import ReactionIcon from '@/components/shared/ReactionIcon'
+
+interface BlogReactionControlsProps {
+  blog: IBlog
+  currentUser: PublicUser | null
+  onBlogUpdated: (blog: IBlog) => void
+}
+
+const REACTION_NAMES = [
+  'like',
+  'love',
+  'haha',
+  'wow',
+  'sad',
+  'angry'
+] as const
+
+const BlogReactionControls = ({
+  blog,
+  currentUser,
+  onBlogUpdated
+}: BlogReactionControlsProps) => {
+  useEffect(() => {
+    import('@lottiefiles/lottie-player')
+  }, [])
+
+  const { publish } = useChannel(`blog-${blog._id}`, () => {})
+
+  const [showEmojis, setShowEmojis] = useState(false)
+  const arrowRef = useRef(null)
+  const { refs, floatingStyles, context } = useFloating({
+    open: showEmojis,
+    onOpenChange: setShowEmojis,
+    middleware: [
+      offset(10),
+      flip({ padding: 10 }),
+      shift(),
+      arrow({ element: arrowRef })
+    ],
+    placement: 'top'
+  })
+
+  const reactionCount = blog.reactions?.length ?? 0
+  const displayCount =
+    reactionCount > 0 ? reactionCount : (blog.likes ?? 0)
+
+  const userReaction =
+    currentUser &&
+    blog.reactions?.find(
+      (reaction) => reaction.userId && reaction.userId._id === currentUser._id
+    )
+
+  const removeReaction = async () => {
+    if (!currentUser) return
+    try {
+      const response = await axios.delete(`/api/blogs/${blog.slug}/react`)
+      if (response.status !== 200) throw new Error('Failed to remove reaction')
+      onBlogUpdated(response.data as IBlog)
+      await publish?.({
+        name: 'reaction',
+        data: { blog: response.data }
+      })
+    } catch (error) {
+      console.error('Error removing blog reaction:', error)
+      toast.error('Failed to remove reaction')
+    }
+  }
+
+  const applyReaction = async (type: string) => {
+    if (!currentUser) {
+      toast.error('Please log in to react to this blog')
+      return
+    }
+    try {
+      const existing =
+        currentUser &&
+        blog.reactions?.find(
+          (r) => r.userId && r.userId._id === currentUser._id && r.type === type
+        )
+
+      if (existing) {
+        await removeReaction()
+        return
+      }
+
+      const response = await axios.patch(`/api/blogs/${blog.slug}/react`, {
+        type
+      })
+      if (response.status !== 200) throw new Error('Failed to update reaction')
+      onBlogUpdated(response.data as IBlog)
+      await publish?.({
+        name: 'reaction',
+        data: { blog: response.data }
+      })
+    } catch (error) {
+      console.error('Error updating blog reaction:', error)
+      toast.error('Failed to update reaction')
+    }
+  }
+
+  return (
+    <div className="group relative">
+      <div
+        ref={refs.setReference}
+        role="button"
+        tabIndex={0}
+        onClick={() => {
+          if (!currentUser) {
+            toast.error('Please log in to react to this blog')
+            return
+          }
+          setShowEmojis(!showEmojis)
+        }}
+        className={`flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+          userReaction
+            ? 'bg-red-50 text-red-600 hover:bg-red-100'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        } ${!currentUser ? 'cursor-not-allowed opacity-50' : ''}`}
+      >
+        {userReaction ? (
+          <span
+            role="presentation"
+            onClick={(e) => {
+              e.stopPropagation()
+              void removeReaction()
+            }}
+          >
+            <ReactionIcon
+              type={userReaction.type}
+              onClick={async () => {}}
+            />
+          </span>
+        ) : (
+          <FaRegHeart className="h-4 w-4" />
+        )}
+        <span className="font-medium">{displayCount}</span>
+      </div>
+
+      {showEmojis && currentUser && (
+        <div
+          ref={refs.setFloating}
+          style={floatingStyles}
+          className="z-50 flex w-fit gap-1 rounded-lg border border-solid border-gray-200 bg-white p-2 shadow-lg"
+        >
+          <FloatingArrow
+            ref={arrowRef}
+            context={context}
+            className="fill-white"
+          />
+          {REACTION_NAMES.map((name) => (
+            <button
+              key={name}
+              type="button"
+              className="cursor-pointer transition-transform hover:scale-125"
+              onClick={() => {
+                void applyReaction(name)
+                setShowEmojis(false)
+              }}
+            >
+              {/* @ts-ignore — custom element */}
+              <lottie-player
+                id={`blog-reaction-${name}-${blog._id}`}
+                autoplay
+                loop
+                mode="normal"
+                src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/lottie/${name}.json`}
+                style={{ width: '24px', height: '24px' }}
+              />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default BlogReactionControls

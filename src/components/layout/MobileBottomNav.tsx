@@ -1,22 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import type { Gender } from '@/interfaces'
 import useUserStore from '@/store/user'
 import { Cog6ToothIcon } from '@heroicons/react/24/outline'
 
 import Avatar from '@/components/shared/Avatar'
 import { BlogOutlineIcon, VideoIcon } from '@/components/shared/Icons'
+import { useIsClient } from '@/lib/hooks/useIsClient'
 
 const MobileBottomNav = () => {
   const { user } = useUserStore()
-  const [hydrated, setHydrated] = useState(false)
+  const hydrated = useIsClient()
   const pathname = usePathname()
-
-  useEffect(() => {
-    setHydrated(true)
-  }, [])
 
   if (!hydrated || !user) {
     return null
@@ -43,7 +40,7 @@ const MobileBottomNav = () => {
       )
     },
     {
-      href: '/blog',
+      href: '/feed?tab=blogs',
       label: 'Blog',
       icon: <BlogOutlineIcon className="h-6 w-6" />
     },
@@ -62,7 +59,7 @@ const MobileBottomNav = () => {
       label: 'Profile',
       icon: (
         <Avatar
-          gender={user.gender}
+          gender={user.gender as Gender}
           className="h-6 w-6"
           alt={`${user.firstName}'s Profile`}
           src={user.profilePicture?.url!}

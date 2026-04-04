@@ -7,7 +7,7 @@ import { CheckIcon, PencilIcon, UserIcon } from '@heroicons/react/24/outline'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { z } from 'zod'
 
@@ -17,7 +17,7 @@ const profileSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(50),
   lastName: z.string().min(1, 'Last name is required').max(50),
   bio: z.string().max(300, 'Bio must be 300 characters or less').optional(),
-  gender: z.enum(['Male', 'Female', 'Other'], {
+  gender: z.enum(['Male', 'Female', 'Others'], {
     required_error: 'Please select a gender'
   }),
   pronoun: z
@@ -47,6 +47,9 @@ const ProfileSettings = () => {
     }
   })
 
+  const bioLength = (useWatch({ control: form.control, name: 'bio' }) ?? '')
+    .length
+
   // Update form when user data is available
   useEffect(() => {
     if (user) {
@@ -55,7 +58,7 @@ const ProfileSettings = () => {
         firstName: typedUser.firstName || '',
         lastName: typedUser.lastName || '',
         bio: typedUser.bio || '',
-        gender: (typedUser.gender as 'Male' | 'Female' | 'Other') || 'Male',
+        gender: (typedUser.gender as 'Male' | 'Female' | 'Others') || 'Male',
         pronoun:
           (typedUser.pronoun as '' | 'She/Her' | 'He/Him' | 'They/Them') || '',
         publicProfileVisible: typedUser.publicProfileVisible ?? true
@@ -77,8 +80,12 @@ const ProfileSettings = () => {
       toast.success('Profile updated successfully!')
       setIsEditing(false)
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to update profile')
+    onError: (error: unknown) => {
+      const message =
+        axios.isAxiosError(error) && error.response?.data?.error
+          ? String(error.response.data.error)
+          : 'Failed to update profile'
+      toast.error(message)
     }
   })
 
@@ -218,7 +225,7 @@ const ProfileSettings = () => {
                 </p>
               )}
               <span className="text-xs text-gray-500">
-                {form.watch('bio')?.length || 0}/300
+                {bioLength}/300
               </span>
             </div>
           </div>

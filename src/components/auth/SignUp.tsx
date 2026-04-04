@@ -1,9 +1,10 @@
 'use client'
 
-import { FC } from 'react'
+import React, { FC } from 'react'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import type { Gender, Pronoun } from '@/interfaces'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import axios from 'axios'
@@ -11,6 +12,11 @@ import { FormProvider, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { z } from 'zod'
 
+import {
+  GENDER_OPTIONS,
+  GENDER_TO_DEFAULT_PRONOUN,
+  PRONOUN_OPTIONS
+} from '@/data/constants'
 import { getValidationMessages } from '@/components/auth/password-validations'
 import BirthdayPicker from '@/components/shared/BirthdayPicker'
 import Button from '@/components/shared/Button'
@@ -23,14 +29,6 @@ import {
 } from '@/components/shared/Form'
 import Input from '@/components/shared/Input'
 import ListBox from '@/components/shared/ListBox'
-
-const genderOptions: string[] = [
-  'Female',
-  'Male',
-  'Others',
-  'Prefer not to say'
-]
-const pronounOptions: string[] = ['She/Her', 'He/Him', 'They/Them']
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -47,8 +45,8 @@ const signUpSchema = z.object({
       'Password must contain at least one special character'
     ),
   dob: z.date({ required_error: 'Date of birth is required' }),
-  gender: z.enum(genderOptions as [string, ...string[]]),
-  pronoun: z.enum(pronounOptions as [string, ...string[]]),
+  gender: z.enum(GENDER_OPTIONS as [string, ...string[]]),
+  pronoun: z.enum(PRONOUN_OPTIONS as [string, ...string[]]),
   publicProfileVisible: z.boolean(),
   agreeToTerms: z.boolean().refine((val) => val, 'You must agree to the terms')
 })
@@ -65,8 +63,8 @@ const SignUp: FC = () => {
       email: '',
       password: '',
       dob: new Date(),
-      gender: genderOptions[0],
-      pronoun: pronounOptions[0],
+      gender: GENDER_OPTIONS[0],
+      pronoun: PRONOUN_OPTIONS[0],
       publicProfileVisible: true,
       agreeToTerms: false
     }
@@ -76,8 +74,31 @@ const SignUp: FC = () => {
     handleSubmit,
     control,
     formState: { errors, isValid },
-    watch
+    watch,
+    setValue
   } = formMethods
+
+  // Watch gender changes to update pronoun automatically
+  const selectedGender = watch('gender') as Gender
+
+  // Update pronoun when gender changes (but only if user hasn't manually selected a pronoun)
+  React.useEffect(() => {
+    const currentPronoun = watch('pronoun')
+    const defaultPronounForGender = GENDER_TO_DEFAULT_PRONOUN[selectedGender]
+
+    // Only auto-update if the current pronoun is the default for the previous gender
+    // This prevents overriding user's manual selection
+    const defaultPronouns = Object.values(
+      GENDER_TO_DEFAULT_PRONOUN
+    ) as Pronoun[]
+    const isCurrentPronounDefault = defaultPronouns.includes(
+      currentPronoun as Pronoun
+    )
+
+    if (isCurrentPronounDefault && currentPronoun !== defaultPronounForGender) {
+      setValue('pronoun', defaultPronounForGender)
+    }
+  }, [selectedGender, setValue, watch])
 
   const mutation = useMutation({
     mutationFn: async (data: SignUpFormData) => {
@@ -243,7 +264,7 @@ const SignUp: FC = () => {
                 <FormControl>
                   <ListBox
                     label="Gender"
-                    options={genderOptions}
+                    options={GENDER_OPTIONS}
                     setSelected={field.onChange}
                     selected={field.value}
                     className="h-12 rounded-xl border border-neutral-200 bg-white/80 px-4 py-3.5 text-lg focus:border-[#42BBFF] focus:ring-2 focus:ring-[#0EA5E9] focus:outline-none"
@@ -263,7 +284,7 @@ const SignUp: FC = () => {
                 <FormControl>
                   <ListBox
                     label="Pronoun"
-                    options={pronounOptions}
+                    options={PRONOUN_OPTIONS}
                     setSelected={field.onChange}
                     selected={field.value}
                     className="h-12 rounded-xl border border-neutral-200 bg-white/80 px-4 py-3.5 text-lg focus:border-[#42BBFF] focus:ring-2 focus:ring-[#0EA5E9] focus:outline-none"

@@ -10,6 +10,15 @@ export interface IPost {
       url: string
       key: string
     }[]
+    blogPreview?: {
+      url: string
+      slug: string
+      title: string
+      summary?: string
+      category?: string
+      /** null when no cover is set for the blog */
+      coverImage?: string | null
+    }
   }
   audience: string
   author: AuthorInterface
@@ -42,8 +51,8 @@ export interface IPostDocument
     >,
     Document {
   author: Types.ObjectId | AuthorInterface
-  reactions: Types.ObjectId[] | any[]
-  comments: Types.ObjectId[] | any[]
+  reactions: Types.ObjectId[]
+  comments: Types.ObjectId[]
   createdAt?: Date
   updatedAt?: Date
 }
@@ -52,7 +61,15 @@ const PostSchema = new Schema<IPostDocument>(
   {
     content: {
       text: String,
-      images: [{ url: String, key: String }]
+      images: [{ url: String, key: String }],
+      blogPreview: {
+        url: { type: String },
+        slug: { type: String },
+        title: { type: String },
+        summary: { type: String, required: false },
+        category: { type: String, required: false },
+        coverImage: { type: String, required: false }
+      }
     },
     audience: String,
     author: { type: Schema.Types.ObjectId, ref: 'User' },

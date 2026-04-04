@@ -5,6 +5,8 @@ import { StaticImport } from 'next/dist/shared/lib/get-img-props'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import Link from 'next/link'
+import type { Gender } from '@/interfaces'
+import { DEFAULT_GENDER } from '@/data/constants'
 import { useFollow } from '@/lib/hooks/useFollow'
 import { IComment } from '@/models/Comment'
 import { IPost } from '@/models/Post'
@@ -36,6 +38,11 @@ import CommentComponent from '@/components/feed/Comment'
 import Avatar from '@/components/shared/Avatar'
 import { ShareIcon } from '@/components/shared/Icons'
 import ReactionIcon from '@/components/shared/ReactionIcon'
+import BlogPreviewCard from '@/components/feed/BlogPreviewCard'
+import {
+  mergePostClientUpdate,
+  mergePostFromFeedProp
+} from '@/utils/mergePostClientUpdate'
 
 // Dynamic import for ShareModal
 const ShareModalWithAbly = dynamic(
@@ -82,6 +89,24 @@ const Post = ({ post: initialPost }: PostProps) => {
     )
   )
 
+  const initialPostIdRef = useRef(String(initialPost._id))
+
+  useEffect(() => {
+    const id = String(initialPost._id)
+    if (initialPostIdRef.current !== id) {
+      initialPostIdRef.current = id
+      setPost(initialPost)
+      setPostComments(
+        (initialPost.comments || []).filter(
+          (comment): comment is IComment =>
+            typeof comment !== 'string' && '_id' in comment
+        )
+      )
+      return
+    }
+    setPost((prev) => mergePostFromFeedProp(prev, initialPost))
+  }, [initialPost])
+
   // Try to use Ably channel for both comments and reactions
   const channel = useChannel(`post-${post._id}`, (message) => {
     // Ignore messages from the current user to prevent duplication
@@ -101,10 +126,9 @@ const Post = ({ post: initialPost }: PostProps) => {
       })
       setShowCommentInput(true)
     } else if (message.name === 'reaction') {
-      // Update the post with new reaction data
-      setPost(message.data)
+      setPost((prev) => mergePostClientUpdate(prev, message.data as IPost))
     } else if (message.name === 'vote') {
-      setPost(message.data)
+      setPost((prev) => mergePostClientUpdate(prev, message.data as IPost))
     }
   })
 
@@ -193,8 +217,8 @@ const Post = ({ post: initialPost }: PostProps) => {
           throw new Error('Failed to update reaction')
         }
 
-        const updatedPost = response.data
-        setPost(updatedPost)
+        const updatedPost = response.data as IPost
+        setPost((prev) => mergePostClientUpdate(prev, updatedPost))
 
         if (channel && channel.publish) {
           await channel.publish({
@@ -217,8 +241,8 @@ const Post = ({ post: initialPost }: PostProps) => {
         throw new Error('Failed to remove reaction')
       }
 
-      const updatedPost = response.data
-      setPost(updatedPost)
+      const updatedPost = response.data as IPost
+      setPost((prev) => mergePostClientUpdate(prev, updatedPost))
 
       if (channel && channel.publish) {
         await channel.publish({
@@ -348,8 +372,8 @@ const Post = ({ post: initialPost }: PostProps) => {
         throw new Error('Failed to vote')
       }
 
-      const updatedPost = await response.json()
-      setPost(updatedPost)
+      const updatedPost = (await response.json()) as IPost
+      setPost((prev) => mergePostClientUpdate(prev, updatedPost))
 
       // Publish vote update to Ably
       try {
@@ -362,8 +386,19 @@ const Post = ({ post: initialPost }: PostProps) => {
       toast.error('Failed to vote')
     }
   }
-  const isAuthor = user?._id === post.author._id
-  const { isFollowing, follow, loading } = useFollow(post.author._id)
+
+  const author = post.author
+  const authorId =
+    typeof author === 'string' && author
+      ? author
+      : author &&
+          typeof author === 'object' &&
+          '_id' in author &&
+          author._id != null
+        ? String(author._id)
+        : null
+  const isAuthor = !!(user?._id && authorId && String(user._id) === authorId)
+  const { isFollowing, follow, loading } = useFollow(authorId)
 
   // Share functionality
   const handleShare = () => {
@@ -390,8 +425,8 @@ const Post = ({ post: initialPost }: PostProps) => {
         <div className="px-4 py-3">
           <div className="relative block">
             <Avatar
-              gender={post.author?.gender}
-              src={post.author.profilePicture?.url || null}
+              gender={author?.gender ?? DEFAULT_GENDER}
+              src={author?.profilePicture?.url || null}
             />
           </div>
         </div>
@@ -400,9 +435,14 @@ const Post = ({ post: initialPost }: PostProps) => {
             <div className="flex flex-col gap-y-1">
               <div className="flex items-baseline space-x-1">
                 <h3 className={`text-sm leading-none font-bold`}>
-                  {post.author.firstName} {post.author.lastName}
+                  {author
+                    ? [author.firstName, author.lastName]
+                        .filter(Boolean)
+                        .join(' ') || 'Unknown user'
+                    : 'Unknown user'}
                 </h3>
                 {!isAuthor &&
+                  authorId &&
                   (isFollowing ? (
                     <span className="ml-2 text-xs font-semibold text-sky-600">
                       Following
@@ -445,8 +485,13 @@ const Post = ({ post: initialPost }: PostProps) => {
                 </Link>
               )}
 
-              {post.content.images
-                ? post.content.images.map(
+              {/* Blog Preview Card (if this is a blog share) */}
+              {post.content.blogPreview ? (
+                <BlogPreviewCard blogPreview={post.content.blogPreview} />
+              ) : (
+                /* Regular Images (only show if not a blog share) */
+                post.content.images &&
+                  post.content.images.map(
                     (
                       image: {
                         key: Key | null | undefined
@@ -472,7 +517,7 @@ const Post = ({ post: initialPost }: PostProps) => {
                       </div>
                     )
                   )
-                : null}
+              )}
             </div>
           </div>
 
@@ -651,7 +696,7 @@ const Post = ({ post: initialPost }: PostProps) => {
             >
               {user && user.gender ? (
                 <Avatar
-                  gender={user.gender}
+                  gender={user.gender as Gender}
                   size="h-6 w-6"
                   src={user.profilePicture?.url || null}
                 />
@@ -707,7 +752,7 @@ const Post = ({ post: initialPost }: PostProps) => {
                   </button>
                 </MenuItem>
               </div>
-              {user?._id === post.author._id && (
+              {isAuthor && (
                 <div className="px-1">
                   <MenuItem>
                     <button className="group flex w-full items-center rounded-md px-2 py-2 text-xs text-red-500 data-[focus]:bg-red-500 data-[focus]:text-white">

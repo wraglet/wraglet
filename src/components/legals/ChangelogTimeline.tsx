@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import {
   Bell,
+  BookOpen,
   Calendar,
   Check,
   Code,
@@ -26,6 +27,28 @@ interface ChangelogEntry {
 }
 
 const changelogData: ChangelogEntry[] = [
+  {
+    date: '2026-04-04',
+    version: '0.9.0',
+    title: 'Wraglet Blogs & Next.js 16 Platform Upgrade',
+    description:
+      'Full blogging experience on Wraglet plus a framework upgrade that closes known Next.js / React 19 security gaps',
+    features: [
+      'Blogs with rich blocks (text, code, images, video), categories, tags, covers, drafts, and stable slugs',
+      'Discovery and author dashboard to create, edit, publish, and manage posts',
+      'Comments and reactions (same emoji types as the feed) with real-time updates',
+      'Share blogs to the feed with a preview card and notifications for new posts',
+      'Upgraded to Next.js 16 to address React 19–related CVEs and align with current security guidance',
+      'Feed fix: multiple posts by the same author no longer show as “Unknown user” (API serialization of shared author objects)',
+      'Feed fix: post cards keep correct author names and avatars after follow actions and Ably reaction or vote updates',
+      'Chat floater: opening the bubble lists recent conversations with avatars; each thread can show an unread count badge',
+      'Chat floater: new messages pin the conversation so you can open it from the stack, not only via the header menu',
+      'Chat avatars: missing or invalid profile image URLs fall back cleanly without Next/Image console errors',
+      'Chat: closing a floating window no longer triggers Ably presence leave errors during room teardown'
+    ],
+    type: 'major',
+    icon: <BookOpen className="h-6 w-6" />
+  },
   {
     date: '2025-06-10',
     version: '0.8.1',
@@ -289,8 +312,11 @@ export const ChangelogTimeline = () => {
 
               {/* Features List */}
               <div className="space-y-1">
-                {entry.features.slice(0, 3).map((feature, featureIndex) => (
-                  <div key={featureIndex} className="flex items-start gap-2">
+                {entry.features.slice(0, 3).map((feature) => (
+                  <div
+                    key={`${entry.version}:${feature}`}
+                    className="flex items-start gap-2"
+                  >
                     <Check className="mt-0.5 h-3 w-3 flex-shrink-0 text-green-500" />
                     <span className="text-xs text-gray-700">{feature}</span>
                   </div>

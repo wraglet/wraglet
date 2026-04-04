@@ -1,4 +1,5 @@
 import Avatar from '@/components/shared/Avatar'
+import type { Gender } from '@/interfaces'
 
 interface User {
   _id: string
@@ -47,7 +48,7 @@ const CollageAvatar = ({ users }: { users: User[] }) => {
         >
           <Avatar
             src={getProfilePictureUrl(user.profilePicture)}
-            gender={user.gender}
+            gender={user.gender as Gender}
             alt={user.firstName}
             className="h-8 w-8"
           />
@@ -69,7 +70,7 @@ const GroupChatHeader = ({ participants, isGroup }: GroupChatHeaderProps) => {
       <div className="sticky top-0 z-10 mt-14 flex items-center border-b bg-white/80 px-6 py-3 backdrop-blur">
         <Avatar
           src={getProfilePictureUrl(user.profilePicture)}
-          gender={user.gender}
+          gender={user.gender as Gender}
           alt={user.firstName}
           className="mr-3 h-9 w-9 border-2 border-white"
         />

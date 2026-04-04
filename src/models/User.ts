@@ -1,4 +1,7 @@
+import { Gender, Pronoun } from '@/interfaces'
 import { Document, model, models, Schema } from 'mongoose'
+
+import { DEFAULT_GENDER, DEFAULT_PRONOUN } from '@/data/constants'
 
 // Base User interface without MongoDB document properties
 export interface IUser {
@@ -8,9 +11,9 @@ export interface IUser {
   email: string
   username: string
   dob: Date
-  gender: string
+  gender: Gender
   bio?: string
-  pronoun: string
+  pronoun: Pronoun
   profilePicture?: {
     url: string
     key: string
@@ -45,9 +48,17 @@ const UserSchema = new Schema<IUserDocument>(
     hashedPassword: String,
     username: String,
     dob: Date,
-    gender: { type: String, default: 'Other' },
+    gender: {
+      type: String,
+      enum: ['Female', 'Male', 'Others', 'Prefer not to say'],
+      default: DEFAULT_GENDER
+    },
     bio: String,
-    pronoun: String,
+    pronoun: {
+      type: String,
+      enum: ['She/Her', 'He/Him', 'They/Them', 'Prefer not to say'],
+      default: DEFAULT_PRONOUN
+    },
     profilePicture: { type: Object, url: String, key: String },
     coverPhoto: { type: Object, url: String, key: String },
     publicProfileVisible: { type: Boolean, default: true },

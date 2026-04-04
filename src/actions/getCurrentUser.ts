@@ -5,6 +5,8 @@ import client from '@/lib/db'
 import User from '@/models/User'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 
+import { DEFAULT_GENDER, DEFAULT_PRONOUN } from '@/data/constants'
+
 const getCurrentUser = async () => {
   try {
     // Get the session
@@ -33,7 +35,12 @@ const getCurrentUser = async () => {
 
       // Ensure gender field is always present and valid
       if (!convertedUser.gender || typeof convertedUser.gender !== 'string') {
-        convertedUser.gender = 'Other'
+        convertedUser.gender = DEFAULT_GENDER
+      }
+
+      // Ensure pronoun field is always present and valid
+      if (!convertedUser.pronoun || typeof convertedUser.pronoun !== 'string') {
+        convertedUser.pronoun = DEFAULT_PRONOUN
       }
 
       return convertedUser
