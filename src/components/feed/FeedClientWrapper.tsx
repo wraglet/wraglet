@@ -1,10 +1,18 @@
 'use client'
 
-import { FormEvent, Fragment, useEffect, useReducer, useState } from 'react'
+import {
+  FormEvent,
+  Fragment,
+  useEffect,
+  useMemo,
+  useReducer,
+  useState
+} from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import type { TrendingTopic } from '@/interfaces'
 import { IBlog } from '@/models/Blog'
 import { IPost } from '@/models/Post'
 import useBlogModalStore from '@/store/blogModal'
@@ -18,6 +26,9 @@ import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import toast from 'react-hot-toast'
+
+import { DEFAULT_GENDER } from '@/data/constants'
+import Avatar from '@/components/shared/Avatar'
 
 const FeedAbly = dynamic(() => import('@/components/feed/FeedAbly'), {
   ssr: false
@@ -35,8 +46,8 @@ const BlogCreateForm = dynamic(
 )
 
 const getLimit = () => {
-  if (typeof window === 'undefined') return 20 // default to desktop for SSR
-  const width = window.innerWidth
+  if (globalThis.window === undefined) return 20 // default to desktop for SSR
+  const width = globalThis.window.innerWidth
   return width < 768 ? 10 : 20
 }
 
@@ -53,13 +64,23 @@ const FeedClientWrapper = () => {
   } = useBlogModalStore()
 
   // CreatePost state/logic
-  const initialState = {
+  type CreatePostState = {
+    text: string
+    image: string | null
+    isLoading: boolean
+  }
+  type CreatePostAction = Partial<CreatePostState>
+
+  const initialState: CreatePostState = {
     text: '',
     image: null,
     isLoading: false
   }
   const [{ text, image, isLoading }, dispatchState] = useReducer(
-    (state: any, action: any) => ({ ...state, ...action }),
+    (state: CreatePostState, action: CreatePostAction) => ({
+      ...state,
+      ...action
+    }),
     initialState
   )
 
@@ -78,7 +99,7 @@ const FeedClientWrapper = () => {
     e.preventDefault()
     dispatchState({ isLoading: true })
     try {
-      const res = await axios.post('/api/posts', { text, image })
+      await axios.post('/api/posts', { text, image })
 
       // Reset form state
       dispatchState({ text: '', image: null })
@@ -93,39 +114,45 @@ const FeedClientWrapper = () => {
     }
   }
 
-  // Fetch posts data
+  // Fetch posts (GET /api/posts uses cursor + nextCursor only; no page index)
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery({
       queryKey: ['posts', limit],
-      queryFn: async ({ pageParam = 1 }) => {
-        const response = await fetch(
-          `/api/posts?page=${pageParam}&limit=${limit}`
-        )
-        return response.json()
+      queryFn: async ({ pageParam }) => {
+        const params = new URLSearchParams({ limit: String(limit) })
+        if (pageParam) params.set('cursor', pageParam)
+        const response = await fetch(`/api/posts?${params.toString()}`)
+        return response.json() as Promise<{
+          posts?: IPost[]
+          nextCursor?: string | null
+        }>
       },
-      getNextPageParam: (lastPage) => {
-        return lastPage.hasNextPage ? lastPage.nextPage : undefined
-      },
-      initialPageParam: 1
+      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+      initialPageParam: null as null | string
     })
 
-  // Flatten all posts from all pages
-  const posts: IPost[] = data?.pages?.flatMap((page) => page.posts ?? []) ?? []
-
-  // Ensure posts is always an array to prevent runtime errors
-  const safePosts = Array.isArray(posts) ? posts : []
+  // Flatten posts only when infinite-query data changes so FeedWithAbly does not
+  // reset local state on unrelated parent re-renders (new array reference each render).
+  const safePosts = useMemo(() => {
+    const posts: IPost[] =
+      data?.pages?.flatMap((page) => page.posts ?? []) ?? []
+    return Array.isArray(posts) ? posts : []
+  }, [data])
 
   // Get trending data
-  const { data: trendingTopics } = useQuery({
+  const { data: trendingTopicsData } = useQuery({
     queryKey: ['trending'],
     queryFn: async () => {
-      const response = await axios.get('/api/users/topics-trending')
-      return response.data
+      const response = await axios.get<{
+        success: boolean
+        topics: TrendingTopic[]
+      }>('/api/users/topics-trending')
+      return response.data.topics ?? []
     }
   })
 
-  const [showTrending, setShowTrending] = useState(false)
-  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showTrending] = useState(false)
+  const [showOnboarding] = useState(false)
 
   // Render content based on current tab
   const renderTabContent = () => {
@@ -133,113 +160,215 @@ const FeedClientWrapper = () => {
       case 'blogs':
         return (
           <div className="mx-auto w-full max-w-2xl space-y-6">
-            {/* Blog Creation Button */}
-            <div className="rounded-lg bg-white p-4 shadow-sm">
+            {/* Enhanced Blog Creation Button */}
+            <div className="rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-purple-50 p-6 shadow-sm">
               <button
                 onClick={openBlogModal}
-                className="w-full rounded-lg border-2 border-dashed border-gray-300 p-4 text-left text-gray-500 transition-colors hover:border-blue-500 hover:text-blue-500"
+                className="group w-full rounded-xl border-2 border-dashed border-blue-300 p-6 text-left transition-all duration-200 hover:border-blue-500 hover:bg-white hover:shadow-md"
               >
-                <div className="flex items-center space-x-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                    <span className="text-lg text-blue-600">✍️</span>
+                <div className="flex items-center space-x-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg transition-transform group-hover:scale-110">
+                    <span className="text-xl">✍️</span>
                   </div>
-                  <span className="text-sm font-medium">
-                    Write a new blog post...
-                  </span>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 transition-colors group-hover:text-blue-600">
+                      Share your thoughts
+                    </h3>
+                    <p className="text-sm text-gray-600 transition-colors group-hover:text-blue-500">
+                      Write a blog post and inspire the community
+                    </p>
+                  </div>
+                  <div className="text-blue-500 transition-colors group-hover:text-blue-600">
+                    <svg
+                      className="h-6 w-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                  </div>
                 </div>
               </button>
             </div>
 
-            {/* Blogs List */}
-            {isBlogsLoading ? (
-              <div className="space-y-4">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="animate-pulse rounded-lg bg-white p-6 shadow-sm"
-                  >
-                    <div className="mb-2 h-4 w-1/4 rounded bg-gray-200"></div>
-                    <div className="mb-2 h-6 w-3/4 rounded bg-gray-200"></div>
-                    <div className="mb-4 h-4 w-full rounded bg-gray-200"></div>
-                    <div className="flex space-x-4">
-                      <div className="h-3 w-20 rounded bg-gray-200"></div>
-                      <div className="h-3 w-16 rounded bg-gray-200"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : blogs.length > 0 ? (
-              <div className="space-y-4">
-                {blogs.map((blog: IBlog) => (
-                  <div
-                    key={blog._id}
-                    className="overflow-hidden rounded-lg bg-white shadow-sm transition-all duration-200 hover:shadow-md"
-                  >
-                    {/* Cover Image */}
-                    {blog.coverImage?.url && (
-                      <div className="aspect-[16/9] overflow-hidden">
-                        <Image
-                          src={blog.coverImage.url}
-                          alt={blog.title}
-                          width={400}
-                          height={225}
-                          className="h-full w-full object-cover transition-transform duration-200 hover:scale-105"
-                        />
-                      </div>
-                    )}
-
-                    <div className="p-6">
-                      <div className="mb-2 flex items-center justify-between">
-                        <span className="inline-block rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                          {blog.category}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {new Date(
-                            blog.createdAt || Date.now()
-                          ).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <h3 className="mb-2 cursor-pointer text-lg font-semibold text-gray-900 hover:text-blue-600">
-                        <Link href={`/blog/${blog.slug}`}>{blog.title}</Link>
-                      </h3>
-                      <p className="mb-4 line-clamp-2 text-gray-600">
-                        {blog.summary}
-                      </p>
-                      <div className="flex items-center justify-between text-sm text-gray-500">
-                        <div className="flex items-center space-x-4">
-                          <span>👀 {blog.views || 0}</span>
-                          <span>❤️ {blog.likes || 0}</span>
-                          <span>📝 {blog.readTime}m read</span>
+            {/* Enhanced Blog List */}
+            {(() => {
+              if (isBlogsLoading) {
+                return (
+                  <div className="space-y-6">
+                    {Array.from({ length: 3 }, (_, i) => (
+                      <div
+                        key={`skeleton-${i}`}
+                        className="animate-pulse rounded-xl bg-white p-6 shadow-sm"
+                      >
+                        <div className="mb-4 flex items-center space-x-3">
+                          <div className="h-10 w-10 rounded-full bg-gray-200"></div>
+                          <div className="flex-1">
+                            <div className="mb-1 h-4 w-32 rounded bg-gray-200"></div>
+                            <div className="h-3 w-20 rounded bg-gray-200"></div>
+                          </div>
                         </div>
-                        <Link href={`/blog/${blog.slug}`}>
-                          <button className="text-blue-600 hover:text-blue-800">
-                            Read more
-                          </button>
-                        </Link>
+                        <div className="mb-4 h-48 rounded-lg bg-gray-200"></div>
+                        <div className="mb-2 h-6 w-3/4 rounded bg-gray-200"></div>
+                        <div className="mb-4 h-4 w-full rounded bg-gray-200"></div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex space-x-4">
+                            <div className="h-4 w-16 rounded bg-gray-200"></div>
+                            <div className="h-4 w-12 rounded bg-gray-200"></div>
+                            <div className="h-4 w-20 rounded bg-gray-200"></div>
+                          </div>
+                          <div className="h-8 w-20 rounded bg-gray-200"></div>
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="py-12 text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                  <span className="text-2xl">📝</span>
+                )
+              }
+
+              if (blogs.length > 0) {
+                return (
+                  <div className="space-y-6">
+                    {blogs.map((blog: IBlog) => (
+                      <div
+                        key={blog._id}
+                        className="overflow-hidden rounded-xl bg-white shadow-sm transition-all duration-200 hover:shadow-lg"
+                      >
+                        {/* Author Header */}
+                        <div className="flex items-center space-x-3 p-6 pb-4">
+                          <Avatar
+                            gender={blog.author?.gender || DEFAULT_GENDER}
+                            src={blog.author?.profilePicture?.url || null}
+                            size="h-10 w-10"
+                            alt={`${blog.author?.firstName} ${blog.author?.lastName}`}
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2">
+                              <Link
+                                href={`/${blog.author?.username}`}
+                                className="font-semibold text-gray-900 hover:text-blue-600"
+                              >
+                                {blog.author?.firstName} {blog.author?.lastName}
+                              </Link>
+                              <span className="text-xs text-gray-500">•</span>
+                              <span className="text-xs text-gray-500">
+                                {new Date(
+                                  blog.createdAt || Date.now()
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs text-gray-500">
+                                @{blog.author?.username}
+                              </span>
+                              <span className="text-xs text-gray-500">•</span>
+                              <span className="inline-block rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                                {blog.category}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Cover Image */}
+                        {blog.coverImage?.url && (
+                          <div className="aspect-[16/9] overflow-hidden">
+                            <Image
+                              src={blog.coverImage.url}
+                              alt={blog.title}
+                              width={600}
+                              height={337}
+                              className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                            />
+                          </div>
+                        )}
+
+                        <div className="p-6 pt-4">
+                          <h3 className="mb-3 cursor-pointer text-xl font-bold text-gray-900 transition-colors hover:text-blue-600">
+                            <Link href={`/blog/${blog.slug}`}>
+                              {blog.title}
+                            </Link>
+                          </h3>
+                          <p className="mb-4 line-clamp-3 leading-relaxed text-gray-600">
+                            {blog.summary}
+                          </p>
+
+                          {/* Tags */}
+                          {blog.tags && blog.tags.length > 0 && (
+                            <div className="mb-4 flex flex-wrap gap-2">
+                              {blog.tags
+                                .slice(0, 3)
+                                .map((tag: string, index: number) => (
+                                  <span
+                                    key={`tag-${tag}-${index}`}
+                                    className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-200"
+                                  >
+                                    #{tag}
+                                  </span>
+                                ))}
+                              {blog.tags.length > 3 && (
+                                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
+                                  +{blog.tags.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Engagement Stats */}
+                          <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+                            <div className="flex items-center space-x-6 text-sm text-gray-500">
+                              <div className="flex items-center space-x-1">
+                                <span className="text-lg">👀</span>
+                                <span>{blog.views || 0} views</span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <span className="text-lg">❤️</span>
+                                <span>{blog.likes || 0} reactions</span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <span className="text-lg">📖</span>
+                                <span>{blog.readTime}m read</span>
+                              </div>
+                            </div>
+                            <Link href={`/blog/${blog.slug}`}>
+                              <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
+                                Read more
+                              </button>
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              }
+
+              return (
+                <div className="py-16 text-center">
+                  <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-purple-100">
+                    <span className="text-3xl">📝</span>
+                  </div>
+                  <h3 className="mb-3 text-xl font-semibold text-gray-900">
+                    No blogs yet
+                  </h3>
+                  <p className="mx-auto mb-6 max-w-md text-gray-500">
+                    Be the first to share your thoughts and insights with the
+                    community!
+                  </p>
+                  <button
+                    onClick={openBlogModal}
+                    className="rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 font-medium text-white transition-all hover:from-blue-700 hover:to-purple-700 hover:shadow-lg"
+                    type="button"
+                  >
+                    ✍️ Write your first blog
+                  </button>
                 </div>
-                <h3 className="mb-2 text-lg font-medium text-gray-900">
-                  No blogs yet
-                </h3>
-                <p className="mb-4 text-gray-500">
-                  Be the first to share your thoughts with the community!
-                </p>
-                <button
-                  onClick={openBlogModal}
-                  className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                >
-                  Write your first blog
-                </button>
-              </div>
-            )}
+              )
+            })()}
           </div>
         )
 
@@ -375,17 +504,19 @@ const FeedClientWrapper = () => {
                 {/* Trending Topics */}
                 <div>
                   <h3 className="mb-2 font-semibold">Trending Topics</h3>
-                  {!trendingTopics && <div>Loading topics...</div>}
-                  {trendingTopics && trendingTopics.length > 0 && (
+                  {!trendingTopicsData && <div>Loading topics...</div>}
+                  {trendingTopicsData &&
+                    trendingTopicsData.length > 0 && (
                     <div className="mb-4 flex flex-wrap justify-center gap-2">
-                      {trendingTopics.map((topic: any) => (
-                        <span
+                      {trendingTopicsData.map((topic) => (
+                        <button
                           key={topic.tag}
+                          type="button"
                           className={`inline-block cursor-pointer rounded-full px-3 py-1 hover:bg-blue-200 ${selectedTopic === topic.tag ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'}`}
                           onClick={() => setSelectedTopic(topic.tag)}
                         >
                           #{topic.tag}
-                        </span>
+                        </button>
                       ))}
                     </div>
                   )}
