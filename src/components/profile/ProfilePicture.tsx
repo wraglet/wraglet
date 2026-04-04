@@ -1,6 +1,7 @@
 'use client'
 
 import getUserByUsername from '@/actions/getUserByUsername'
+import type { Gender } from '@/interfaces'
 import { useQuery } from '@tanstack/react-query'
 
 import ProfilePictureHover from '@/components/profile/ProfilePictureHover'
@@ -44,7 +45,7 @@ const ProfilePicture = ({
     <div className="group relative block">
       <Avatar
         src={finalProfilePictureUrl}
-        gender={userGender}
+        gender={userGender as Gender}
         alt={`${username}'s avatar`}
         size="shadow-md h-[100px] w-[100px] md:h-[160px] md:w-[160px]"
       />

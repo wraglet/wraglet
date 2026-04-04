@@ -17,6 +17,7 @@ const UnauthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
             src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/logo/android-chrome-192x192.png`}
             width={40}
             height={40}
+            sizes="40px"
             alt="Wraglet logo"
           />
           <span
@@ -35,6 +36,7 @@ const UnauthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
             priority
             src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/logo/logo.png`}
             fill
+            sizes="(min-width: 1280px) 552px, 430px"
             style={{
               objectFit: 'contain',
               filter: 'drop-shadow(0 0 60px #42BBFF88)'
@@ -93,6 +95,7 @@ const UnauthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
             src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/logo/android-chrome-192x192.png`}
             width={16}
             height={16}
+            sizes="16px"
             alt="Globe icon"
             className="inline-block"
           />

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import Link from 'next/link'
 import { INotification } from '@/models/Notification'
 import { BellIcon as HeroBellIcon } from '@heroicons/react/24/outline'
@@ -13,9 +13,10 @@ import { formatDistanceToNow } from 'date-fns'
 
 import Avatar from '@/components/shared/Avatar'
 import { ShadcnButton } from '@/components/shared/ShadcnButton'
+import { DEFAULT_GENDER } from '@/data/constants'
+import type { Gender } from '@/interfaces'
 
 const NotificationsPage = () => {
-  const [allNotifications, setAllNotifications] = useState<INotification[]>([])
   const queryClient = useQueryClient()
 
   const {
@@ -42,13 +43,10 @@ const NotificationsPage = () => {
     initialPageParam: null
   })
 
-  // Flatten all pages of notifications
-  useEffect(() => {
-    if (data?.pages) {
-      const allNotifs = data.pages.flatMap((page) => page.notifications || [])
-      setAllNotifications(allNotifs)
-    }
-  }, [data])
+  const allNotifications = useMemo(
+    () => data?.pages?.flatMap((page) => page.notifications || []) ?? [],
+    [data]
+  )
 
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
@@ -92,6 +90,8 @@ const NotificationsPage = () => {
         return '❤️'
       case 'new_post':
         return '📝'
+      case 'new_blog':
+        return '📰'
       case 'share':
         return '🔄'
       case 'admin':
@@ -117,7 +117,9 @@ const NotificationsPage = () => {
         return '/feed'
 
       case 'reaction':
-        // Redirect to the specific post
+        if (notification.data?.slug && !notification.data?.postId) {
+          return `/blog/${notification.data.slug}`
+        }
         if (notification.data?.postId) {
           return `/post/${notification.data.postId}`
         }
@@ -128,6 +130,12 @@ const NotificationsPage = () => {
         // Redirect to the specific post (for both new posts and shares)
         if (notification.data?.postId) {
           return `/post/${notification.data.postId}`
+        }
+        return '/feed'
+
+      case 'new_blog':
+        if (notification.data?.slug) {
+          return `/blog/${notification.data.slug}`
         }
         return '/feed'
 
@@ -235,7 +243,7 @@ const NotificationsPage = () => {
                   <div className="flex-shrink-0">
                     {notification.sender ? (
                       <Avatar
-                        gender={notification.sender.gender}
+                        gender={(notification.sender.gender as Gender) || DEFAULT_GENDER}
                         src={notification.sender.profilePicture?.url || null}
                         alt={notification.sender.firstName}
                         className="h-12 w-12"

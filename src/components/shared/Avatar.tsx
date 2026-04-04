@@ -1,11 +1,26 @@
 import Image from 'next/image'
+import { DEFAULT_GENDER } from '@/data/constants'
+import { Gender } from '@/interfaces'
 
 type AvatarProps = {
-  gender: string
+  gender: Gender
   size?: string
   className?: string
   alt?: string
-  src: string | null
+  /** Remote image URL, or null/undefined to use gender placeholder */
+  src?: string | null
+}
+
+const placeholderForGender = (gender: Gender) =>
+  `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/${gender.toLowerCase().replace(/\s+/g, '-')}-placeholder.png`
+
+/** Next/Image must not receive "", non-strings, or empty objects as src */
+const resolveAvatarSrc = (raw: unknown, placeholder: string): string => {
+  if (raw == null) return placeholder
+  if (typeof raw !== 'string') return placeholder
+  const trimmed = raw.trim()
+  if (trimmed.length === 0) return placeholder
+  return trimmed
 }
 
 const Avatar = ({
@@ -15,18 +30,19 @@ const Avatar = ({
   alt,
   src
 }: AvatarProps) => {
+  const safeGender = gender || DEFAULT_GENDER
+  const placeholder = placeholderForGender(safeGender)
+  const imageSrc = resolveAvatarSrc(src, placeholder)
+
   return (
     <div
       className={`relative block rounded-full border border-solid border-neutral-200 ${className} ${size}`}
     >
       <Image
-        className="object-over rounded-full"
+        className="object-cover rounded-full"
         fill
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        src={
-          src ??
-          `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/${gender.toLowerCase().replace(/\s+/g, '-')}-placeholder.png`
-        }
+        sizes="160px"
+        src={imageSrc}
         alt={alt ?? 'Avatar'}
       />
     </div>
