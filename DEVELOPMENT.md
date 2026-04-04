@@ -62,13 +62,37 @@ Make sure you have the following tools installed on your system:
    ```
 
 2. **Access the Application:**
-   Open your browser and navigate to [http://localhost:3000](http://localhost:3000) to view the application.
+   Open your browser and navigate to [http://localhost:5000](http://localhost:5000) to view the application.
 
 3. **Development Tasks:**
    - Create new components and pages inside the `/src` directory.
    - Implement features, fix bugs, and update styles.
    - Run tests and ensure code quality before submitting contributions.
    - Commit your changes and create pull requests following the contribution guidelines.
+
+## Formatting
+
+- **`yarn format`** — run Prettier with the repo `.prettierrc` (writes changes).
+- **`yarn format:check`** — same as above but fails if anything would change (CI-friendly).
+
+Ignored paths are listed in `.prettierignore` (for example `.next`, `node_modules`, coverage).
+
+## Quality checks and Git hooks
+
+After **`yarn install`**, Husky wires Git to run:
+
+- **`pre-commit`** — `yarn test` (Vitest), **`yarn test:func`** (Playwright), `yarn lint`, and `yarn build`. All must pass or the commit is aborted.
+- **`commit-msg`** — [Conventional Commits](https://www.conventionalcommits.org/) via Commitlint (for example `feat:`, `fix:`, `chore:`).
+
+One-liner to match CI/hooks locally:
+
+```bash
+yarn validate
+```
+
+Playwright needs browsers once per machine: **`yarn test:e2e:install`**.
+
+To skip hooks when absolutely necessary (use sparingly): **`git commit --no-verify`** or set **`HUSKY=0`**.
 
 ## Additional Information
 

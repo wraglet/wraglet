@@ -1,0 +1,14 @@
+.next
+out
+build
+coverage
+node_modules
+.yarn
+playwright-report
+test-results
+blob-report
+*.lock
+package-lock.json
+pnpm-lock.yaml
+.vercel
+next-env.d.ts
