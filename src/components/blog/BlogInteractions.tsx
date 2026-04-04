@@ -1,50 +1,89 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useRef, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { IBlog } from '@/models/Blog'
 import { IBlogComment } from '@/models/BlogComment'
-import {
-  ChatBubbleLeftIcon,
-  HeartIcon as HeartOutline,
-  ShareIcon
-} from '@heroicons/react/24/outline'
-import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid'
+import { ChatBubbleLeftIcon, ShareIcon } from '@heroicons/react/24/outline'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useChannel } from 'ably/react'
 import axios from 'axios'
 import { formatDistanceToNow } from 'date-fns'
 import toast from 'react-hot-toast'
 
+import type { PublicUser } from '@/interfaces'
+import { DEFAULT_GENDER } from '@/data/constants'
 import Avatar from '@/components/shared/Avatar'
+import BlogReactionControls from '@/components/blog/BlogReactionControls'
 import Button from '@/components/shared/Button'
+
+// Dynamic import for BlogShareModal
+const BlogShareModal = dynamic(
+  () => import('@/components/blog/BlogShareModal'),
+  {
+    ssr: false
+  }
+)
 
 interface BlogInteractionsProps {
   blog: IBlog
-  currentUser: any
+  currentUser: PublicUser | null
 }
 
 interface CommentItemProps {
   comment: IBlogComment
+  currentUserId?: string
+  onDelete: (commentId: string) => void
 }
 
-const CommentItem = ({ comment }: CommentItemProps) => {
+const CommentItem = ({
+  comment,
+  currentUserId,
+  onDelete
+}: CommentItemProps) => {
+  const [isDeleting, setIsDeleting] = useState(false)
+  const isOwner = currentUserId === comment.author._id
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this comment?')) return
+
+    setIsDeleting(true)
+    try {
+      await onDelete(comment._id)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <div className="flex space-x-3 py-3">
       <Avatar
-        gender={comment.author.gender}
+        gender={comment.author.gender || DEFAULT_GENDER}
         src={comment.author.profilePicture?.url || null}
         size="h-8 w-8"
       />
       <div className="flex-1">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm font-semibold text-gray-900">
-            {comment.author.firstName} {comment.author.lastName}
-          </span>
-          <span className="text-xs text-gray-500">
-            {formatDistanceToNow(new Date(comment.createdAt || Date.now()), {
-              addSuffix: true
-            })}
-          </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-semibold text-gray-900">
+              {comment.author.firstName} {comment.author.lastName}
+            </span>
+            <span className="text-xs text-gray-500">
+              {formatDistanceToNow(new Date(comment.createdAt || Date.now()), {
+                addSuffix: true
+              })}
+            </span>
+          </div>
+          {isOwner && (
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="text-xs text-red-600 hover:text-red-800 disabled:text-gray-400"
+              title="Delete comment"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </button>
+          )}
         </div>
         <p className="mt-1 text-sm text-gray-700">{comment.content}</p>
       </div>
@@ -58,12 +97,37 @@ const BlogInteractions = ({
 }: BlogInteractionsProps) => {
   const [blog, setBlog] = useState(initialBlog)
   const [newComment, setNewComment] = useState('')
-  const [isLiking, setIsLiking] = useState(false)
   const [showComments, setShowComments] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
   const queryClient = useQueryClient()
+  const commentsEndRef = useRef<HTMLDivElement>(null)
 
-  // Check if user has liked the blog
-  const isLiked = currentUser && blog.likedBy?.includes(currentUser._id)
+  // Helper function to add comment without duplicates (append to bottom for chat-style)
+  const addCommentToCache = (newComment: IBlogComment) => {
+    if (!newComment._id) {
+      console.warn('Comment missing _id field:', newComment)
+      return
+    }
+
+    queryClient.setQueryData(
+      ['blog-comments', blog.slug],
+      (old: IBlogComment[] = []) => {
+        // Check if this comment already exists to prevent duplicates
+        const commentExists = old.some(
+          (comment) => comment._id === newComment._id
+        )
+        if (commentExists) {
+          return old
+        }
+        // Append to end (bottom) for chat-style ordering
+        return [...old, newComment]
+      }
+    )
+    // Scroll to bottom when new comment is added
+    setTimeout(() => {
+      commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, 100)
+  }
 
   // Fetch comments with TanStack Query
   const { data: comments = [], isLoading: isLoadingComments } = useQuery({
@@ -72,8 +136,20 @@ const BlogInteractions = ({
       const response = await axios.get(`/api/blogs/${blog.slug}/comment`)
       return response.data.comments
     },
-    enabled: showComments // Only fetch when comments are shown
+    enabled: true // Always fetch to get accurate comment count
   })
+
+  // Auto-scroll to bottom when comments are loaded or section is opened
+  useEffect(() => {
+    if (showComments && comments.length > 0) {
+      setTimeout(() => {
+        commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 100)
+    }
+  }, [showComments, comments.length])
+
+  // Calculate comment count - use comments from query
+  const commentCount = comments.length
 
   // Post comment mutation
   const postCommentMutation = useMutation({
@@ -85,11 +161,8 @@ const BlogInteractions = ({
     },
     onSuccess: (newComment) => {
       setNewComment('')
-      // Update the comments cache
-      queryClient.setQueryData(
-        ['blog-comments', blog.slug],
-        (old: IBlogComment[] = []) => [newComment, ...old]
-      )
+      // Update the comments cache, but check for duplicates first
+      addCommentToCache(newComment)
       if (!showComments) {
         setShowComments(true)
       }
@@ -102,51 +175,45 @@ const BlogInteractions = ({
   })
 
   // Real-time channel for blog interactions
-  const channel = useChannel(`blog-${blog._id}`, (message) => {
-    if (message.name === 'like') {
-      setBlog((prev) => ({
-        ...prev,
-        likes: message.data.likes,
-        likedBy: message.data.isLiked
-          ? [...(prev.likedBy || []), message.data.userId]
-          : (prev.likedBy || []).filter(
-              (id: string) => id !== message.data.userId
-            )
-      }))
+  useChannel(`blog-${blog._id}`, (message) => {
+    if (message.name === 'reaction' && message.data?.blog) {
+      setBlog(message.data.blog as IBlog)
     } else if (message.name === 'comment') {
-      // Update comments cache with real-time data
+      // Only add comment if it's not from the current user (to avoid duplicates)
+      // The current user's comment is already added via onSuccess callback
+      if (message.data.comment.author._id !== currentUser?._id) {
+        addCommentToCache(message.data.comment)
+      }
+    } else if (message.name === 'comment-delete') {
+      // Remove deleted comment from cache
       queryClient.setQueryData(
         ['blog-comments', blog.slug],
-        (old: IBlogComment[] = []) => [message.data.comment, ...old]
+        (old: IBlogComment[] = []) => {
+          return old.filter((comment) => comment._id !== message.data.commentId)
+        }
       )
     }
   })
 
-  const handleLike = async () => {
-    if (!currentUser) {
-      toast.error('Please login to like this blog')
-      return
-    }
-
-    if (isLiking) return
-
-    setIsLiking(true)
+  // Delete comment handler
+  const handleDeleteComment = async (commentId: string) => {
     try {
-      const response = await axios.post(`/api/blogs/${blog.slug}/like`)
-
-      // Optimistic update - the real-time channel will also update this
-      setBlog((prev) => ({
-        ...prev,
-        likes: response.data.likes,
-        likedBy: response.data.liked
-          ? [...(prev.likedBy || []), currentUser._id]
-          : (prev.likedBy || []).filter((id: string) => id !== currentUser._id)
-      }))
+      await axios.delete(
+        `/api/blogs/${blog.slug}/comment?commentId=${commentId}`
+      )
+      // Optimistically remove from cache
+      queryClient.setQueryData(
+        ['blog-comments', blog.slug],
+        (old: IBlogComment[] = []) => {
+          return old.filter((comment) => comment._id !== commentId)
+        }
+      )
+      toast.success('Comment deleted successfully')
     } catch (error) {
-      console.error('Error liking blog:', error)
-      toast.error('Failed to like blog')
-    } finally {
-      setIsLiking(false)
+      console.error('Error deleting comment:', error)
+      toast.error('Failed to delete comment')
+      // Refetch to restore the comment if delete failed
+      queryClient.invalidateQueries({ queryKey: ['blog-comments', blog.slug] })
     }
   }
 
@@ -163,17 +230,8 @@ const BlogInteractions = ({
     postCommentMutation.mutate(newComment.trim())
   }
 
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(
-        `${window.location.origin}/blog/${blog.slug}`
-      )
-      toast.success('Blog link copied to clipboard!')
-    } catch (error) {
-      // Fallback for browsers that don't support clipboard API
-      const url = `${window.location.origin}/blog/${blog.slug}`
-      prompt('Copy this link:', url)
-    }
+  const handleShare = () => {
+    setShowShareModal(true)
   }
 
   return (
@@ -181,23 +239,11 @@ const BlogInteractions = ({
       {/* Interaction Buttons */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          {/* Like Button */}
-          <button
-            onClick={handleLike}
-            disabled={isLiking || !currentUser}
-            className={`flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
-              isLiked
-                ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            } ${!currentUser ? 'cursor-not-allowed opacity-50' : ''}`}
-          >
-            {isLiked ? (
-              <HeartSolid className="h-4 w-4" />
-            ) : (
-              <HeartOutline className="h-4 w-4" />
-            )}
-            <span className="font-medium">{blog.likes || 0}</span>
-          </button>
+          <BlogReactionControls
+            blog={blog}
+            currentUser={currentUser}
+            onBlogUpdated={setBlog}
+          />
 
           {/* Comment Button */}
           <button
@@ -205,7 +251,7 @@ const BlogInteractions = ({
             className="flex items-center space-x-1.5 rounded-lg bg-gray-100 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200"
           >
             <ChatBubbleLeftIcon className="h-4 w-4" />
-            <span className="font-medium">{comments.length}</span>
+            <span className="font-medium">{commentCount}</span>
           </button>
 
           {/* Share Button */}
@@ -277,9 +323,16 @@ const BlogInteractions = ({
               </div>
             ) : comments.length > 0 ? (
               <div className="divide-y divide-gray-200">
-                {comments.map((comment: IBlogComment) => (
-                  <CommentItem key={comment._id} comment={comment} />
+                {comments.map((comment: IBlogComment, index: number) => (
+                  <CommentItem
+                    key={comment._id || `comment-${index}`}
+                    comment={comment}
+                    currentUserId={currentUser?._id}
+                    onDelete={handleDeleteComment}
+                  />
                 ))}
+                {/* Scroll anchor for auto-scroll to bottom */}
+                <div ref={commentsEndRef} />
               </div>
             ) : (
               <div className="py-6 text-center">
@@ -290,6 +343,15 @@ const BlogInteractions = ({
             )}
           </div>
         </div>
+      )}
+
+      {/* Blog Share Modal */}
+      {showShareModal && (
+        <BlogShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          blog={blog}
+        />
       )}
     </div>
   )

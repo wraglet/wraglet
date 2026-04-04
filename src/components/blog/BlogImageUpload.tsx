@@ -1,6 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  startTransition,
+  useState
+} from 'react'
 import Image from 'next/image'
 import {
   ClipboardDocumentIcon,
@@ -39,17 +45,18 @@ const BlogImageUpload = ({
     typeof value === 'string' ? value : undefined
   )
 
-  // Generate preview URL for File
+  // Generate preview URL for File (object URL lifecycle)
   useEffect(() => {
     if (value instanceof File) {
       const url = URL.createObjectURL(value)
-      setPreviewUrl(url)
+      startTransition(() => setPreviewUrl(url))
       return () => URL.revokeObjectURL(url)
-    } else if (typeof value === 'string') {
-      setPreviewUrl(value)
-    } else {
-      setPreviewUrl(undefined)
     }
+    startTransition(() => {
+      if (typeof value === 'string') setPreviewUrl(value)
+      else setPreviewUrl(undefined)
+    })
+    return undefined
   }, [value])
 
   // Handle file selection
@@ -132,7 +139,7 @@ const BlogImageUpload = ({
   }
 
   useEffect(() => {
-    setImgError(false)
+    startTransition(() => setImgError(false))
   }, [previewUrl])
 
   return (

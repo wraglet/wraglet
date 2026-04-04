@@ -1,5 +1,6 @@
 'use client'
 
+import type { PublicUser } from '@/interfaces'
 import { IBlog } from '@/models/Blog'
 import { ChannelProvider } from 'ably/react'
 
@@ -7,7 +8,7 @@ import BlogInteractions from '@/components/blog/BlogInteractions'
 
 interface BlogInteractionsAblyProps {
   blog: IBlog
-  currentUser: any
+  currentUser: PublicUser | null
 }
 
 const BlogInteractionsAbly = ({

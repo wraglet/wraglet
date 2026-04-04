@@ -3,6 +3,7 @@
 import { FormEvent, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
+import { IBlog } from '@/models/Blog'
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -57,62 +58,49 @@ type ContentBlock = {
   content: string
   order: number
   metadata?: {
-    language?: string // for code blocks
-    caption?: string // for images/videos
-    url?: string // for images/videos
-    alt?: string // for images
-    key?: string // for R2 storage key
+    language?: string
+    caption?: string
+    url?: string
+    alt?: string
+    key?: string
   }
 }
 
-interface BlogCreateFormProps {
+interface BlogEditFormProps {
+  blog: IBlog
   onSuccess?: () => void
 }
 
-const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
+const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
   const router = useRouter()
 
-  // Form state
-  const [title, setTitle] = useState('')
-  const [summary, setSummary] = useState('')
-  const [category, setCategory] = useState(CATEGORIES[0])
-  const [tags, setTags] = useState('')
-  // Change coverImage state to string | undefined
-  const [coverImage, setCoverImage] = useState<string | undefined>(undefined)
-  const [status, setStatus] = useState<'draft' | 'published'>('draft')
-  const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([
-    { id: '1', type: 'text', content: '', order: 0 }
-  ])
+  // Form state - initialize with blog data
+  const [title, setTitle] = useState(blog.title || '')
+  const [summary, setSummary] = useState(blog.summary || '')
+  const [category, setCategory] = useState(blog.category || CATEGORIES[0])
+  const [tags, setTags] = useState(blog.tags?.join(', ') || '')
+  const [coverImage, setCoverImage] = useState<string | undefined>(
+    blog.coverImage?.url || undefined
+  )
+  const [status, setStatus] = useState<'draft' | 'published'>(
+    blog.status as 'draft' | 'published'
+  )
+  const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>(
+    blog.contentBlocks && blog.contentBlocks.length > 0
+      ? blog.contentBlocks.map((block) => ({
+          id: block.id,
+          type: block.type,
+          content: block.content || '',
+          order: block.order,
+          metadata: block.metadata
+        }))
+      : [{ id: '1', type: 'text' as const, content: '', order: 0 }]
+  )
   const [isLoading, setIsLoading] = useState(false)
   const [showCoverCrop, setShowCoverCrop] = useState(false)
   const [pendingCoverFile, setPendingCoverFile] = useState<File | null>(null)
-  // Add state for cropping modal for image blocks
   const [pendingBlockId, setPendingBlockId] = useState<string | null>(null)
   const [pendingBlockFile, setPendingBlockFile] = useState<File | null>(null)
-
-  // Helper to upload a single image file to R2
-  const uploadImageToR2 = async (file: File, type: 'cover' | 'content') => {
-    const reader = new FileReader()
-    return new Promise<string>((resolve, reject) => {
-      reader.onload = async () => {
-        try {
-          const base64Data = reader.result as string
-          const response = await fetch('/api/blogs/upload-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: base64Data, type })
-          })
-          if (!response.ok) throw new Error('Failed to upload image')
-          const data = await response.json()
-          resolve(data.url)
-        } catch (err) {
-          reject(err)
-        }
-      }
-      reader.onerror = () => reject(new Error('Failed to read file'))
-      reader.readAsDataURL(file)
-    })
-  }
 
   // Character counts
   const titleCount = title.length
@@ -129,14 +117,10 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
     title.trim() &&
     summary.trim() &&
     contentBlocks.some((block) => {
-      // Text blocks need content
-      if (block.type === 'text') return block.content && block.content.trim()
-      // Image blocks need URL (content can be empty)
-      if (block.type === 'image') return block.metadata?.url
-      // Code blocks need content
-      if (block.type === 'code') return block.content && block.content.trim()
-      // Video blocks need URL (content can be empty)
-      if (block.type === 'video') return block.metadata?.url
+      if (block.type === 'text' || block.type === 'code')
+        return block.content && block.content.trim()
+      if (block.type === 'image' || block.type === 'video')
+        return block.metadata?.url
       return false
     }) &&
     !isOverTitleLimit &&
@@ -158,7 +142,6 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
   // Remove content block
   const removeContentBlock = (id: string) => {
     const filteredBlocks = contentBlocks.filter((block) => block.id !== id)
-    // Reorder remaining blocks
     const reorderedBlocks = filteredBlocks.map((block, index) => ({
       ...block,
       order: index
@@ -250,42 +233,25 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
 
     setIsLoading(true)
     try {
-      // 1. Upload cover image if it's a File
-      let coverImageUrl: string | undefined = undefined
-      if (
-        typeof window !== 'undefined' &&
-        coverImage &&
-        typeof coverImage === 'object' &&
-        'name' in coverImage
-      ) {
-        coverImageUrl = await uploadImageToR2(coverImage, 'cover')
-      } else if (typeof coverImage === 'string') {
-        coverImageUrl = coverImage
+      // 1. Upload cover image if it's a base64 string (new/cropped image)
+      let coverImageUrl: string | undefined = coverImage
+      if (coverImage && coverImage.startsWith('data:image/')) {
+        coverImageUrl = coverImage // Keep base64 for API to handle
       }
 
       // 2. Upload image blocks if any
       const updatedBlocks = await Promise.all(
         contentBlocks.map(async (block) => {
           if (block.type === 'image' && block.metadata?.url) {
-            // If it's a File object, upload it
+            // If it's a base64 string, keep it for API to handle
             if (
-              block.metadata.url &&
-              typeof block.metadata.url === 'object' &&
-              'name' in block.metadata.url
+              typeof block.metadata.url === 'string' &&
+              block.metadata.url.startsWith('data:image/')
             ) {
-              const url = await uploadImageToR2(
-                block.metadata.url as File,
-                'content'
-              )
-              return {
-                ...block,
-                metadata: { ...block.metadata, url }
-              }
-            }
-            // If it's already a string URL, keep it as is
-            else if (typeof block.metadata.url === 'string') {
               return block
             }
+            // If it's already a URL, keep it as is
+            return block
           }
           return block
         })
@@ -302,26 +268,18 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
         coverImageUrl: coverImageUrl || undefined,
         status,
         contentBlocks: updatedBlocks.filter((block) => {
-          // Include text blocks with content
-          if (block.type === 'text')
+          if (block.type === 'text' || block.type === 'code')
             return block.content && block.content.trim()
-          // Include image blocks with URL (content can be empty)
-          if (block.type === 'image') return block.metadata?.url
-          // Include code blocks with content
-          if (block.type === 'code')
-            return block.content && block.content.trim()
-          // Include video blocks with URL (content can be empty)
-          if (block.type === 'video') return block.metadata?.url
+          if (block.type === 'image' || block.type === 'video')
+            return block.metadata?.url
           return false
         })
       }
 
-      const response = await axios.post('/api/blogs', blogData)
+      const response = await axios.put(`/api/blogs/${blog.slug}`, blogData)
 
-      if (response.status === 201) {
-        toast.success(
-          `Blog ${status === 'published' ? 'published' : 'saved as draft'} successfully!`
-        )
+      if (response.status === 200) {
+        toast.success('Blog updated successfully!')
         if (onSuccess) {
           onSuccess()
         } else {
@@ -329,11 +287,11 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
         }
       }
     } catch (error: unknown) {
-      console.error('Error creating blog:', error)
+      console.error('Error updating blog:', error)
       const message =
         axios.isAxiosError(error) && error.response?.data?.error
           ? String(error.response.data.error)
-          : 'Failed to create blog'
+          : 'Failed to update blog'
       toast.error(message)
     } finally {
       setIsLoading(false)
@@ -352,7 +310,7 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
     <div className="z-40 flex h-full flex-col bg-white">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-4 pr-16 shadow-sm">
-        <h1 className="text-lg font-medium text-gray-900">Create New Blog</h1>
+        <h1 className="text-lg font-medium text-gray-900">Edit Blog</h1>
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -367,10 +325,10 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
             } disabled:cursor-not-allowed disabled:text-gray-500`}
           >
             {isLoading
-              ? 'Creating...'
+              ? 'Updating...'
               : status === 'published'
-                ? 'Publish Blog'
-                : 'Save Draft'}
+                ? 'Update & Publish'
+                : 'Update Draft'}
           </button>
         </div>
       </div>
@@ -654,7 +612,7 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
   )
 }
 
-// Content Block Editor Component
+// Content Block Editor Component (same as in BlogCreateForm)
 interface ContentBlockEditorProps {
   block: ContentBlock
   index: number
@@ -676,7 +634,6 @@ const ContentBlockEditor = ({
   onMoveDown,
   onImageChange
 }: ContentBlockEditorProps) => {
-  // TipTap editor for text blocks
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -749,26 +706,6 @@ const ContentBlockEditor = ({
             <span className="text-sm font-medium text-gray-900">
               {getBlockTitle(block.type)} {index + 1}
             </span>
-            {block.type === 'text' && (
-              <p className="text-xs text-gray-500">
-                Rich text editor with formatting options
-              </p>
-            )}
-            {block.type === 'code' && (
-              <p className="text-xs text-gray-500">
-                Syntax highlighted code snippets
-              </p>
-            )}
-            {block.type === 'image' && (
-              <p className="text-xs text-gray-500">
-                Upload images with captions and alt text
-              </p>
-            )}
-            {block.type === 'video' && (
-              <p className="text-xs text-gray-500">
-                Video embeds with captions
-              </p>
-            )}
           </div>
         </div>
 
@@ -808,7 +745,6 @@ const ContentBlockEditor = ({
       <div className="p-4">
         {block.type === 'text' && (
           <div className="rounded-lg border border-neutral-200">
-            {/* Toolbar */}
             {editor && (
               <div className="rounded-t-lg border-b border-neutral-200 bg-gray-50 p-3">
                 <div className="flex flex-wrap gap-1">
@@ -943,12 +879,11 @@ const ContentBlockEditor = ({
                 </div>
               </div>
             )}
-            {/* Editor Content */}
             <div className="rounded-b-lg bg-white p-4">
               {editor ? (
                 <TipTapEditor
                   editor={editor}
-                  className="prose prose-sm min-h-[200px] max-w-none focus:outline-none [&_blockquote]:border-l-4 [&_blockquote]:border-sky-500 [&_blockquote]:pl-4 [&_blockquote]:italic [&_code]:rounded [&_code]:bg-gray-100 [&_code]:px-1 [&_h1]:mt-6 [&_h1]:mb-4 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:mt-5 [&_h2]:mb-3 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_h3]:text-lg [&_h3]:font-medium [&_ol]:text-sm [&_p]:mb-3 [&_p]:text-sm [&_p]:leading-relaxed [&_ul]:text-sm"
+                  className="prose prose-sm min-h-[200px] max-w-none focus:outline-none"
                 />
               ) : (
                 <div className="flex min-h-[200px] items-center justify-center text-gray-500">
@@ -1114,4 +1049,4 @@ const ContentBlockEditor = ({
   )
 }
 
-export default BlogCreateForm
+export default BlogEditForm
