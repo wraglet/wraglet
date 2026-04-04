@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 5000 --turbopack",
+    "dev": "next dev -p 5000",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@ably-labs/react-hooks": "^2.1.2",
@@ -44,11 +44,11 @@
     "date-fns": "^4.1.0",
     "lucide-react": "^0.445.0",
     "mongoose": "^8.15.0",
-    "next": "^15.2.4",
+    "next": "^16.2.2",
     "next-auth": "^5.0.0-beta.25",
     "quill": "^2.0.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "react-dropzone": "^14.2.9",
     "react-easy-crop": "^5.1.0",
     "react-hook-form": "^7.53.1",
@@ -66,15 +66,14 @@
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.3.1",
     "@tailwindcss/postcss": "^4.1.0",
-    "@tanstack/eslint-plugin-query": "^5.57.1",
     "@types/bcryptjs": "^2",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@types/supports-color": "^8.1.3",
     "@types/uuid": "^10",
-    "eslint": "^8",
-    "eslint-config-next": "^15.0.2",
+    "eslint": "^9",
+    "eslint-config-next": "^16.2.2",
     "eslint-plugin-unused-imports": "^4.1.4",
     "postcss": "^8",
     "prettier": "^3.3.3",
@@ -85,9 +84,7 @@
   "resolutions": {
     "glob": "^10.4.5",
     "rimraf": "^4.0.0",
-    "inflight": "deprecated",
-    "@humanwhocodes/config-array": "^0.13.0",
-    "@humanwhocodes/object-schema": "^2.0.3"
+    "inflight": "deprecated"
   },
   "packageManager": "yarn@4.9.2"
 }
