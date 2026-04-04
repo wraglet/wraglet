@@ -5,6 +5,8 @@ import client from '@/lib/db'
 import User from '@/models/User'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 
+import { DEFAULT_GENDER, DEFAULT_PRONOUN } from '@/data/constants'
+
 const getUserByUsername = async (username: string) => {
   try {
     await client()
@@ -25,7 +27,7 @@ const getUserByUsername = async (username: string) => {
     )
 
     // Check if the found user is the current user
-    const isCurrentUser = user && user.email === session?.user?.email
+    const isCurrentUser = user?.email === session?.user?.email
 
     // Convert the user document to a plain object and handle ObjectId
     if (user) {
@@ -38,7 +40,12 @@ const getUserByUsername = async (username: string) => {
 
       // Ensure gender field is always present
       if (!convertedUser.gender) {
-        convertedUser.gender = 'Other'
+        convertedUser.gender = DEFAULT_GENDER
+      }
+
+      // Ensure pronoun field is always present
+      if (!convertedUser.pronoun) {
+        convertedUser.pronoun = DEFAULT_PRONOUN
       }
 
       return convertedUser

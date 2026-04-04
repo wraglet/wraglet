@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, startTransition, useState } from 'react'
 
 import ListBox, { ListProps } from '@/components/shared/ListBox'
 
@@ -46,27 +46,25 @@ const BirthdayPicker = ({ dateSetter, date }: BirthdayPickerProps) => {
     []
   )
 
-  // Update the useEffect to set selected year within the range
   useEffect(() => {
-    const currentDate = new Date()
-    setSelectedDay(currentDate.getDate().toString())
-    setSelectedMonth(months[currentDate.getMonth()]) // Get abbreviated month name
-
-    // Ensure selected year is within the calculated range
-    const selectedYear = Math.max(
-      minimumBirthYear,
-      Math.min(maximumBirthYear, currentDate.getFullYear() - 13)
-    )
-    setSelectedYear(selectedYear.toString())
-
-    // Set initial values from the date prop if dateSetter has a value
-    if (date) {
-      const initialDate = new Date(date)
-      setSelectedDay(initialDate.getDate().toString())
-      setSelectedMonth(months[initialDate.getMonth()])
-      setSelectedYear(initialDate.getFullYear().toString())
-    }
-  }, [months, minimumBirthYear, maximumBirthYear, dateSetter, date])
+    startTransition(() => {
+      const currentDate = new Date()
+      if (date) {
+        const initialDate = new Date(date)
+        setSelectedDay(initialDate.getDate().toString())
+        setSelectedMonth(months[initialDate.getMonth()])
+        setSelectedYear(initialDate.getFullYear().toString())
+        return
+      }
+      setSelectedDay(currentDate.getDate().toString())
+      setSelectedMonth(months[currentDate.getMonth()])
+      const year = Math.max(
+        minimumBirthYear,
+        Math.min(maximumBirthYear, currentDate.getFullYear() - 13)
+      )
+      setSelectedYear(year.toString())
+    })
+  }, [months, minimumBirthYear, maximumBirthYear, date])
 
   const handleDayChange = (val: string | ListProps) => {
     setSelectedDay(val as string)

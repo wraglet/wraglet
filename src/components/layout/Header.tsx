@@ -8,10 +8,10 @@ import { IUser } from '@/models/User'
 import useGlobalStore from '@/store/global'
 import useUserStore, { User } from '@/store/user'
 
+import { DEFAULT_GENDER, DEFAULT_PRONOUN } from '@/data/constants'
 import HeaderMessagesIconClientWrapper from '@/components/chat/HeaderMessagesIconClientWrapper'
 import HeaderNotificationsIconClientWrapper from '@/components/chat/HeaderNotificationsIconClientWrapper'
 import AvatarMenu from '@/components/shared/AvatarMenu'
-import { BlogOutlineIcon } from '@/components/shared/Icons'
 import { ChatIcon, HomeIcon } from '@/components/shared/NavIcons'
 import SearchBar from '@/components/shared/SearchBar'
 
@@ -36,7 +36,8 @@ const Header = ({ currentUser }: { currentUser: IUser & { _id: string } }) => {
       // Ensure currentUser has required fields
       const userWithDefaults = {
         ...currentUser,
-        gender: currentUser.gender || 'Other'
+        gender: currentUser.gender || DEFAULT_GENDER,
+        pronoun: currentUser.pronoun || DEFAULT_PRONOUN
       }
       setUser(userWithDefaults as unknown as User)
       setUserInitialized(true)
@@ -59,7 +60,7 @@ const Header = ({ currentUser }: { currentUser: IUser & { _id: string } }) => {
             <Image
               src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/logo/android-chrome-192x192.png`}
               fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              sizes="40px"
               alt="Wraglet"
             />
           </div>
@@ -78,11 +79,6 @@ const Header = ({ currentUser }: { currentUser: IUser & { _id: string } }) => {
         <li className="hidden cursor-pointer md:block">
           <Link href={'/feed'}>
             <HomeIcon className="text-white" />
-          </Link>
-        </li>
-        <li className="hidden cursor-pointer md:block">
-          <Link href={'/blog'} title="Blogs">
-            <BlogOutlineIcon className="h-6 w-6 text-white transition-colors hover:text-blue-200" />
           </Link>
         </li>
         <li className="relative cursor-pointer">

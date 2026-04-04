@@ -3,6 +3,8 @@
 import { Fragment } from 'react'
 import { signOut } from 'next-auth/react'
 import Link from 'next/link'
+import { Gender } from '@/interfaces'
+import useBlogModalStore from '@/store/blogModal'
 import useFeedPostsStore from '@/store/feedPosts'
 import useGlobalStore from '@/store/global'
 import useUserStore from '@/store/user'
@@ -22,12 +24,14 @@ import {
   HiOutlinePencilSquare
 } from 'react-icons/hi2'
 
+import { DEFAULT_GENDER } from '@/data/constants'
 import Avatar from '@/components/shared/Avatar'
 
 const AvatarMenu = () => {
   const { user, clearUser } = useUserStore()
   const { clearGlobalState } = useGlobalStore()
   const { clearFeedPosts } = useFeedPostsStore()
+  const { openModal: openBlogModal } = useBlogModalStore()
 
   const handleLogout = () => {
     signOut()
@@ -39,7 +43,7 @@ const AvatarMenu = () => {
     <Menu as="li" className="inline-flex">
       <MenuButton className="relative h-8 w-8 cursor-pointer rounded-full border border-solid border-white">
         <Avatar
-          gender={user?.gender || 'Other'}
+          gender={(user?.gender || DEFAULT_GENDER) as Gender}
           size="h-8 w-8"
           src={user?.profilePicture?.url || null}
           alt={'Avatar'}
@@ -98,8 +102,19 @@ const AvatarMenu = () => {
               </Link>
             </MenuItem>
             <MenuItem>
-              <Link
-                href="/blog/create"
+              <button
+                onClick={() => {
+                  // Close the menu first
+                  const menuButton = document.querySelector(
+                    '[data-headlessui-state]'
+                  )
+                  if (menuButton) {
+                    ;(menuButton as HTMLElement).click()
+                  }
+                  // Navigate to feed and open blog modal
+                  window.location.href = '/feed?tab=blogs'
+                  setTimeout(() => openBlogModal(), 100)
+                }}
                 className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 transition-colors hover:bg-green-50 focus:bg-green-100 focus:text-green-700"
               >
                 <HiOutlinePencilSquare
@@ -107,7 +122,7 @@ const AvatarMenu = () => {
                   aria-hidden="true"
                 />
                 Write Blog
-              </Link>
+              </button>
             </MenuItem>
           </div>
 

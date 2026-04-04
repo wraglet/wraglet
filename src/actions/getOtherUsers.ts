@@ -5,7 +5,10 @@ import client from '@/lib/db'
 import User from '@/models/User'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 
-const getOtherUsers = async () => {
+import { DEFAULT_GENDER, DEFAULT_PRONOUN } from '@/data/constants'
+import type { PublicUser } from '@/interfaces'
+
+const getOtherUsers = async (): Promise<PublicUser[]> => {
   const session = await getSession().catch((err) => {
     console.error(
       'Error happened while getting getSession on getOtherUsers: ',
@@ -31,16 +34,19 @@ const getOtherUsers = async () => {
 
     // Convert each user document to a plain object and convert ObjectId to string
     const plainUsers = users.map((user) => user.toObject())
-    const convertedUsers = convertObjectIdsToStrings(plainUsers)
+    const convertedUsers = convertObjectIdsToStrings(
+      plainUsers
+    ) as PublicUser[]
 
-    // Ensure all users have a gender field
-    const usersWithGender = convertedUsers.map((user: any) => ({
+    // Ensure all users have gender and pronoun fields
+    const usersWithDefaults = convertedUsers.map((user) => ({
       ...user,
-      gender: user.gender || 'Other'
+      gender: user.gender || DEFAULT_GENDER,
+      pronoun: user.pronoun || DEFAULT_PRONOUN
     }))
 
     // Debug: Check for duplicates before filtering
-    const userIds = usersWithGender.map((user: any) => user._id)
+    const userIds = usersWithDefaults.map((user) => user._id)
     const duplicateIds = userIds.filter(
       (id: string, index: number) => userIds.indexOf(id) !== index
     )
@@ -49,14 +55,17 @@ const getOtherUsers = async () => {
     }
 
     // Remove duplicates based on _id to ensure unique users
-    const uniqueUsers = usersWithGender.filter(
-      (user: any, index: number, self: any[]) =>
-        index === self.findIndex((u: any) => u._id === user._id)
+    const uniqueUsers = usersWithDefaults.filter(
+      (user, index, self) =>
+        index === self.findIndex((u) => u._id === user._id)
     )
 
     return uniqueUsers
-  } catch (error: any) {
-    console.error('Some error happened while getting getOtherUsers(): ', error)
+  } catch (error: unknown) {
+    console.error(
+      'Some error happened while getting getOtherUsers(): ',
+      error instanceof Error ? error.message : error
+    )
     return []
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import useChatFloaterStore from '@/store/chatFloater'
 import useUserStore from '@/store/user'
 import { ChatRoomProvider } from '@ably/chat/react'
@@ -8,14 +9,12 @@ import { ChannelProvider } from 'ably/react'
 
 import type { IConversation } from '@/types/conversation'
 import ChatFloaterBadgeButton from '@/components/chat/ChatFloaterBadgeButton'
+import ChatFloaterIncomingListener from '@/components/chat/ChatFloaterIncomingListener'
+import ChatFloaterRecentPanel from '@/components/chat/ChatFloaterRecentPanel'
 import ChatWindow from '@/components/chat/ChatWindow'
 import { NewChatModal } from '@/components/chat/NewChatModal'
 import Avatar from '@/components/shared/Avatar'
-
-interface FloaterChat {
-  id: string
-  name: string
-}
+import { getConversationFloaterDisplay } from '@/utils/conversationFloaterDisplay'
 
 const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
   const {
@@ -23,9 +22,9 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
     closeChat,
     openChat,
     minimizedChats,
-    minimizeChat,
-    restoreChat
+    minimizeChat
   } = useChatFloaterStore()
+  const queryClient = useQueryClient()
   const { user: currentUser } = useUserStore()
   const [showChatHeads, setShowChatHeads] = useState(false)
   const [newChatOpen, setNewChatOpen] = useState(false)
@@ -33,38 +32,14 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
   const [usersLoading, setUsersLoading] = useState(false)
   const [usersError, setUsersError] = useState<string | null>(null)
 
-  // Helper to get display info for a conversation
-  const getDisplayInfo = (convo: any) => {
-    if (!convo)
-      return { name: '', avatar: '', isGroup: false, users: [], gender: '' }
-    let displayUsers = convo.participants
-    if (!convo.isGroup && currentUser?._id) {
-      displayUsers = convo.participants.filter(
-        (p: any) => p._id !== currentUser._id
-      )
+  useEffect(() => {
+    if (showChatHeads && currentUser?._id) {
+      void queryClient.invalidateQueries({
+        queryKey: ['conversations', currentUser._id]
+      })
     }
-    return {
-      name: convo.isGroup
-        ? convo.name ||
-          displayUsers
-            .map((u: any) => `${u.firstName} ${u.lastName}`)
-            .join(', ')
-        : `${displayUsers[0]?.firstName} ${displayUsers[0]?.lastName}`,
-      avatar: convo.isGroup
-        ? null
-        : displayUsers[0]?.profilePicture?.url ||
-          displayUsers[0]?.profilePicture ||
-          '',
-      isGroup: convo.isGroup,
-      users: displayUsers,
-      gender: convo.isGroup ? '' : displayUsers[0]?.gender || ''
-    }
-  }
+  }, [showChatHeads, currentUser?._id, queryClient])
 
-  // Show chat heads panel if toggled, regardless of minimized chats
-  const shouldShowChatHeadsPanel = showChatHeads
-
-  // Open modal and fetch users
   const handleOpenNewChat = async () => {
     setNewChatOpen(true)
     setUsersLoading(true)
@@ -80,7 +55,6 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
     }
   }
 
-  // Handle selecting a user to chat with
   const handleSelectUser = async (user: any) => {
     setNewChatOpen(false)
     try {
@@ -99,70 +73,39 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
     }
   }
 
+  const handleOpenConversationFromPanel = (conversationId: string) => {
+    openChat(conversationId)
+    setShowChatHeads(false)
+  }
+
   return (
     <>
-      {/* Chat heads stack (panel always shows when toggled) */}
-      {shouldShowChatHeadsPanel && (
-        <div className="fixed right-8 bottom-36 z-50 flex flex-col items-center gap-2 lg:bottom-24">
-          {/* Minimized chat heads (if any) */}
-          {minimizedChats.map((chat) => {
-            const convo = conversations.find(
-              (c: any) => c._id === chat.conversationId
-            )
-            const info = getDisplayInfo(convo)
-            return (
-              <button
-                key={chat.conversationId}
-                className="group relative flex flex-col items-center"
-                onClick={() => restoreChat(chat.conversationId)}
-              >
-                {info.isGroup ? (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-xs font-bold">
-                    {info.users
-                      .slice(0, 2)
-                      .map((u: any) => u.firstName[0])
-                      .join('')}
-                  </div>
-                ) : (
-                  <Avatar
-                    gender={info.gender}
-                    src={info.avatar}
-                    alt={info.name}
-                    className="h-10 w-10"
-                  />
-                )}
-                {/* Name only on hover */}
-                <span className="pointer-events-none absolute top-12 left-1/2 z-10 -translate-x-1/2 rounded bg-gray-900 px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 shadow-lg group-hover:opacity-100">
-                  {info.name}
-                </span>
-              </button>
-            )
-          })}
-          {/* Add chat button always present */}
-          <button
-            className="mt-2 flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-2xl text-white shadow hover:bg-blue-600"
-            onClick={handleOpenNewChat}
-            aria-label="Add chat"
-          >
-            +
-          </button>
-        </div>
+      {showChatHeads && (
+        <ChatFloaterRecentPanel
+          conversations={conversations}
+          minimizedChats={minimizedChats}
+          currentUserId={currentUser?._id}
+          onOpenConversation={handleOpenConversationFromPanel}
+          onAddChat={handleOpenNewChat}
+        />
       )}
-      {/* Floating chat icon button */}
       {currentUser?._id && (
         <ChannelProvider channelName={`user-${currentUser._id}-messages`}>
+          <ChatFloaterIncomingListener
+            userId={currentUser._id}
+            onIncomingPinned={() => setShowChatHeads(true)}
+          />
           <span onClick={() => setShowChatHeads((v) => !v)}>
             <ChatFloaterBadgeButton userId={currentUser._id} />
           </span>
         </ChannelProvider>
       )}
-      {/* Floating chat windows */}
       <div className="fixed right-24 bottom-20 z-50 flex gap-4 lg:bottom-4">
         {openChats.map((chat) => {
           const convo = conversations.find(
             (c: any) => c._id === chat.conversationId
           )
-          const info = getDisplayInfo(convo)
+          const info = getConversationFloaterDisplay(convo, currentUser?._id)
           return (
             <div
               key={chat.conversationId}
@@ -191,17 +134,18 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  {/* Minimize button */}
                   <button
+                    type="button"
                     className="px-1 text-gray-500 hover:text-yellow-500"
                     title="Minimize"
                     onClick={() => minimizeChat(chat.conversationId)}
                   >
                     _
                   </button>
-                  {/* Close button */}
                   <button
+                    type="button"
                     className="px-1 text-gray-500 hover:text-red-500"
+                    title="Close"
                     onClick={() => closeChat(chat.conversationId)}
                   >
                     ×
@@ -210,14 +154,16 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
               </div>
               <div className="flex-1 overflow-y-auto p-2 text-sm text-gray-500">
                 <ChatRoomProvider name={chat.conversationId}>
-                  <ChatWindow conversationId={chat.conversationId} />
+                  <ChatWindow
+                    key={chat.conversationId}
+                    conversationId={chat.conversationId}
+                  />
                 </ChatRoomProvider>
               </div>
             </div>
           )
         })}
       </div>
-      {/* Add chat modal */}
       <NewChatModal
         open={newChatOpen}
         onClose={() => setNewChatOpen(false)}

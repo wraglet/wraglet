@@ -27,9 +27,9 @@ const Avatar = ({
       className={`relative block rounded-full border border-solid border-neutral-200 ${className} ${size}`}
     >
       <Image
-        className="object-over rounded-full"
+        className="object-cover rounded-full"
         fill
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        sizes="160px"
         src={finalProfilePictureUrl}
         alt={alt ?? 'Avatar'}
       />
