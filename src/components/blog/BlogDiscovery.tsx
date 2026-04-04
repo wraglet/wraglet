@@ -1,5 +1,6 @@
 'use client'
 
+import type { PublicUser } from '@/interfaces'
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -39,7 +40,7 @@ const CATEGORIES = [
 ]
 
 interface BlogDiscoveryProps {
-  user: any
+  user: PublicUser
 }
 
 interface BlogCardProps {
@@ -97,12 +98,12 @@ const BlogCard = ({ blog }: BlogCardProps) => {
               <div className="flex items-center space-x-1 text-xs text-gray-500">
                 <CalendarIcon className="h-3 w-3" />
                 <span>
-                  {formatDistanceToNow(
-                    new Date(blog.publishedAt || blog.createdAt || Date.now()),
-                    {
-                      addSuffix: true
-                    }
-                  )}
+                  {(() => {
+                    const at = blog.publishedAt || blog.createdAt
+                    return at
+                      ? formatDistanceToNow(new Date(at), { addSuffix: true })
+                      : '—'
+                  })()}
                 </span>
               </div>
             </div>
@@ -247,12 +248,21 @@ const BlogDiscovery = ({ user }: BlogDiscoveryProps) => {
           </div>
 
           {user && (
-            <Link href="/blog/create">
-              <Button className="flex items-center space-x-2 bg-blue-600 text-white hover:bg-blue-700">
-                <PlusIcon className="h-4 w-4" />
-                <span>Write Blog</span>
-              </Button>
-            </Link>
+            <button
+              onClick={() => {
+                // Navigate to feed and open blog modal
+                window.location.href = '/feed?tab=blogs'
+                setTimeout(() => {
+                  const { openModal } =
+                    require('@/store/blogModal').default.getState()
+                  openModal()
+                }, 100)
+              }}
+              className="flex items-center space-x-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
+            >
+              <PlusIcon className="h-4 w-4" />
+              <span>Write Blog</span>
+            </button>
           )}
         </div>
 
@@ -331,9 +341,20 @@ const BlogDiscovery = ({ user }: BlogDiscoveryProps) => {
         <div className="py-12 text-center">
           <p className="text-lg text-gray-500">No blogs found.</p>
           {user && (
-            <Link href="/blog/create">
-              <Button className="mt-4">Write the first blog</Button>
-            </Link>
+            <button
+              onClick={() => {
+                // Navigate to feed and open blog modal
+                window.location.href = '/feed?tab=blogs'
+                setTimeout(() => {
+                  const { openModal } =
+                    require('@/store/blogModal').default.getState()
+                  openModal()
+                }, 100)
+              }}
+              className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
+            >
+              Write the first blog
+            </button>
           )}
         </div>
       ) : (

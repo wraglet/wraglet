@@ -4,9 +4,11 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import getCurrentUser from '@/actions/getCurrentUser'
 import getDiscoverUsers from '@/actions/getDiscoverUsers'
+import type { PublicUser } from '@/interfaces'
 import client from '@/lib/db'
 import { initModels } from '@/lib/models'
 import Blog from '@/models/Blog'
+import type { IBlog } from '@/models/Blog'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 import {
   CalendarIcon,
@@ -28,15 +30,18 @@ interface BlogPageProps {
   params: Promise<{ slug: string }>
 }
 
-const getBlog = async (slug: string) => {
+type ContentBlock = IBlog['contentBlocks'][number]
+
+const getBlog = async (slug: string): Promise<IBlog | null> => {
   try {
     await client()
     await initModels()
 
-    const blog = (await Blog.findOne({ slug, status: 'published' })
+    const raw = await Blog.findOne({ slug, status: 'published' })
       .populate({
         path: 'author',
-        select: 'firstName lastName username gender pronoun profilePicture'
+        select:
+          'firstName lastName username gender pronoun profilePicture bio'
       })
       .populate({
         path: 'reactions',
@@ -52,16 +57,16 @@ const getBlog = async (slug: string) => {
           select: 'firstName lastName username gender pronoun profilePicture'
         }
       })
-      .lean()) as any
+      .lean()
 
-    if (!blog) {
+    if (!raw || Array.isArray(raw)) {
       return null
     }
 
     // Increment view count
-    await Blog.findByIdAndUpdate(blog._id, { $inc: { views: 1 } })
+    await Blog.findByIdAndUpdate(raw._id, { $inc: { views: 1 } })
 
-    return convertObjectIdsToStrings(blog)
+    return convertObjectIdsToStrings(raw) as IBlog
   } catch (error) {
     console.error('Error fetching blog:', error)
     return null
@@ -78,7 +83,7 @@ const BlogPage = async ({ params }: BlogPageProps) => {
   }
 
   const discoverUsers =
-    (await getDiscoverUsers().catch((err: any) => {
+    (await getDiscoverUsers().catch((err: unknown) => {
       console.error(
         'Error happened while getting getDiscoverUsers() on Blog Post component: ',
         err
@@ -88,13 +93,14 @@ const BlogPage = async ({ params }: BlogPageProps) => {
 
   // Filter out the current user and blog author from discover users
   const filteredDiscoverUsers = discoverUsers.filter(
-    (user: any) => user._id !== currentUser?._id && user._id !== blog.author._id
+    (user: PublicUser) =>
+      user._id !== currentUser?._id && user._id !== blog.author._id
   )
 
   // Deduplicate users by _id to prevent duplicate keys
   const uniqueDiscoverUsers = filteredDiscoverUsers.filter(
-    (user: any, index: number, array: any[]) =>
-      array.findIndex((u: any) => u._id === user._id) === index
+    (user: PublicUser, index: number, array: PublicUser[]) =>
+      array.findIndex((u) => u._id === user._id) === index
   )
 
   return (
@@ -139,14 +145,14 @@ const BlogPage = async ({ params }: BlogPageProps) => {
                         <div className="flex items-center space-x-1">
                           <CalendarIcon className="h-3 w-3" />
                           <span>
-                            {formatDistanceToNow(
-                              new Date(
-                                blog.publishedAt || blog.createdAt || Date.now()
-                              ),
-                              {
-                                addSuffix: true
-                              }
-                            )}
+                            {(() => {
+                              const at = blog.publishedAt || blog.createdAt
+                              return at
+                                ? formatDistanceToNow(new Date(at), {
+                                    addSuffix: true
+                                  })
+                                : '—'
+                            })()}
                           </span>
                         </div>
                         <div className="flex items-center space-x-1">
@@ -163,10 +169,14 @@ const BlogPage = async ({ params }: BlogPageProps) => {
 
                   {/* Interaction Buttons */}
                   <div className="flex items-center space-x-3">
-                    <button className="flex items-center space-x-1.5 rounded-lg bg-gray-100 px-2.5 py-1.5 text-sm text-gray-700 hover:bg-gray-200">
+                    <div className="flex items-center space-x-1.5 rounded-lg bg-gray-100 px-2.5 py-1.5 text-sm text-gray-700">
                       <HeartIcon className="h-4 w-4" />
-                      <span>{blog.likes}</span>
-                    </button>
+                      <span>
+                        {(blog.reactions?.length ?? 0) > 0
+                          ? blog.reactions?.length
+                          : blog.likes}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -191,15 +201,15 @@ const BlogPage = async ({ params }: BlogPageProps) => {
                   // Render structured content blocks
                   <div className="space-y-6">
                     {blog.contentBlocks
-                      .sort((a: any, b: any) => a.order - b.order)
-                      .map((block: any) => {
+                      .sort((a: ContentBlock, b: ContentBlock) => a.order - b.order)
+                      .map((block: ContentBlock) => {
                         switch (block.type) {
                           case 'text':
                             return (
                               <div
                                 key={block.id}
                                 dangerouslySetInnerHTML={{
-                                  __html: block.content
+                                  __html: block.content ?? ''
                                 }}
                                 className="prose-headings:text-gray-900 prose-a:text-blue-600 prose-strong:text-gray-900 prose-p:text-gray-700 prose-li:text-gray-700"
                               />
@@ -266,11 +276,7 @@ const BlogPage = async ({ params }: BlogPageProps) => {
                       })}
                   </div>
                 ) : (
-                  // Fallback to old content format
-                  <div
-                    dangerouslySetInnerHTML={{ __html: blog.content }}
-                    className="prose-headings:text-gray-900 prose-a:text-blue-600 prose-strong:text-gray-900 prose-p:text-gray-700 prose-li:text-gray-700"
-                  />
+                  <p className="text-sm text-gray-500">No content to display.</p>
                 )}
               </div>
 
@@ -295,7 +301,10 @@ const BlogPage = async ({ params }: BlogPageProps) => {
 
               {/* Blog Interactions */}
               <Suspense fallback={<Loading />}>
-                <BlogInteractionsAbly blog={blog} currentUser={currentUser} />
+                <BlogInteractionsAbly
+                  blog={blog}
+                  currentUser={currentUser as PublicUser | null}
+                />
               </Suspense>
 
               {/* Author Card */}

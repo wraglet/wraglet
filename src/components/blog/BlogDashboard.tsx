@@ -1,5 +1,6 @@
 'use client'
 
+import type { PublicUser } from '@/interfaces'
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -22,8 +23,10 @@ import toast from 'react-hot-toast'
 
 import Button from '@/components/shared/Button'
 
+type BlogStatusFilter = 'all' | 'published' | 'draft'
+
 interface BlogDashboardProps {
-  user: any
+  user: PublicUser
 }
 
 interface BlogStatsProps {
@@ -32,7 +35,7 @@ interface BlogStatsProps {
 
 const BlogStats = ({ blogs }: BlogStatsProps) => {
   const totalViews = blogs.reduce((sum, blog) => sum + (blog.views || 0), 0)
-  const totalLikes = blogs.reduce((sum, blog) => sum + (blog.likes || 0), 0)
+  const totalReactions = blogs.reduce((sum, blog) => sum + (blog.likes || 0), 0)
   const publishedBlogs = blogs.filter(
     (blog) => blog.status === 'published'
   ).length
@@ -58,8 +61,8 @@ const BlogStats = ({ blogs }: BlogStatsProps) => {
       color: 'text-green-600 bg-green-100'
     },
     {
-      label: 'Total Likes',
-      value: totalLikes.toLocaleString(),
+      label: 'Total Reactions',
+      value: totalReactions.toLocaleString(),
       icon: HeartIcon,
       color: 'text-red-600 bg-red-100'
     }
@@ -220,7 +223,7 @@ const BlogListItem = ({ blog, onEdit, onDelete }: BlogListItemProps) => {
 }
 
 const BlogDashboard = ({ user }: BlogDashboardProps) => {
-  const [filter, setFilter] = useState<'all' | 'published' | 'draft'>('all')
+  const [filter, setFilter] = useState<BlogStatusFilter>('all')
 
   // Fetch user's blogs
   const {
@@ -262,12 +265,21 @@ const BlogDashboard = ({ user }: BlogDashboardProps) => {
             </p>
           </div>
 
-          <Link href="/blog/create">
-            <Button className="flex items-center space-x-2 bg-blue-600 text-white hover:bg-blue-700">
-              <PlusIcon className="h-4 w-4" />
-              <span>New Blog</span>
-            </Button>
-          </Link>
+          <button
+            onClick={() => {
+              // Navigate to feed and open blog modal
+              window.location.href = '/feed?tab=blogs'
+              setTimeout(() => {
+                const { openModal } =
+                  require('@/store/blogModal').default.getState()
+                openModal()
+              }, 100)
+            }}
+            className="flex items-center space-x-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
+          >
+            <PlusIcon className="h-4 w-4" />
+            <span>New Blog</span>
+          </button>
         </div>
       </div>
 
@@ -286,7 +298,7 @@ const BlogDashboard = ({ user }: BlogDashboardProps) => {
           ].map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setFilter(tab.key as any)}
+              onClick={() => setFilter(tab.key as BlogStatusFilter)}
               className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                 filter === tab.key
                   ? 'bg-white text-gray-900 shadow-sm'
@@ -330,12 +342,21 @@ const BlogDashboard = ({ user }: BlogDashboardProps) => {
               : `You don't have any ${filter} blogs yet.`}
           </p>
           <div className="mt-6">
-            <Link href="/blog/create">
-              <Button className="flex items-center space-x-2">
-                <PlusIcon className="h-4 w-4" />
-                <span>Create Blog</span>
-              </Button>
-            </Link>
+            <button
+              onClick={() => {
+                // Navigate to feed and open blog modal
+                window.location.href = '/feed?tab=blogs'
+                setTimeout(() => {
+                  const { openModal } =
+                    require('@/store/blogModal').default.getState()
+                  openModal()
+                }, 100)
+              }}
+              className="flex items-center space-x-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
+            >
+              <PlusIcon className="h-4 w-4" />
+              <span>Create Blog</span>
+            </button>
           </div>
         </div>
       ) : (
