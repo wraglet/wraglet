@@ -4,10 +4,14 @@ import { ensureBlogLikedByRenamedToReactedBy } from '@/lib/migrateBlogLikesToRea
 import { initModels } from '@/lib/models'
 import mongoose from 'mongoose'
 
-const uri = process.env.MONGODB_URI!
-
-// Create a function to connect to the database
+// Read URI when connecting, not at module load — CLI tools (e.g. seed-e2e-user) load
+// `.env` / `.env.local` after imports, so a top-level read would stay undefined.
 const client = async () => {
+  const uri = process.env.MONGODB_URI
+  if (!uri) {
+    throw new Error('MONGODB_URI is not set')
+  }
+
   if (mongoose.connection.readyState >= 1) {
     initModels()
     await ensureBlogLikedByRenamedToReactedBy()
