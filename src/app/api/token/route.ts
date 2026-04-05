@@ -5,7 +5,8 @@ import * as Ably from 'ably'
 export const GET = async () => {
   try {
     const currentUser = await getCurrentUser()
-    if (!process.env.ABLY_API_KEY) {
+    const ablyApiKey = process.env.ABLY_API_KEY?.trim()
+    if (!ablyApiKey) {
       return NextResponse.json(
         {
           errorMessage: 'Missing ABLY_API_KEY environment variable.'
@@ -14,7 +15,7 @@ export const GET = async () => {
       )
     }
 
-    const client = new Ably.Rest(process.env.ABLY_API_KEY)
+    const client = new Ably.Rest(ablyApiKey)
     const tokenRequestData = await client.auth.createTokenRequest({
       clientId: currentUser?._id?.toString() || 'anonymous'
     })
