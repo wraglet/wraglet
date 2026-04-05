@@ -116,4 +116,22 @@ describe('getConversationFloaterDisplay', () => {
     }
     expect(getConversationFloaterDisplay(convo, 'a').name).toBe('Ann Ng, Bo Li')
   })
+
+  it('handles 1:1 thread with no counterpart after filtering', () => {
+    const convo: IConversation = {
+      _id: 'solo',
+      isGroup: false,
+      participants: [
+        {
+          _id: 'me',
+          firstName: 'Only',
+          lastName: 'Me',
+          username: 'me'
+        }
+      ]
+    }
+    const d = getConversationFloaterDisplay(convo, 'me')
+    expect(d.name).toBe('')
+    expect(d.users).toHaveLength(0)
+  })
 })

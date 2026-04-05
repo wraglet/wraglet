@@ -24,6 +24,11 @@ describe('getValidationMessages', () => {
     expect(msgs).toContain('❌ must contain at least one uppercase letter')
   })
 
+  it('flags missing lowercase when other character rules pass', () => {
+    const msgs = getValidationMessages('ABCDEFGH1!')
+    expect(msgs).toContain('❌ must contain at least one lowercase letter')
+  })
+
   it('reports passing rules for strong passwords', () => {
     const msgs = getValidationMessages('GoodPass1!')
     expect(msgs?.every((m) => m.startsWith('✔️'))).toBe(true)
