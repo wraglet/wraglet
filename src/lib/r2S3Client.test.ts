@@ -41,4 +41,36 @@ describe('createR2S3Client', () => {
       credentials: { accessKeyId: '', secretAccessKey: '' }
     })
   })
+
+  it('uses ?? fallback when credential env vars are absent', () => {
+    vi.stubEnv('CLOUDFLARE_ACCOUNT_ID', 'acc123')
+    vi.unstubAllEnvs()
+    vi.stubEnv('CLOUDFLARE_ACCOUNT_ID', 'acc123')
+    delete process.env.CLOUDFLARE_ACCESS_KEY_ID
+    delete process.env.CLOUDFLARE_SECRET_ACCESS_KEY
+    createR2S3Client()
+    expect(s3Config.last).toMatchObject({
+      credentials: { accessKeyId: '', secretAccessKey: '' }
+    })
+  })
+
+  it('uses defined access key with missing secret', () => {
+    vi.stubEnv('CLOUDFLARE_ACCOUNT_ID', 'acc123')
+    vi.stubEnv('CLOUDFLARE_ACCESS_KEY_ID', 'only-access')
+    delete process.env.CLOUDFLARE_SECRET_ACCESS_KEY
+    createR2S3Client()
+    expect(s3Config.last).toMatchObject({
+      credentials: { accessKeyId: 'only-access', secretAccessKey: '' }
+    })
+  })
+
+  it('uses defined secret with missing access key', () => {
+    vi.stubEnv('CLOUDFLARE_ACCOUNT_ID', 'acc123')
+    delete process.env.CLOUDFLARE_ACCESS_KEY_ID
+    vi.stubEnv('CLOUDFLARE_SECRET_ACCESS_KEY', 'only-secret')
+    createR2S3Client()
+    expect(s3Config.last).toMatchObject({
+      credentials: { accessKeyId: '', secretAccessKey: 'only-secret' }
+    })
+  })
 })

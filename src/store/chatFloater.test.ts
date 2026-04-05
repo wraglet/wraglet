@@ -46,6 +46,31 @@ describe('useChatFloaterStore', () => {
     expect(useChatFloaterStore.getState().minimizedChats).toHaveLength(1)
   })
 
+  it('openChat when already open does not duplicate the conversation', () => {
+    const s = useChatFloaterStore.getState()
+    s.openChat('dup')
+    s.openChat('dup')
+    const next = useChatFloaterStore.getState()
+    expect(next.openChats.filter((c) => c.conversationId === 'dup')).toHaveLength(
+      1
+    )
+  })
+
+  it('minimizeChat is a no-op when id is not open', () => {
+    reset()
+    const before = useChatFloaterStore.getState()
+    before.minimizeChat('missing')
+    expect(useChatFloaterStore.getState()).toEqual(before)
+  })
+
+  it('restoreChat is a no-op when id is not minimized', () => {
+    reset()
+    useChatFloaterStore.getState().openChat('only')
+    const mid = useChatFloaterStore.getState()
+    mid.restoreChat('ghost')
+    expect(useChatFloaterStore.getState()).toEqual(mid)
+  })
+
   it('closeChat removes from both stacks', () => {
     const s = useChatFloaterStore.getState()
     s.openChat('a')

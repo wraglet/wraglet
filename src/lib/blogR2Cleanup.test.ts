@@ -8,6 +8,9 @@ import {
   isSafeBlogR2Key
 } from '@/lib/blogR2Cleanup'
 
+const sortKeys = (keys: string[]) =>
+  keys.toSorted((a, b) => a.localeCompare(b))
+
 describe('isSafeBlogR2Key', () => {
   it('allows only blogs/covers and blogs/content prefixes', () => {
     expect(isSafeBlogR2Key('blogs/covers/abc')).toBe(true)
@@ -32,7 +35,24 @@ describe('collectBlogR2Keys', () => {
         { metadata: { key: 'evil/key' } }
       ]
     })
-    expect(keys.sort()).toEqual(['blogs/content/i1', 'blogs/covers/c1'])
+    expect(sortKeys(keys)).toEqual(['blogs/content/i1', 'blogs/covers/c1'])
+  })
+
+  it('ignores trimmed cover keys that are not under allowed prefixes', () => {
+    expect(
+      collectBlogR2Keys({
+        coverImage: { key: '  other/prefix/x  ' },
+        contentBlocks: []
+      })
+    ).toEqual([])
+  })
+
+  it('treats missing contentBlocks like an empty list', () => {
+    expect(
+      collectBlogR2Keys({
+        coverImage: { key: 'blogs/covers/only' }
+      })
+    ).toEqual(['blogs/covers/only'])
   })
 })
 
@@ -46,7 +66,7 @@ describe('blogR2KeysRemovedSinceUpdate', () => {
       coverImage: { key: 'blogs/covers/new' },
       contentBlocks: [{ metadata: { key: 'blogs/content/a' } }]
     }
-    expect(blogR2KeysRemovedSinceUpdate(prev, next).sort()).toEqual([
+    expect(sortKeys(blogR2KeysRemovedSinceUpdate(prev, next))).toEqual([
       'blogs/covers/old'
     ])
   })
