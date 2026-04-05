@@ -1,13 +1,13 @@
 # Development Guide for Wraglet
 
-Welcome to the development guide for Wraglet, a Next.js 13.4 application built with TypeScript and App Router. This guide will help you set up your development environment and provide an overview of the project structure and workflow.
+Welcome to the development guide for Wraglet, a **Next.js 16** application built with TypeScript and App Router. This guide will help you set up your development environment and provide an overview of the project structure and workflow.
 
 ## Prerequisites
 
 Make sure you have the following tools installed on your system:
 
-- [Node.js](https://nodejs.org/) (v14.x or higher)
-- [npm](https://www.npmjs.com/)
+- [Node.js](https://nodejs.org/) (current LTS recommended)
+- [Yarn](https://yarnpkg.com/) (see `package.json` `packageManager` for the expected version)
 
 ## Setting Up the Development Environment
 
@@ -76,6 +76,16 @@ Make sure you have the following tools installed on your system:
 - **`yarn format:check`** — same as above but fails if anything would change (CI-friendly).
 
 Ignored paths are listed in `.prettierignore` (for example `.next`, `node_modules`, coverage).
+
+## Automated testing
+
+The full testing stack, layout, mocking, Playwright/E2E env (including seeding), and TDD workflow are documented in **[docs/TESTING.md](docs/TESTING.md)**.
+
+Common commands:
+
+- **`yarn test`** — Vitest (once)
+- **`yarn test:watch`** — Vitest watch mode
+- **`yarn test:func`** — Playwright (starts dev server per config; optional `E2E_TEST_USER_PASSWORD` for authenticated specs — see `docs/TESTING.md` and `.env.example`)
 
 ## Quality checks and Git hooks
 

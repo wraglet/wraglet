@@ -27,8 +27,8 @@ Please take a moment to review this document to understand how to contribute eff
 - Follow the coding style and conventions used in the existing codebase.
 - Write clear, concise, and meaningful commit messages.
 - Keep code modular and maintainable.
-- Write unit tests for new functionality.
-- Ensure your changes do not break existing features.
+- **Testing:** Follow **[docs/TESTING.md](docs/TESTING.md)** — Vitest for units and components, Playwright for critical browser flows, colocated `*.test.ts` / `*.test.tsx`, and a test-first (TDD) workflow for new behavior and bugfixes when practical.
+- Ensure your changes do not break existing features (`yarn test`, and `yarn test:func` when your change affects routes or auth; see `DEVELOPMENT.md`).
 
 ## Reporting Issues
 

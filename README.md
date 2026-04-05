@@ -27,7 +27,7 @@ We welcome contributions from developers and enthusiasts like you to make Wragle
 
 4. **Pick an Issue:** Check out the [Issues](https://github.com/Wraglet/wraglet/issues) section for tasks that interest you. Feel free to create new issues if you identify areas of improvement.
 
-5. **Make Changes:** Work on the issue, add your improvements, and commit your changes. Be sure to follow the coding guidelines outlined in `CONTRIBUTING.md`.
+5. **Make Changes:** Work on the issue, add your improvements, and commit your changes. Follow `CONTRIBUTING.md` and the testing standard in [`docs/TESTING.md`](docs/TESTING.md) (Vitest, Playwright, TDD where it fits).
 
 6. **Submit a Pull Request:** Once your changes are ready, submit a pull request to the main repository. Be descriptive about what your changes achieve and why they are necessary.
 
@@ -37,7 +37,7 @@ We welcome contributions from developers and enthusiasts like you to make Wragle
 
 - **Be Respectful:** Treat everyone with respect and kindness. We encourage a positive and inclusive atmosphere for all.
 
-- **Quality Contributions:** Ensure your contributions are well-tested, maintain code quality, and provide meaningful improvements.
+- **Quality Contributions:** Ensure your contributions are well-tested (see [`docs/TESTING.md`](docs/TESTING.md)), maintain code quality, and provide meaningful improvements.
 
 - **Collaborate:** Feel free to collaborate with other contributors. Together, we can achieve great things.
 

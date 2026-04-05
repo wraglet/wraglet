@@ -1,9 +1,4 @@
 ---
-description: 
-globs: 
-alwaysApply: true
----
----
 description: Wraglet project coding standards and guidelines
 globs:
   - "src/**/*.{ts,tsx}"
@@ -454,26 +449,9 @@ export const API_ENDPOINTS = {
 } as const
 ```
 
-## Testing Patterns
+## Testing (Wraglet standard)
 
-```typescript
-// Test Pattern
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-
-describe('UserForm', () => {
-  it('should submit form with valid data', async () => {
-    render(<UserForm />)
-    
-    await userEvent.type(screen.getByLabelText('Email'), 'test@example.com')
-    await userEvent.type(screen.getByLabelText('Password'), 'password123')
-    
-    await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
-    
-    expect(screen.getByText('Success')).toBeInTheDocument()
-  })
-})
-```
+Do not duplicate the full testing section here — it is maintained in **`.cursor/rules/general.mdc`** under **Testing (Wraglet standard)** (examples, stack, and mocks). Project source of truth: [docs/TESTING.md](../../docs/TESTING.md).
 
 ## Documentation Patterns
 
