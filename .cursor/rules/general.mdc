@@ -456,23 +456,59 @@ export const API_ENDPOINTS = {
 } as const
 ```
 
-## Testing Patterns
+## Testing (Wraglet standard)
+
+Use this stack for **Next.js 16** (App Router). Full detail: [docs/TESTING.md](../../docs/TESTING.md).
+
+**Tools**
+
+- **Vitest** — the only test runner for automated tests (pure functions, hooks, route handlers, mocked integration). Do not add Jest for new work.
+- **React Testing Library** + **@testing-library/user-event** + **@testing-library/jest-dom** — render components and simulate users inside Vitest (`jsdom` environment).
+- **Playwright** — end-to-end tests in a real browser; use for critical user flows and cases where unit tests are a poor fit (e.g. async Server Components per Next.js testing docs).
+
+**Clarifications**
+
+- Vitest uses Vite internally only to run tests; `next dev` / `next build` do not use Vite. Next.js documents Vitest + RTL alongside Jest ([Testing](https://nextjs.org/docs/app/guides/testing)).
+- RTL is not a runner: `describe` / `it` / `expect` / `vi.mock` are Vitest.
+
+**Conventions**
+
+- Use **yarn** for installs and scripts (`yarn test`, `yarn test:watch`, etc.).
+- Colocate **`*.test.ts`** / **`*.test.tsx`** next to the module under test unless a feature already uses a documented `__tests__` layout.
+- Mock **Next.js** (`next/image`, `next/link`, `next/navigation`), **Ably**, **next-auth** / session, and **DB** (`@/lib/db`, models) where tests would otherwise hit the network or database.
 
 ```typescript
-// Test Pattern
+// Vitest + React Testing Library (component)
+import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { UserForm } from './UserForm'
 
 describe('UserForm', () => {
-  it('should submit form with valid data', async () => {
+  it('submits with valid data', async () => {
+    const user = userEvent.setup()
     render(<UserForm />)
-    
-    await userEvent.type(screen.getByLabelText('Email'), 'test@example.com')
-    await userEvent.type(screen.getByLabelText('Password'), 'password123')
-    
-    await userEvent.click(screen.getByRole('button', { name: 'Submit' }))
-    
+
+    await user.type(screen.getByLabelText('Email'), 'test@example.com')
+    await user.type(screen.getByLabelText('Password'), 'password123')
+    await user.click(screen.getByRole('button', { name: 'Submit' }))
+
     expect(screen.getByText('Success')).toBeInTheDocument()
+  })
+})
+```
+
+```typescript
+// Vitest only (pure util or route handler with mocks)
+import { describe, it, expect } from 'vitest'
+
+const clamp = (n: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, n))
+
+describe('clamp', () => {
+  it('bounds values', () => {
+    expect(clamp(5, 0, 10)).toBe(5)
+    expect(clamp(-1, 0, 10)).toBe(0)
   })
 })
 ```
