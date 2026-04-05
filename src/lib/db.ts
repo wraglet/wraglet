@@ -27,6 +27,7 @@ const client = async () => {
     console.log('Models initialized:', models)
 
     await ensureBlogLikedByRenamedToReactedBy()
+    return mongoose.connection
   } catch (error) {
     console.error('Error connecting to MongoDB with Mongoose:', error)
     throw error
