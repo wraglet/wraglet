@@ -35,5 +35,19 @@ export default defineConfig([
     rules: {
       'no-restricted-imports': 'off'
     }
+  },
+  // e2e: relative imports like ./fixtures and ./helpers match the restricted `patterns: ['.*']` rule.
+  {
+    files: ['e2e/**/*.ts'],
+    rules: {
+      'no-restricted-imports': 'off'
+    }
+  },
+  // scripts: `@/` path aliases match the same restricted-import patterns as other non-barrel files.
+  {
+    files: ['scripts/**/*.ts'],
+    rules: {
+      'no-restricted-imports': 'off'
+    }
   }
 ])
