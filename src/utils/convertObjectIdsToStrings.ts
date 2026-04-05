@@ -1,7 +1,10 @@
 import mongoose from 'mongoose'
 
-const isPlainObject = (v: unknown): v is Record<string, unknown> =>
-  v !== null && typeof v === 'object' && !Array.isArray(v)
+/** Only called from `convert` after null/undefined/primitives, arrays, and Mongoose/Buffer types are ruled out. */
+const isPlainObject = (v: object): v is Record<string, unknown> => {
+  if (Object.getPrototypeOf(v) === null) return true
+  return (v as { constructor?: unknown }).constructor === Object
+}
 
 const convertArray = (
   value: unknown[],
