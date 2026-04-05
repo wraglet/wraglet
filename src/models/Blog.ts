@@ -1,4 +1,5 @@
 import { AuthorInterface } from '@/interfaces'
+import { blogDocumentPreSave } from '@/models/blogDocumentPreSave'
 import { Document, model, models, Schema, Types } from 'mongoose'
 
 export const BLOG_CATEGORIES = [
@@ -157,28 +158,7 @@ const BlogSchema = new Schema<IBlogDocument>(
 
 // Slug is set by API routes (stable URLs); do not rewrite on title change here.
 
-BlogSchema.pre('save', function (next) {
-  // Calculate read time from contentBlocks (average 200 words per minute)
-  if (this.isModified('contentBlocks') && this.contentBlocks) {
-    const textContent = this.contentBlocks
-      .filter((block) => block.type === 'text')
-      .map((block) => block.content)
-      .join(' ')
-    const wordCount = textContent.split(/\s+/).length
-    this.readTime = Math.max(1, Math.ceil(wordCount / 200))
-  }
-
-  // Set publishedAt when status changes to published
-  if (
-    this.isModified('status') &&
-    this.status === 'published' &&
-    !this.publishedAt
-  ) {
-    this.publishedAt = new Date()
-  }
-
-  next()
-})
+BlogSchema.pre('save', blogDocumentPreSave)
 
 // Index for better performance
 BlogSchema.index({ author: 1, createdAt: -1 })
