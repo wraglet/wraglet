@@ -1,10 +1,9 @@
-import { describe, expect, it } from 'vitest'
-
 import {
   getClientMountSnapshot,
   getServerMountSnapshot,
   subscribeToClientMount
 } from '@/lib/hooks/clientMountSync'
+import { describe, expect, it } from 'vitest'
 
 describe('clientMountSync', () => {
   it('subscribe returns an unsubscribe noop', () => {

@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import useChatFloaterStore from '@/store/chatFloater'
 import useUserStore from '@/store/user'
+import { getConversationFloaterDisplay } from '@/utils/conversationFloaterDisplay'
 import { ChatRoomProvider } from '@ably/chat/react'
+import { useQueryClient } from '@tanstack/react-query'
 import { ChannelProvider } from 'ably/react'
 
 import type { IConversation } from '@/types/conversation'
@@ -14,16 +15,10 @@ import ChatFloaterRecentPanel from '@/components/chat/ChatFloaterRecentPanel'
 import ChatWindow from '@/components/chat/ChatWindow'
 import { NewChatModal } from '@/components/chat/NewChatModal'
 import Avatar from '@/components/shared/Avatar'
-import { getConversationFloaterDisplay } from '@/utils/conversationFloaterDisplay'
 
 const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
-  const {
-    openChats,
-    closeChat,
-    openChat,
-    minimizedChats,
-    minimizeChat
-  } = useChatFloaterStore()
+  const { openChats, closeChat, openChat, minimizedChats, minimizeChat } =
+    useChatFloaterStore()
   const queryClient = useQueryClient()
   const { user: currentUser } = useUserStore()
   const [showChatHeads, setShowChatHeads] = useState(false)

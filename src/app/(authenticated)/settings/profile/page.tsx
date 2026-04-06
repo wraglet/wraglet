@@ -224,9 +224,7 @@ const ProfileSettings = () => {
                   {form.formState.errors.bio.message}
                 </p>
               )}
-              <span className="text-xs text-gray-500">
-                {bioLength}/300
-              </span>
+              <span className="text-xs text-gray-500">{bioLength}/300</span>
             </div>
           </div>
 

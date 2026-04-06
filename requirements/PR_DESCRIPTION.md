@@ -10,17 +10,17 @@ This branch establishes a **documented testing standard** (Vitest + React Testin
 
 ## Commits (intent-ordered)
 
-| Commit     | Intent |
-|-----------|--------|
-| `fix(db)` | Read `MONGODB_URI` when connecting (not at module load) so CLI tools such as `yarn seed:e2e` can load `.env` after imports. |
-| `refactor(models)` | Extract blog `pre('save')` logic into `blogPreSave` / `blogDocumentPreSave` with Vitest coverage. |
-| `fix(utils)` | Tighten `isPlainObject` in `convertObjectIdsToStrings` (shared refs, null-prototype objects); expanded tests. |
-| `refactor(hooks)` | `useIsClient` uses `clientMountSync` + SSR test via `renderToStaticMarkup`. |
-| `fix(api)` | Trim `ABLY_API_KEY` in `GET /api/token` before Ably usage; aligns with E2E expectations. |
-| `test` | Additional Vitest coverage: password validations, blog R2 cleanup, R2 client, chat floater, conversation display. |
-| `chore` | `tsx`, `dotenv`; `yarn seed:e2e`; ESLint overrides for `e2e/**` and `scripts/**`; `commitlint` default export shape. |
-| `feat(e2e)` | Playwright config (env load, global setup, webServer), E2E specs, `scripts/seed-e2e-user.ts`, `.env.example` E2E vars. |
-| `docs` | `docs/TESTING.md`; Cursor rules link to it; `README` / `CONTRIBUTING` / `DEVELOPMENT` testing pointers. |
+| Commit             | Intent                                                                                                                      |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `fix(db)`          | Read `MONGODB_URI` when connecting (not at module load) so CLI tools such as `yarn seed:e2e` can load `.env` after imports. |
+| `refactor(models)` | Extract blog `pre('save')` logic into `blogPreSave` / `blogDocumentPreSave` with Vitest coverage.                           |
+| `fix(utils)`       | Tighten `isPlainObject` in `convertObjectIdsToStrings` (shared refs, null-prototype objects); expanded tests.               |
+| `refactor(hooks)`  | `useIsClient` uses `clientMountSync` + SSR test via `renderToStaticMarkup`.                                                 |
+| `fix(api)`         | Trim `ABLY_API_KEY` in `GET /api/token` before Ably usage; aligns with E2E expectations.                                    |
+| `test`             | Additional Vitest coverage: password validations, blog R2 cleanup, R2 client, chat floater, conversation display.           |
+| `chore`            | `tsx`, `dotenv`; `yarn seed:e2e`; ESLint overrides for `e2e/**` and `scripts/**`; `commitlint` default export shape.        |
+| `feat(e2e)`        | Playwright config (env load, global setup, webServer), E2E specs, `scripts/seed-e2e-user.ts`, `.env.example` E2E vars.      |
+| `docs`             | `docs/TESTING.md`; Cursor rules link to it; `README` / `CONTRIBUTING` / `DEVELOPMENT` testing pointers.                     |
 
 ## Documentation
 

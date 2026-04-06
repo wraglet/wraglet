@@ -86,10 +86,7 @@ const ShareModalNoAbly = ({
       }
     } catch (error: unknown) {
       console.error('Error sharing post:', error)
-      if (
-        axios.isAxiosError(error) &&
-        error.response?.status === 409
-      ) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
         toast.error('You have already shared this post')
       } else {
         toast.error('Failed to share post')

@@ -1,28 +1,26 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
-import { safeApiError } from '@/lib/apiError'
 import { getAblyInstance } from '@/lib/ably'
+import { safeApiError } from '@/lib/apiError'
 import client from '@/lib/db'
-import { initModels } from '@/lib/models'
-import { createR2S3Client } from '@/lib/r2S3Client'
 import { escapeRegExp } from '@/lib/escapeRegExp'
+import { initModels } from '@/lib/models'
 import { createNewBlogNotification } from '@/lib/notifications'
+import { createR2S3Client } from '@/lib/r2S3Client'
 import Blog, {
   BLOG_CATEGORIES,
   type BlogCategory,
   type IBlogDocument
 } from '@/models/Blog'
 import Follow from '@/models/Follow'
-import {
-  MAX_BLOG_CONTENT_BLOCKS,
-  MAX_FILE_SIZE
-} from '@/data/constants'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import type { FilterQuery } from 'mongoose'
 import { isValidObjectId } from 'mongoose'
 import slugify from 'slugify'
 import { v4 as uuidv4 } from 'uuid'
+
+import { MAX_BLOG_CONTENT_BLOCKS, MAX_FILE_SIZE } from '@/data/constants'
 
 export const POST = async (request: Request) => {
   const s3Client = createR2S3Client()
@@ -272,7 +270,9 @@ export const GET = async (request: Request) => {
     const tag = searchParams.get('tag')
     const authorFilter = searchParams.get('author')
     const search = searchParams.get('search')
-    const statusParam = (searchParams.get('status') || 'published').toLowerCase()
+    const statusParam = (
+      searchParams.get('status') || 'published'
+    ).toLowerCase()
 
     const query: FilterQuery<IBlogDocument> = {}
 

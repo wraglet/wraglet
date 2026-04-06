@@ -26,7 +26,7 @@ test.describe('authenticated journeys', () => {
   })
 
   test('settings profile shows profile heading', async ({ page }) => {
-    await page.goto('/settings')
+    await page.goto('/settings/profile')
     await expect(page).toHaveURL('/settings/profile')
     await expect(
       page.getByRole('heading', { level: 1, name: 'Profile Settings' })

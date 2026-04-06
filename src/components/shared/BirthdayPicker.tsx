@@ -1,4 +1,4 @@
-import { useEffect, useMemo, startTransition, useState } from 'react'
+import { startTransition, useEffect, useMemo, useState } from 'react'
 
 import ListBox, { ListProps } from '@/components/shared/ListBox'
 

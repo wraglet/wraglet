@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type { Gender } from '@/interfaces'
 import useUserStore, { User } from '@/store/user'
 import { type ChatMessageEvent, type Message } from '@ably/chat'
 import {
@@ -10,7 +11,6 @@ import {
 import axios from 'axios'
 
 import Avatar from '@/components/shared/Avatar'
-import type { Gender } from '@/interfaces'
 
 const ChatWindow = ({ conversationId }: { conversationId: string }) => {
   const { user: currentUser } = useUserStore()

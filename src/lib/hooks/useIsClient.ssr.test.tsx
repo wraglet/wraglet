@@ -1,8 +1,8 @@
 // @vitest-environment node
-import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
 
 import { useIsClient } from '@/lib/hooks/useIsClient'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { describe, expect, it } from 'vitest'
 
 const Flag = () => <span data-c={useIsClient() ? '1' : '0'} />
 

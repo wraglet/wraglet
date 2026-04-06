@@ -1,9 +1,8 @@
 'use client'
 
+import useChatFloaterStore from '@/store/chatFloater'
 import { useQueryClient } from '@tanstack/react-query'
 import { useChannel } from 'ably/react'
-
-import useChatFloaterStore from '@/store/chatFloater'
 
 type MessagePayload = {
   conversationId?: string

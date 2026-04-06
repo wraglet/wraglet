@@ -11,8 +11,10 @@ export async function loginAsE2EUser(page: Page) {
 
   await page.goto('/')
   await page.getByLabel('Email or Username').fill(email)
-  await page.getByLabel('Password').fill(password)
+  // `exact: true` — "Forgot Password?" also exposes an accessible name containing "Password".
+  await page.getByLabel('Password', { exact: true }).fill(password)
   await page.getByRole('button', { name: 'Login' }).click()
   await expect(page).toHaveURL('/feed', { timeout: 20_000 })
-  await expect(page.getByRole('banner')).toBeVisible()
+  // Authenticated shell is client-rendered; default 5s is too tight under parallel `next dev` load.
+  await expect(page.getByRole('banner')).toBeVisible({ timeout: 20_000 })
 }

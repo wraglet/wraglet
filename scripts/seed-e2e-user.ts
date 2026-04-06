@@ -10,16 +10,15 @@
  * `E2E_SEED_ALLOW_ANY_EMAIL=true`. Password must meet sign-up rules (see .env.example).
  * Also upserts a stable post and published blog (see e2e/fixtures/seed-constants.ts).
  */
+
 import path from 'node:path'
-
-import { config as loadEnv } from 'dotenv'
-import bcrypt from 'bcryptjs'
-import mongoose, { Types } from 'mongoose'
-
 import client from '@/lib/db'
 import Blog from '@/models/Blog'
 import Post from '@/models/Post'
 import User from '@/models/User'
+import bcrypt from 'bcryptjs'
+import { config as loadEnv } from 'dotenv'
+import mongoose, { Types } from 'mongoose'
 
 import {
   E2E_SEED_BLOG_SLUG,

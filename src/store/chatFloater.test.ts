@@ -1,6 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest'
-
 import useChatFloaterStore from '@/store/chatFloater'
+import { afterEach, describe, expect, it } from 'vitest'
 
 const reset = () => {
   useChatFloaterStore.setState({
@@ -51,9 +50,9 @@ describe('useChatFloaterStore', () => {
     s.openChat('dup')
     s.openChat('dup')
     const next = useChatFloaterStore.getState()
-    expect(next.openChats.filter((c) => c.conversationId === 'dup')).toHaveLength(
-      1
-    )
+    expect(
+      next.openChats.filter((c) => c.conversationId === 'dup')
+    ).toHaveLength(1)
   })
 
   it('minimizeChat is a no-op when id is not open', () => {

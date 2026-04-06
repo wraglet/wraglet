@@ -1,8 +1,8 @@
 'use client'
 
-import type { IConversation } from '@/types/conversation'
 import { getConversationFloaterDisplay } from '@/utils/conversationFloaterDisplay'
 
+import type { IConversation } from '@/types/conversation'
 import FloaterConversationAvatarButton from '@/components/chat/FloaterConversationAvatarButton'
 
 const RECENT_LIMIT = 8

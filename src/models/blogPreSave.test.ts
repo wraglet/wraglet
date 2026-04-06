@@ -1,9 +1,8 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-
 import {
   applyBlogPreSaveSideEffects,
   type BlogPreSaveDoc
 } from '@/models/blogPreSave'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 describe('applyBlogPreSaveSideEffects', () => {
   afterEach(() => {
@@ -22,6 +21,20 @@ describe('applyBlogPreSaveSideEffects', () => {
     }
     applyBlogPreSaveSideEffects(doc)
     expect(doc.readTime).toBe(2)
+  })
+
+  it('does not count missing or whitespace-only text blocks toward word count', () => {
+    const doc: BlogPreSaveDoc = {
+      isModified: (p) => p === 'contentBlocks',
+      readTime: 5,
+      contentBlocks: [
+        { id: '1', type: 'text', order: 0 },
+        { id: '2', type: 'text', order: 1, content: '   ' },
+        { id: '3', type: 'text', order: 2, content: 'one two three' }
+      ]
+    }
+    applyBlogPreSaveSideEffects(doc)
+    expect(doc.readTime).toBe(1)
   })
 
   it('does not change readTime when contentBlocks not modified', () => {

@@ -4,11 +4,11 @@ This document is the project source of truth for **automated testing**. It match
 
 ## Stack (Next.js 16, App Router)
 
-| Layer | Tool | Role |
-|-------|------|------|
-| Test runner | **Vitest** | All non-browser automated tests: utilities, hooks, API route handlers (with mocks), and any integration-style tests run in Node or jsdom. |
-| Components / DOM | **React Testing Library** + **@testing-library/user-event** + **@testing-library/jest-dom** | Render React trees and assert behavior from a user perspective, **inside** Vitest. |
-| End-to-end | **Playwright** | Real browser, navigation, auth cookies, and flows that unit tests cannot cover reliably. |
+| Layer            | Tool                                                                                        | Role                                                                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Test runner      | **Vitest**                                                                                  | All non-browser automated tests: utilities, hooks, API route handlers (with mocks), and any integration-style tests run in Node or jsdom. |
+| Components / DOM | **React Testing Library** + **@testing-library/user-event** + **@testing-library/jest-dom** | Render React trees and assert behavior from a user perspective, **inside** Vitest.                                                        |
+| End-to-end       | **Playwright**                                                                              | Real browser, navigation, auth cookies, and flows that unit tests cannot cover reliably.                                                  |
 
 **Do not add Jest** for new work. **Do not use RTL without Vitest** (or another runner); RTL does not execute tests.
 
@@ -27,7 +27,7 @@ Suggested scripts once tooling is installed:
 - `yarn test:coverage` — coverage (e.g. `@vitest/coverage-v8`)
 - `yarn test:func` / `yarn test:e2e` — Playwright (functional / E2E)
 - `yarn test:e2e:ui` — Playwright UI mode
-- `yarn validate` — `yarn test`, `yarn test:func`, `yarn lint`, and `yarn build` (matches Husky `pre-commit`)
+- `yarn validate` — `yarn format:check`, `yarn lint`, `yarn test`, `yarn test:func`, and `yarn build` (matches Husky `pre-commit`)
 - `yarn seed:e2e` — upsert the Playwright E2E user in MongoDB **only when** `E2E_SEED_ENABLED=true` (or `1`) is set alongside `E2E_TEST_USER_PASSWORD` and `MONGODB_URI` (see Playwright notes below). **Not** invoked by `next build`, `next start`, or normal deploys.
 - `yarn format` / `yarn format:check` — Prettier
 
@@ -52,7 +52,7 @@ Suggested scripts once tooling is installed:
 
 ## Playwright notes
 
-- Local dev server for this repo uses **port 5000** (`yarn dev`). Set Playwright **`baseURL`** to `http://localhost:5000` unless your workflow differs.
+- Local dev server for this repo uses **port 5000** (`yarn dev`). Set Playwright **`baseURL`** to `http://localhost:5000` unless your workflow differs. Playwright uses **at most 4 workers** locally (1 in CI) so a single `next dev` process is not overloaded; login waits up to **20s** for the authenticated header (`role="banner"`).
 - **Config loads `.env` then `.env.local`** (via `playwright.config.ts`) so E2E variables match what you use locally.
 - **Authenticated flows:** Set `E2E_TEST_USER_PASSWORD` in `.env` or `.env.local` (password must meet the same rules as sign-up: length, upper, lower, digit, and a special character from `@$!%*?&#`). For **manual** `yarn seed:e2e`, also set **`E2E_SEED_ENABLED=true`** so the script is allowed to write to MongoDB. Optionally override `E2E_TEST_USER_EMAIL` (default `e2e-test@wraglet.local`) or `E2E_TEST_USER_USERNAME` (default `@e2e_wraglet`) if the default username is already taken by another account. When `E2E_TEST_USER_PASSWORD` is set, **`yarn test:func`** runs **`yarn seed:e2e`** once in global setup with `E2E_SEED_ENABLED` injected (you do not need that variable in `.env` for Playwright-only runs). If the password is not set, authenticated specs are skipped and only logged-out / public tests run.
 - **Seed safety:** `scripts/seed-e2e-user.ts` exits immediately if `NODE_ENV=production` or `VERCEL_ENV=production`, and refuses to run without `E2E_SEED_ENABLED`. **`E2E_TEST_USER_EMAIL` must end with `@wraglet.local`** unless `E2E_SEED_ALLOW_ANY_EMAIL=true` (isolated sandboxes only). Use a **dedicated test database** URI locally and in CI; do not point production MongoDB at E2E credentials. Do not set `E2E_SEED_ENABLED` or `E2E_TEST_USER_PASSWORD` on production hosting.

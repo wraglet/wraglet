@@ -48,9 +48,9 @@ test.describe('authenticated content (seeded data)', () => {
 
   test('blog edit page loads for author', async ({ page }) => {
     await page.goto(`/blog/${E2E_SEED_BLOG_SLUG}/edit`)
-    await expect(
-      page.getByRole('heading', { name: 'Edit Blog' })
-    ).toBeVisible({ timeout: 20_000 })
+    await expect(page.getByRole('heading', { name: 'Edit Blog' })).toBeVisible({
+      timeout: 20_000
+    })
   })
 
   test('search with query shows results for seeded data', async ({ page }) => {

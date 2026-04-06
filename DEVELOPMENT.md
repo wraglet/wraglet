@@ -91,7 +91,7 @@ Common commands:
 
 After **`yarn install`**, Husky wires Git to run:
 
-- **`pre-commit`** — `yarn test` (Vitest), **`yarn test:func`** (Playwright), `yarn lint`, and `yarn build`. All must pass or the commit is aborted.
+- **`pre-commit`** — `yarn format:check`, `yarn lint`, `yarn test` (Vitest), **`yarn test:func`** (Playwright), and `yarn build`. All must pass or the commit is aborted.
 - **`commit-msg`** — [Conventional Commits](https://www.conventionalcommits.org/) via Commitlint (for example `feat:`, `fix:`, `chore:`).
 
 One-liner to match CI/hooks locally:

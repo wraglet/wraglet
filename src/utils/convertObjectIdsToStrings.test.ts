@@ -1,7 +1,6 @@
+import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 import mongoose from 'mongoose'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-
-import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 
 describe('convertObjectIdsToStrings', () => {
   afterEach(() => {
@@ -97,7 +96,9 @@ describe('convertObjectIdsToStrings', () => {
   })
 
   it('filters array items that convert to undefined (e.g. Buffer)', () => {
-    expect(convertObjectIdsToStrings([Buffer.from('a'), 'keep'])).toEqual(['keep'])
+    expect(convertObjectIdsToStrings([Buffer.from('a'), 'keep'])).toEqual([
+      'keep'
+    ])
   })
 
   it('does not push array elements whose conversion is undefined', () => {
@@ -141,8 +142,8 @@ describe('convertObjectIdsToStrings', () => {
   })
 
   it('does not set object keys when the nested value is undefined', () => {
-    expect(
-      convertObjectIdsToStrings({ keep: 1, drop: undefined })
-    ).toEqual({ keep: 1 })
+    expect(convertObjectIdsToStrings({ keep: 1, drop: undefined })).toEqual({
+      keep: 1
+    })
   })
 })

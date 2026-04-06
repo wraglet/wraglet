@@ -1,10 +1,10 @@
-import type { IConversation } from '@/types/conversation'
-import { describe, expect, it } from 'vitest'
-
 import {
   getConversationFloaterDisplay,
   participantAvatarUrl
 } from '@/utils/conversationFloaterDisplay'
+import { describe, expect, it } from 'vitest'
+
+import type { IConversation } from '@/types/conversation'
 
 describe('participantAvatarUrl', () => {
   it('returns null when missing user or picture', () => {
@@ -13,9 +13,9 @@ describe('participantAvatarUrl', () => {
   })
 
   it('accepts string profile picture', () => {
-    expect(participantAvatarUrl({ profilePicture: '  https://x.test/a.png  ' })).toBe(
-      'https://x.test/a.png'
-    )
+    expect(
+      participantAvatarUrl({ profilePicture: '  https://x.test/a.png  ' })
+    ).toBe('https://x.test/a.png')
   })
 
   it('accepts object profile picture with url', () => {

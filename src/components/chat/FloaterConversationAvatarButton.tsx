@@ -1,6 +1,7 @@
 'use client'
 
 import type { Gender } from '@/interfaces'
+
 import { DEFAULT_GENDER } from '@/data/constants'
 import Avatar from '@/components/shared/Avatar'
 

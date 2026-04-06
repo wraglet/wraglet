@@ -53,7 +53,10 @@ const Header = ({ currentUser }: { currentUser: IUser & { _id: string } }) => {
   ])
 
   return (
-    <header className="fixed z-50 flex h-[56px] w-full items-center justify-between gap-x-5 bg-[#0EA5E9] px-2.5 drop-shadow-md md:gap-x-8 lg:gap-x-10 lg:px-6">
+    <header
+      role="banner"
+      className="fixed z-50 flex h-[56px] w-full items-center justify-between gap-x-5 bg-[#0EA5E9] px-2.5 drop-shadow-md md:gap-x-8 lg:gap-x-10 lg:px-6"
+    >
       <div className="col-span-2 flex h-full items-center space-x-1.5">
         <Link href="/feed" className="block">
           <div className="relative h-10 w-10">

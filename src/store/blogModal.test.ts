@@ -1,6 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest'
-
 import useBlogModalStore from '@/store/blogModal'
+import { afterEach, describe, expect, it } from 'vitest'
 
 describe('useBlogModalStore', () => {
   afterEach(() => {
