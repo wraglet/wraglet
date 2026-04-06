@@ -42,9 +42,7 @@ export const deleteBlogKeysFromR2 = async (
 
   for (const key of keys) {
     try {
-      await s3Client.send(
-        new DeleteObjectCommand({ Bucket: bucket, Key: key })
-      )
+      await s3Client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }))
     } catch (error) {
       console.error('Error deleting R2 object:', key, error)
     }

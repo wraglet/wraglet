@@ -12,10 +12,11 @@ import { initModels } from '@/lib/models'
 import { createR2S3Client } from '@/lib/r2S3Client'
 import Blog, { BLOG_CATEGORIES } from '@/models/Blog'
 import BlogComment from '@/models/BlogComment'
-import { MAX_BLOG_CONTENT_BLOCKS, MAX_FILE_SIZE } from '@/data/constants'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
 import { v4 as uuidv4 } from 'uuid'
+
+import { MAX_BLOG_CONTENT_BLOCKS, MAX_FILE_SIZE } from '@/data/constants'
 
 export const GET = async (
   request: Request,
@@ -166,7 +167,9 @@ export const PUT = async (
         )
       }
       const textLen = rawContentBlocks
-        .filter((b: { type?: string }) => b.type === 'text' || b.type === 'code')
+        .filter(
+          (b: { type?: string }) => b.type === 'text' || b.type === 'code'
+        )
         .reduce(
           (acc: number, b: { content?: string }) =>
             acc + (b.content?.length || 0),

@@ -1,10 +1,10 @@
 'use client'
 
-import type { PublicUser } from '@/interfaces'
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import type { PublicUser } from '@/interfaces'
 import { IBlog } from '@/models/Blog'
 import {
   CalendarIcon,

@@ -160,10 +160,7 @@ const MessagesWithAbly = () => {
             {selectedId && (
               <div className="min-h-0 flex-1">
                 <ChatRoomProvider name={selectedId}>
-                  <ChatWindow
-                    key={selectedId}
-                    conversationId={selectedId}
-                  />
+                  <ChatWindow key={selectedId} conversationId={selectedId} />
                 </ChatRoomProvider>
               </div>
             )}

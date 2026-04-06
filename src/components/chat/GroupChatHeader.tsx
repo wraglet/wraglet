@@ -1,5 +1,6 @@
-import Avatar from '@/components/shared/Avatar'
 import type { Gender } from '@/interfaces'
+
+import Avatar from '@/components/shared/Avatar'
 
 interface User {
   _id: string

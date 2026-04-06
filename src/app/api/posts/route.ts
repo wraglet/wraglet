@@ -34,7 +34,18 @@ export const POST = async (request: Request) => {
 
     const currentUser = await getCurrentUser()
     const body = await request.json()
-    const { text, audience = 'public', image, isBlogShare, blogCoverImage, blogUrl, blogSlug, blogTitle, blogSummary, blogCategory } = body
+    const {
+      text,
+      audience = 'public',
+      image,
+      isBlogShare,
+      blogCoverImage,
+      blogUrl,
+      blogSlug,
+      blogTitle,
+      blogSummary,
+      blogCategory
+    } = body
 
     if (!currentUser?._id || !currentUser?.email) {
       return new NextResponse('Unauthorized', { status: 401 })
@@ -399,9 +410,7 @@ export const GET = async (request: Request) => {
       .slice(0, limit + 1)
 
     const hasMore = allContent.length > limit
-    const contentToReturn = hasMore
-      ? allContent.slice(0, limit)
-      : allContent
+    const contentToReturn = hasMore ? allContent.slice(0, limit) : allContent
     const nextCursor =
       hasMore && contentToReturn.length > 0
         ? contentToReturn[contentToReturn.length - 1].createdAt.toISOString()

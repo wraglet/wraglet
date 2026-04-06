@@ -1,12 +1,12 @@
 'use server'
 
 import getSession from '@/actions/getSession'
+import type { PublicUser } from '@/interfaces'
 import client from '@/lib/db'
 import User from '@/models/User'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 
 import { DEFAULT_GENDER, DEFAULT_PRONOUN } from '@/data/constants'
-import type { PublicUser } from '@/interfaces'
 
 const getOtherUsers = async (): Promise<PublicUser[]> => {
   const session = await getSession().catch((err) => {
@@ -34,9 +34,7 @@ const getOtherUsers = async (): Promise<PublicUser[]> => {
 
     // Convert each user document to a plain object and convert ObjectId to string
     const plainUsers = users.map((user) => user.toObject())
-    const convertedUsers = convertObjectIdsToStrings(
-      plainUsers
-    ) as PublicUser[]
+    const convertedUsers = convertObjectIdsToStrings(plainUsers) as PublicUser[]
 
     // Ensure all users have gender and pronoun fields
     const usersWithDefaults = convertedUsers.map((user) => ({
@@ -56,8 +54,7 @@ const getOtherUsers = async (): Promise<PublicUser[]> => {
 
     // Remove duplicates based on _id to ensure unique users
     const uniqueUsers = usersWithDefaults.filter(
-      (user, index, self) =>
-        index === self.findIndex((u) => u._id === user._id)
+      (user, index, self) => index === self.findIndex((u) => u._id === user._id)
     )
 
     return uniqueUsers

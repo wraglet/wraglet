@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import type { Gender } from '@/interfaces'
+import { useIsClient } from '@/lib/hooks/useIsClient'
 import useUserStore from '@/store/user'
 
 import Avatar from '@/components/shared/Avatar'
@@ -11,8 +13,6 @@ import {
   EventsIcon,
   VideoIcon
 } from '@/components/shared/Icons'
-import type { Gender } from '@/interfaces'
-import { useIsClient } from '@/lib/hooks/useIsClient'
 
 const LeftSideNav = () => {
   const { user } = useUserStore()

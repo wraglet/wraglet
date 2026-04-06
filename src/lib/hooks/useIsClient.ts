@@ -1,7 +1,14 @@
 import { useSyncExternalStore } from 'react'
-
-const emptySubscribe = () => () => {}
+import {
+  getClientMountSnapshot,
+  getServerMountSnapshot,
+  subscribeToClientMount
+} from '@/lib/hooks/clientMountSync'
 
 /** SSR-safe client mount flag without setState-in-effect. */
 export const useIsClient = () =>
-  useSyncExternalStore(emptySubscribe, () => true, () => false)
+  useSyncExternalStore(
+    subscribeToClientMount,
+    getClientMountSnapshot,
+    getServerMountSnapshot
+  )

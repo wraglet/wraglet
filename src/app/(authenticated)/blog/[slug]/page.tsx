@@ -40,8 +40,7 @@ const getBlog = async (slug: string): Promise<IBlog | null> => {
     const raw = await Blog.findOne({ slug, status: 'published' })
       .populate({
         path: 'author',
-        select:
-          'firstName lastName username gender pronoun profilePicture bio'
+        select: 'firstName lastName username gender pronoun profilePicture bio'
       })
       .populate({
         path: 'reactions',
@@ -201,7 +200,9 @@ const BlogPage = async ({ params }: BlogPageProps) => {
                   // Render structured content blocks
                   <div className="space-y-6">
                     {blog.contentBlocks
-                      .sort((a: ContentBlock, b: ContentBlock) => a.order - b.order)
+                      .sort(
+                        (a: ContentBlock, b: ContentBlock) => a.order - b.order
+                      )
                       .map((block: ContentBlock) => {
                         switch (block.type) {
                           case 'text':
@@ -276,7 +277,9 @@ const BlogPage = async ({ params }: BlogPageProps) => {
                       })}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">No content to display.</p>
+                  <p className="text-sm text-gray-500">
+                    No content to display.
+                  </p>
                 )}
               </div>
 

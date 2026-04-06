@@ -1,15 +1,15 @@
 type Props = {
-  w?: string;
-  h?: string;
-  fill?: string;
-  fillColor?: string;
-};
+  w?: string
+  h?: string
+  fill?: string
+  fillColor?: string
+}
 
 const CrossWhite = ({
   fill = '#00000',
   fillColor = 'white',
   w = '20',
-  h = '20',
+  h = '20'
 }: Props) => {
   return (
     <svg
@@ -25,7 +25,7 @@ const CrossWhite = ({
         fill={fill}
       />
     </svg>
-  );
-};
+  )
+}
 
-export default CrossWhite;
+export default CrossWhite

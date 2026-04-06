@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import { safeApiError } from '@/lib/apiError'
-import { migrateLegacyBlogLikesToReactions } from '@/lib/migrateBlogLikesToReactions'
 import client from '@/lib/db'
+import { migrateLegacyBlogLikesToReactions } from '@/lib/migrateBlogLikesToReactions'
 import { initModels } from '@/lib/models'
 import { createBlogReactionNotification } from '@/lib/notifications'
 import Blog from '@/models/Blog'
@@ -10,14 +10,7 @@ import PostReaction from '@/models/PostReaction'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 import type { Types } from 'mongoose'
 
-const REACTION_TYPES = new Set([
-  'like',
-  'love',
-  'haha',
-  'wow',
-  'sad',
-  'angry'
-])
+const REACTION_TYPES = new Set(['like', 'love', 'haha', 'wow', 'sad', 'angry'])
 
 const fetchPublishedBlogDoc = async (slug: string) => {
   return Blog.findOne({ slug, status: 'published' })
@@ -93,7 +86,10 @@ export const PATCH = async (
     }
 
     if (!type || !REACTION_TYPES.has(type)) {
-      return NextResponse.json({ error: 'Invalid reaction type' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Invalid reaction type' },
+        { status: 400 }
+      )
     }
 
     const blogMeta = await fetchPublishedBlogDoc(slug)

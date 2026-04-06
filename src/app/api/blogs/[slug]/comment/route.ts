@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
-import { safeApiError } from '@/lib/apiError'
 import { getAblyInstance } from '@/lib/ably'
+import { safeApiError } from '@/lib/apiError'
 import client from '@/lib/db'
 import { initModels } from '@/lib/models'
 import Blog from '@/models/Blog'
 import BlogComment, { IBlogCommentDocument } from '@/models/BlogComment'
-import { MAX_BLOG_COMMENT_LENGTH } from '@/data/constants'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 import type { FilterQuery } from 'mongoose'
 import { isValidObjectId, type Types } from 'mongoose'
+
+import { MAX_BLOG_COMMENT_LENGTH } from '@/data/constants'
 
 export const POST = async (
   request: Request,

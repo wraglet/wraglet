@@ -3,12 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { Gender } from '@/interfaces'
+import { useIsClient } from '@/lib/hooks/useIsClient'
 import useUserStore from '@/store/user'
 import { Cog6ToothIcon } from '@heroicons/react/24/outline'
 
 import Avatar from '@/components/shared/Avatar'
 import { BlogOutlineIcon, VideoIcon } from '@/components/shared/Icons'
-import { useIsClient } from '@/lib/hooks/useIsClient'
 
 const MobileBottomNav = () => {
   const { user } = useUserStore()

@@ -1,6 +1,6 @@
-import { defineConfig, globalIgnores } from 'eslint/config'
 import nextVitals from 'eslint-config-next/core-web-vitals'
 import unusedImports from 'eslint-plugin-unused-imports'
+import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
   ...nextVitals,
@@ -10,7 +10,11 @@ export default defineConfig([
     '.next/**',
     'out/**',
     'build/**',
-    'next-env.d.ts'
+    'next-env.d.ts',
+    'coverage/**',
+    'playwright-report/**',
+    'test-results/**',
+    'blob-report/**'
   ]),
   {
     plugins: {
@@ -28,6 +32,20 @@ export default defineConfig([
   },
   {
     files: ['src/**/index.tsx', 'src/**/index.ts'],
+    rules: {
+      'no-restricted-imports': 'off'
+    }
+  },
+  // e2e: relative imports like ./fixtures and ./helpers match the restricted `patterns: ['.*']` rule.
+  {
+    files: ['e2e/**/*.ts'],
+    rules: {
+      'no-restricted-imports': 'off'
+    }
+  },
+  // scripts: `@/` path aliases match the same restricted-import patterns as other non-barrel files.
+  {
+    files: ['scripts/**/*.ts'],
     rules: {
       'no-restricted-imports': 'off'
     }

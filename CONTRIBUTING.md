@@ -24,11 +24,12 @@ Please take a moment to review this document to understand how to contribute eff
 
 ## Code Style Guidelines
 
+- **Formatting (required for commits):** The Git **pre-commit** hook runs **`yarn format:check`** first. If anything does not match [`.prettierrc`](.prettierrc), the commit is **aborted**. Run **`yarn format`** to fix files, then stage and commit again. The same check is part of **`yarn validate`**.
 - Follow the coding style and conventions used in the existing codebase.
 - Write clear, concise, and meaningful commit messages.
 - Keep code modular and maintainable.
-- Write unit tests for new functionality.
-- Ensure your changes do not break existing features.
+- **Testing:** Follow **[docs/TESTING.md](docs/TESTING.md)** — Vitest for units and components, Playwright for critical browser flows, colocated `*.test.ts` / `*.test.tsx`, and a test-first (TDD) workflow for new behavior and bugfixes when practical.
+- Ensure your changes do not break existing features (`yarn test`, and `yarn test:func` when your change affects routes or auth; see `DEVELOPMENT.md`).
 
 ## Reporting Issues
 

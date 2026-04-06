@@ -4,8 +4,9 @@ import { FC } from 'react'
 import { IComment } from '@/models/Comment'
 import { formatDistanceToNow } from 'date-fns'
 
-import Avatar from '@/components/shared/Avatar'
 import { DEFAULT_GENDER } from '@/data/constants'
+import Avatar from '@/components/shared/Avatar'
+
 interface Props {
   comment: IComment
 }

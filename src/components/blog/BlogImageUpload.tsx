@@ -1,10 +1,10 @@
 'use client'
 
 import {
+  startTransition,
   useCallback,
   useEffect,
   useRef,
-  startTransition,
   useState
 } from 'react'
 import Image from 'next/image'

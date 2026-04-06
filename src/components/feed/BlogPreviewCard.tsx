@@ -84,4 +84,3 @@ const BlogPreviewCard = ({ blogPreview }: BlogPreviewCardProps) => {
 }
 
 export default BlogPreviewCard
-
