@@ -1,6 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest'
-
 import getLimit from '@/utils/getLimit'
+import { afterEach, describe, expect, it } from 'vitest'
 
 describe('getLimit (jsdom)', () => {
   afterEach(() => {

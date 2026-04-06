@@ -1,6 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-
 import { safeApiError } from '@/lib/apiError'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 describe('safeApiError', () => {
   afterEach(() => {

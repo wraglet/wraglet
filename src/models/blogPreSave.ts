@@ -16,9 +16,11 @@ export const applyBlogPreSaveSideEffects = (doc: BlogPreSaveDoc): void => {
   if (doc.isModified('contentBlocks') && doc.contentBlocks) {
     const textContent = doc.contentBlocks
       .filter((block) => block.type === 'text')
-      .map((block) => block.content)
+      .map((block) => (block.content ?? '').trim())
+      .filter((chunk) => chunk.length > 0)
       .join(' ')
-    const wordCount = textContent.split(/\s+/).length
+    const wordCount =
+      textContent.length === 0 ? 0 : textContent.split(/\s+/).length
     doc.readTime = Math.max(1, Math.ceil(wordCount / 200))
   }
 

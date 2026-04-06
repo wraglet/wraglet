@@ -55,7 +55,10 @@ test.describe('authenticated UI flows', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: /E2E Welcome Blog/i })
     ).toBeVisible({ timeout: 20_000 })
-    await page.getByRole('link', { name: /E2E Test/i }).first().click()
+    await page
+      .getByRole('link', { name: /E2E Test/i })
+      .first()
+      .click()
     await expect(page).toHaveURL(/\/@/)
     await expect(
       page.getByRole('heading', { level: 1, name: 'E2E Test' })

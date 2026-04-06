@@ -6,11 +6,14 @@ import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Gender } from '@/interfaces'
-import { DEFAULT_GENDER } from '@/data/constants'
 import { useFollow } from '@/lib/hooks/useFollow'
 import { IComment } from '@/models/Comment'
 import { IPost } from '@/models/Post'
 import useUserStore from '@/store/user'
+import {
+  mergePostClientUpdate,
+  mergePostFromFeedProp
+} from '@/utils/mergePostClientUpdate'
 import {
   arrow,
   flip,
@@ -34,15 +37,12 @@ import { FaRegComment, FaRegHeart } from 'react-icons/fa6'
 import { HiOutlineEllipsisHorizontal } from 'react-icons/hi2'
 import { LuArrowBigDown, LuArrowBigUp } from 'react-icons/lu'
 
+import { DEFAULT_GENDER } from '@/data/constants'
+import BlogPreviewCard from '@/components/feed/BlogPreviewCard'
 import CommentComponent from '@/components/feed/Comment'
 import Avatar from '@/components/shared/Avatar'
 import { ShareIcon } from '@/components/shared/Icons'
 import ReactionIcon from '@/components/shared/ReactionIcon'
-import BlogPreviewCard from '@/components/feed/BlogPreviewCard'
-import {
-  mergePostClientUpdate,
-  mergePostFromFeedProp
-} from '@/utils/mergePostClientUpdate'
 
 // Dynamic import for ShareModal
 const ShareModalWithAbly = dynamic(
@@ -491,32 +491,32 @@ const Post = ({ post: initialPost }: PostProps) => {
               ) : (
                 /* Regular Images (only show if not a blog share) */
                 post.content.images &&
-                  post.content.images.map(
-                    (
-                      image: {
-                        key: Key | null | undefined
-                        url: string | StaticImport
-                      },
-                      index: number
-                    ) => (
-                      <div
-                        key={image.key || `image-${index}`}
-                        className="my-3 block overflow-hidden rounded-md"
-                      >
-                        <Image
-                          src={image.url}
-                          alt="Post Image"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          width={1}
-                          height={1}
-                          style={{
-                            height: 'auto',
-                            width: '100%'
-                          }}
-                        />
-                      </div>
-                    )
+                post.content.images.map(
+                  (
+                    image: {
+                      key: Key | null | undefined
+                      url: string | StaticImport
+                    },
+                    index: number
+                  ) => (
+                    <div
+                      key={image.key || `image-${index}`}
+                      className="my-3 block overflow-hidden rounded-md"
+                    >
+                      <Image
+                        src={image.url}
+                        alt="Post Image"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        width={1}
+                        height={1}
+                        style={{
+                          height: 'auto',
+                          width: '100%'
+                        }}
+                      />
+                    </div>
                   )
+                )
               )}
             </div>
           </div>

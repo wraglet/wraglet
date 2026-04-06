@@ -1,9 +1,9 @@
 'use client'
 
-import type { PublicUser } from '@/interfaces'
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import type { PublicUser } from '@/interfaces'
 import { IBlog } from '@/models/Blog'
 import {
   CalendarIcon,

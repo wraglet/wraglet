@@ -10,9 +10,9 @@ test('login submit is disabled until email and password are filled', async ({
   await page.getByLabel('Email or Username').fill('user@example.com')
   await expect(submit).toBeDisabled()
 
-  await page.locator('input[type="password"][name="password"]').fill(
-    'not-a-real-password'
-  )
+  await page
+    .locator('input[type="password"][name="password"]')
+    .fill('not-a-real-password')
   await expect(submit).toBeEnabled()
 })
 

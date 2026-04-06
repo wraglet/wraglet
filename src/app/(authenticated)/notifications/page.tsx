@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import Link from 'next/link'
+import type { Gender } from '@/interfaces'
 import { INotification } from '@/models/Notification'
 import { BellIcon as HeroBellIcon } from '@heroicons/react/24/outline'
 import {
@@ -11,10 +12,9 @@ import {
 } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 
+import { DEFAULT_GENDER } from '@/data/constants'
 import Avatar from '@/components/shared/Avatar'
 import { ShadcnButton } from '@/components/shared/ShadcnButton'
-import { DEFAULT_GENDER } from '@/data/constants'
-import type { Gender } from '@/interfaces'
 
 const NotificationsPage = () => {
   const queryClient = useQueryClient()
@@ -243,7 +243,10 @@ const NotificationsPage = () => {
                   <div className="flex-shrink-0">
                     {notification.sender ? (
                       <Avatar
-                        gender={(notification.sender.gender as Gender) || DEFAULT_GENDER}
+                        gender={
+                          (notification.sender.gender as Gender) ||
+                          DEFAULT_GENDER
+                        }
                         src={notification.sender.profilePicture?.url || null}
                         alt={notification.sender.firstName}
                         className="h-12 w-12"

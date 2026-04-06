@@ -5,6 +5,10 @@ import type { Gender } from '@/interfaces'
 import { IPost } from '@/models/Post'
 import useUserStore from '@/store/user'
 import {
+  mergePostClientUpdate,
+  mergePostFromFeedProp
+} from '@/utils/mergePostClientUpdate'
+import {
   arrow,
   flip,
   FloatingArrow,
@@ -21,10 +25,6 @@ import { LuArrowBigDown, LuArrowBigUp } from 'react-icons/lu'
 import CommentComponent from '@/components/feed/Comment'
 import Avatar from '@/components/shared/Avatar'
 import ReactionIcon from '@/components/shared/ReactionIcon'
-import {
-  mergePostClientUpdate,
-  mergePostFromFeedProp
-} from '@/utils/mergePostClientUpdate'
 
 interface PostInteractionsProps {
   post: IPost
@@ -53,8 +53,7 @@ type PostCommentDoc = Exclude<
 
 const isPopulatedComment = (
   comment: NonNullable<IPost['comments']>[number]
-): comment is PostCommentDoc =>
-  typeof comment !== 'string' && '_id' in comment
+): comment is PostCommentDoc => typeof comment !== 'string' && '_id' in comment
 
 const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
   useEffect(() => {
@@ -76,9 +75,7 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
     if (initialPostIdRef.current !== id) {
       initialPostIdRef.current = id
       setPost(initialPost)
-      setPostComments(
-        (initialPost.comments || []).filter(isPopulatedComment)
-      )
+      setPostComments((initialPost.comments || []).filter(isPopulatedComment))
       return
     }
     setPost((prev) => mergePostFromFeedProp(prev, initialPost))

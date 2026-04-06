@@ -3,9 +3,10 @@ import getCurrentUser from '@/actions/getCurrentUser'
 import { safeApiError } from '@/lib/apiError'
 import client from '@/lib/db'
 import { createR2S3Client } from '@/lib/r2S3Client'
-import { MAX_FILE_SIZE } from '@/data/constants'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { v4 as uuidv4 } from 'uuid'
+
+import { MAX_FILE_SIZE } from '@/data/constants'
 
 export const POST = async (request: Request) => {
   const s3Client = createR2S3Client()

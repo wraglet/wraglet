@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
+import type { PublicUser } from '@/interfaces'
 import { IBlog } from '@/models/Blog'
 import { IBlogComment } from '@/models/BlogComment'
 import { ChatBubbleLeftIcon, ShareIcon } from '@heroicons/react/24/outline'
@@ -11,10 +12,9 @@ import axios from 'axios'
 import { formatDistanceToNow } from 'date-fns'
 import toast from 'react-hot-toast'
 
-import type { PublicUser } from '@/interfaces'
 import { DEFAULT_GENDER } from '@/data/constants'
-import Avatar from '@/components/shared/Avatar'
 import BlogReactionControls from '@/components/blog/BlogReactionControls'
+import Avatar from '@/components/shared/Avatar'
 import Button from '@/components/shared/Button'
 
 // Dynamic import for BlogShareModal

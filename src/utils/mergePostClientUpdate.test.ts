@@ -1,11 +1,10 @@
 import type { IPost } from '@/models/Post'
-import { describe, expect, it } from 'vitest'
-
 import {
   isPopulatedPostAuthor,
   mergePostClientUpdate,
   mergePostFromFeedProp
 } from '@/utils/mergePostClientUpdate'
+import { describe, expect, it } from 'vitest'
 
 const author: IPost['author'] = {
   _id: '507f1f77bcf86cd799439011',

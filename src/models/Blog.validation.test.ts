@@ -1,7 +1,6 @@
+import Blog from '@/models/Blog'
 import mongoose from 'mongoose'
 import { describe, expect, it } from 'vitest'
-
-import Blog from '@/models/Blog'
 
 const validBlock = {
   id: 'b1',

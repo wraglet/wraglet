@@ -106,9 +106,7 @@ test.describe('authenticated API routes', () => {
     expect(Array.isArray(data.users)).toBe(true)
   })
 
-  test('GET /api/users/people-you-may-know returns users', async ({
-    page
-  }) => {
+  test('GET /api/users/people-you-may-know returns users', async ({ page }) => {
     const res = await page.request.get('/api/users/people-you-may-know')
     expect(res.ok(), await res.text()).toBeTruthy()
     const data = await res.json()

@@ -27,7 +27,7 @@ const Avatar = ({
       className={`relative block rounded-full border border-solid border-neutral-200 ${className} ${size}`}
     >
       <Image
-        className="object-cover rounded-full"
+        className="rounded-full object-cover"
         fill
         sizes="160px"
         src={finalProfilePictureUrl}

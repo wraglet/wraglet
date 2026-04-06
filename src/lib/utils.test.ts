@@ -1,6 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-
 import { cn, generateUsername } from '@/lib/utils'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const optionalClass = (): string | undefined => undefined
 const truthyToken = (): string | undefined => 'on'

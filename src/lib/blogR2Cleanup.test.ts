@@ -1,15 +1,13 @@
-import type { S3Client } from '@aws-sdk/client-s3'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-
 import {
   blogR2KeysRemovedSinceUpdate,
   collectBlogR2Keys,
   deleteBlogKeysFromR2,
   isSafeBlogR2Key
 } from '@/lib/blogR2Cleanup'
+import type { S3Client } from '@aws-sdk/client-s3'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-const sortKeys = (keys: string[]) =>
-  keys.toSorted((a, b) => a.localeCompare(b))
+const sortKeys = (keys: string[]) => keys.toSorted((a, b) => a.localeCompare(b))
 
 describe('isSafeBlogR2Key', () => {
   it('allows only blogs/covers and blogs/content prefixes', () => {

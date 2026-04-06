@@ -1,4 +1,4 @@
-import { auth } from "@/auth"
+import { auth } from '@/auth'
 
 const getSession = async () => {
   try {
@@ -6,7 +6,7 @@ const getSession = async () => {
     return session
   } catch (err) {
     console.error('Error while getting session: ', err)
-    return null 
+    return null
   }
 }
 

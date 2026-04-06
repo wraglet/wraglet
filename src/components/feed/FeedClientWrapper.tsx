@@ -505,8 +505,7 @@ const FeedClientWrapper = () => {
                 <div>
                   <h3 className="mb-2 font-semibold">Trending Topics</h3>
                   {!trendingTopicsData && <div>Loading topics...</div>}
-                  {trendingTopicsData &&
-                    trendingTopicsData.length > 0 && (
+                  {trendingTopicsData && trendingTopicsData.length > 0 && (
                     <div className="mb-4 flex flex-wrap justify-center gap-2">
                       {trendingTopicsData.map((topic) => (
                         <button

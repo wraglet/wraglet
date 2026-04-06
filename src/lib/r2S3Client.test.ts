@@ -1,6 +1,9 @@
+import { createR2S3Client } from '@/lib/r2S3Client'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-const s3Config = vi.hoisted(() => ({ last: null as Record<string, unknown> | null }))
+const s3Config = vi.hoisted(() => ({
+  last: null as Record<string, unknown> | null
+}))
 
 vi.mock('@aws-sdk/client-s3', () => {
   const S3Client = vi.fn(function (this: object, cfg: Record<string, unknown>) {
@@ -8,8 +11,6 @@ vi.mock('@aws-sdk/client-s3', () => {
   })
   return { S3Client }
 })
-
-import { createR2S3Client } from '@/lib/r2S3Client'
 
 describe('createR2S3Client', () => {
   afterEach(() => {

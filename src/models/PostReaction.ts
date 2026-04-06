@@ -50,9 +50,7 @@ PostReactionSchema.pre('validate', function (next) {
   const hasPost = !!this.postId
   const hasBlog = !!this.blogId
   if (hasPost === hasBlog) {
-    next(
-      new Error('PostReaction requires exactly one of postId or blogId')
-    )
+    next(new Error('PostReaction requires exactly one of postId or blogId'))
     return
   }
   next()

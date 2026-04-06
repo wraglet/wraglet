@@ -1,7 +1,6 @@
 import path from 'node:path'
-
-import { config as loadEnv } from 'dotenv'
 import { defineConfig, devices } from '@playwright/test'
+import { config as loadEnv } from 'dotenv'
 
 const root = path.resolve(__dirname)
 loadEnv({ path: path.join(root, '.env') })
@@ -13,11 +12,14 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // Cap local workers so a single `next dev` is not overwhelmed (reduces flaky nav/hydration timeouts).
+  workers: process.env.CI ? 1 : 4,
   reporter: 'list',
+  timeout: 60_000,
   use: {
     baseURL: 'http://localhost:5000',
-    trace: 'on-first-retry'
+    trace: 'on-first-retry',
+    navigationTimeout: 45_000
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {

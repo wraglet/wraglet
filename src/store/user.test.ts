@@ -1,6 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest'
-
 import useUserStore, { type User } from '@/store/user'
+import { afterEach, describe, expect, it } from 'vitest'
 
 const sampleUser = (): User => ({
   _id: 'u1',

@@ -2,9 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test('home links to register from body CTA', async ({ page }) => {
   await page.goto('/')
-  await page
-    .getByRole('link', { name: /Don'?t have an account\?/i })
-    .click()
+  await page.getByRole('link', { name: /Don'?t have an account\?/i }).click()
   await expect(page).toHaveURL('/register')
   await expect(
     page.getByRole('heading', { level: 1, name: 'Create an account' })
@@ -28,10 +26,7 @@ test('header Login on register goes home', async ({ page }) => {
 
 test('footer Help link from home opens help', async ({ page }) => {
   await page.goto('/')
-  await page
-    .locator('main footer')
-    .getByRole('link', { name: 'Help' })
-    .click()
+  await page.locator('main footer').getByRole('link', { name: 'Help' }).click()
   await expect(page).toHaveURL('/help')
   await expect(
     page.getByRole('heading', { level: 1, name: 'Help' })

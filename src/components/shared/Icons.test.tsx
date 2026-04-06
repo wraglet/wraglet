@@ -1,5 +1,5 @@
-import { render } from '@testing-library/react'
 import type { ReactElement, SVGProps } from 'react'
+import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import * as Icons from '@/components/shared/Icons'

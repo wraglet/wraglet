@@ -24,14 +24,7 @@ interface BlogReactionControlsProps {
   onBlogUpdated: (blog: IBlog) => void
 }
 
-const REACTION_NAMES = [
-  'like',
-  'love',
-  'haha',
-  'wow',
-  'sad',
-  'angry'
-] as const
+const REACTION_NAMES = ['like', 'love', 'haha', 'wow', 'sad', 'angry'] as const
 
 const BlogReactionControls = ({
   blog,
@@ -59,8 +52,7 @@ const BlogReactionControls = ({
   })
 
   const reactionCount = blog.reactions?.length ?? 0
-  const displayCount =
-    reactionCount > 0 ? reactionCount : (blog.likes ?? 0)
+  const displayCount = reactionCount > 0 ? reactionCount : (blog.likes ?? 0)
 
   const userReaction =
     currentUser &&
@@ -143,10 +135,7 @@ const BlogReactionControls = ({
               void removeReaction()
             }}
           >
-            <ReactionIcon
-              type={userReaction.type}
-              onClick={async () => {}}
-            />
+            <ReactionIcon type={userReaction.type} onClick={async () => {}} />
           </span>
         ) : (
           <FaRegHeart className="h-4 w-4" />

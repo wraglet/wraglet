@@ -1,5 +1,4 @@
 import { useSyncExternalStore } from 'react'
-
 import {
   getClientMountSnapshot,
   getServerMountSnapshot,

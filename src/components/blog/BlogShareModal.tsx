@@ -99,11 +99,13 @@ const BlogShareModal = ({
     setIsSharing(true)
     try {
       const blogUrl = `${window.location.origin}/blog/${blog.slug}`
-      const authorName = blog.author?.firstName && blog.author?.lastName
-        ? `${blog.author.firstName} ${blog.author.lastName}`
-        : 'Unknown Author'
-      const defaultMessage = shareMessage.trim() || `Check out "${blog.title}" by ${authorName}!`
-      
+      const authorName =
+        blog.author?.firstName && blog.author?.lastName
+          ? `${blog.author.firstName} ${blog.author.lastName}`
+          : 'Unknown Author'
+      const defaultMessage =
+        shareMessage.trim() || `Check out "${blog.title}" by ${authorName}!`
+
       // Create a post that shares the blog with preview
       // Always include blog metadata for sharing, regardless of cover image
       const postData: BlogShareFeedPayload = {
@@ -115,9 +117,7 @@ const BlogShareModal = ({
         blogTitle: blog.title,
         blogSummary: blog.summary || '',
         blogCategory: blog.category || '',
-        ...(blog.coverImage?.url
-          ? { blogCoverImage: blog.coverImage.url }
-          : {})
+        ...(blog.coverImage?.url ? { blogCoverImage: blog.coverImage.url } : {})
       }
 
       const response = await axios.post('/api/posts', postData)
@@ -318,7 +318,9 @@ const BlogShareModal = ({
                 )}
 
                 {/* External Share Section */}
-                <div className={`${user ? 'border-t border-gray-200 pt-4' : ''}`}>
+                <div
+                  className={`${user ? 'border-t border-gray-200 pt-4' : ''}`}
+                >
                   <h4 className="mb-3 text-sm font-medium text-gray-900">
                     {user ? 'Or share with a link' : 'Share with a link'}
                   </h4>
@@ -361,4 +363,3 @@ const BlogShareModal = ({
 }
 
 export default BlogShareModal
-

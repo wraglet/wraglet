@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest'
-
 import { BLOG_CATEGORIES } from '@/models/Blog'
+import { describe, expect, it } from 'vitest'
 
 describe('BLOG_CATEGORIES', () => {
   it('is a non-empty readonly list with Other', () => {

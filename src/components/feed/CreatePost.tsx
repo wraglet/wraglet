@@ -2,6 +2,7 @@
 
 import { ChangeEvent, FormEvent, useReducer } from 'react'
 import Image from 'next/image'
+import type { Gender } from '@/interfaces'
 import useBlogModalStore from '@/store/blogModal'
 import useUserStore from '@/store/user'
 import { BsSend } from 'react-icons/bs'
@@ -11,7 +12,6 @@ import UploadPostImage from '@/components/feed/UploadPostImage'
 import Avatar from '@/components/shared/Avatar'
 import Button from '@/components/shared/Button'
 import { GalleryIcon, TerminalIcon } from '@/components/shared/Icons'
-import type { Gender } from '@/interfaces'
 
 // Constants for character limits
 const MAX_POST_CHARACTERS = 280

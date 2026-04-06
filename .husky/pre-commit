@@ -1,6 +1,9 @@
 #!/usr/bin/env sh
 set -e
+# Block commit unless every step succeeds (order: format first — fix with `yarn format` if check fails).
+# Skipping hooks (HUSKY=0, --no-verify) bypasses this policy; do not use for normal commits.
+yarn format:check
+yarn lint
 yarn test
 yarn test:func
-yarn lint
 yarn build

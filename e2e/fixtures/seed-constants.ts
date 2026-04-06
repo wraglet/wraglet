@@ -8,6 +8,8 @@ export const E2E_SEED_BLOG_TITLE = 'E2E Welcome Blog'
 
 /** Profile URL segment: user `username` field includes leading `@`. */
 export function e2eProfilePath(usernameWithAt: string): string {
-  const u = usernameWithAt.startsWith('@') ? usernameWithAt : `@${usernameWithAt}`
+  const u = usernameWithAt.startsWith('@')
+    ? usernameWithAt
+    : `@${usernameWithAt}`
   return `/${u}`
 }
