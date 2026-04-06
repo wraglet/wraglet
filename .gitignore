@@ -20,6 +20,9 @@
 # production
 /build
 
+# local-only notes (never commit; see docs/TESTING.md for PR templates)
+/requirements/
+
 # misc
 .DS_Store
 *.pem
