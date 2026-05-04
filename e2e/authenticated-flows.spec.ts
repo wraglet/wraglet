@@ -14,14 +14,15 @@ test.describe('authenticated UI flows', () => {
 
   test('feed shows composer', async ({ page }) => {
     await page.goto('/feed')
-    await expect(
-      page.getByPlaceholder('Wanna share something up?')
-    ).toBeVisible({ timeout: 20_000 })
+    const composer = page.getByPlaceholder(
+      "How's your day? Share a thought, a picture—or both."
+    )
+    await expect(composer).toBeVisible({ timeout: 20_000 })
     await expect(
       page
         .locator('form')
-        .filter({ has: page.getByPlaceholder('Wanna share something up?') })
-        .getByRole('button', { name: 'Post' })
+        .filter({ has: composer })
+        .getByRole('button', { name: 'Post', exact: true })
     ).toBeVisible()
   })
 
@@ -68,10 +69,15 @@ test.describe('authenticated UI flows', () => {
   test('mobile bottom nav opens settings', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('/feed')
-    await page.getByRole('link', { name: 'Settings' }).click()
+    const bottomNav = page
+      .locator('nav')
+      .filter({ has: page.getByRole('link', { name: 'Videos' }) })
+    await expect(bottomNav).toBeVisible({ timeout: 15_000 })
+    await bottomNav.getByRole('link', { name: 'Settings' }).click()
     await expect(page).toHaveURL('/settings/profile')
+    // Mobile settings layout uses category label ("Profile"); desktop page has "Profile Settings".
     await expect(
-      page.getByRole('heading', { level: 1, name: 'Profile Settings' })
+      page.getByRole('heading', { level: 1, name: 'Profile' })
     ).toBeVisible({ timeout: 15_000 })
   })
 })

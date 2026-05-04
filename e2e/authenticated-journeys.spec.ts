@@ -12,12 +12,10 @@ test.describe('authenticated journeys', () => {
   })
 
   test('feed loads with app header', async ({ page }) => {
-    await page.goto('/feed')
+    await page.goto('/feed', { waitUntil: 'domcontentloaded' })
     await expect(page).toHaveURL('/feed')
     await expect(page.getByRole('banner')).toBeVisible()
-    await expect(
-      page.getByRole('link', { name: 'wraglet', exact: true })
-    ).toBeVisible()
+    await expect(page.getByRole('link', { name: /wraglet/i })).toBeVisible()
   })
 
   test('root redirects to feed when signed in', async ({ page }) => {
@@ -52,10 +50,10 @@ test.describe('authenticated journeys', () => {
     await expect(page.getByText('Chats', { exact: true })).toBeVisible()
   })
 
-  test('blog dashboard shows heading', async ({ page }) => {
-    await page.goto('/blog/dashboard')
+  test('feed blogs tab shows blog composer entry', async ({ page }) => {
+    await page.goto('/feed?tab=blogs')
     await expect(
-      page.getByRole('heading', { level: 1, name: 'Blog Dashboard' })
+      page.getByRole('heading', { level: 3, name: 'Share your thoughts' })
     ).toBeVisible()
   })
 })
