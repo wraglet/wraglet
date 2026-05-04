@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usernameToDisplayHandle } from '@/lib/profileHref'
 import { IPost } from '@/models/Post'
 import { IShare } from '@/models/Share'
 import { formatDistanceToNow } from 'date-fns'
@@ -51,8 +52,13 @@ const SharedPost = ({ share }: SharedPostProps) => {
                 src={share.sharedBy.profilePicture?.url || null}
                 size="h-6 w-6"
               />
-              <span className="truncate text-sm font-medium text-gray-900">
-                {share.sharedBy.firstName} {share.sharedBy.lastName}
+              <span className="flex min-w-0 flex-col text-left">
+                <span className="truncate text-sm font-medium text-gray-900">
+                  {share.sharedBy.firstName} {share.sharedBy.lastName}
+                </span>
+                <span className="truncate text-xs text-gray-500">
+                  {usernameToDisplayHandle(share.sharedBy.username)}
+                </span>
               </span>
             </Link>
             <span className="flex-shrink-0 text-sm text-gray-500">

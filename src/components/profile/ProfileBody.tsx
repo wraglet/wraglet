@@ -3,6 +3,11 @@
 import { FormEvent, Suspense, useReducer, useState } from 'react'
 import getPostsByUsername from '@/actions/getPostsByUsername'
 import getUserByUsername from '@/actions/getUserByUsername'
+import {
+  mobileFabSecondaryRightClassName,
+  mobileFabStackBottomClassName
+} from '@/lib/uiChrome'
+import { cn } from '@/lib/utils'
 import { IPost } from '@/models/Post'
 import useFeedPostsStore from '@/store/feedPosts'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -215,11 +220,17 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
 
       {/* Mobile Photo Collection FAB */}
       <button
+        type="button"
         onClick={() => setShowMobilePhotoCollection(true)}
-        className="tablet:hidden fixed right-20 bottom-20 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg transition-all duration-200 hover:scale-110 hover:shadow-xl focus:ring-4 focus:ring-purple-200 focus:outline-none lg:hidden"
+        title="Photo collection"
+        className={cn(
+          'tablet:hidden fixed z-40 flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 via-purple-600 to-violet-700 text-white shadow-[0_8px_28px_-8px_rgba(109,40,217,0.5)] ring-2 ring-white/40 transition hover:scale-105 hover:shadow-[0_12px_34px_-8px_rgba(109,40,217,0.6)] focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-2 active:scale-95 sm:h-12 sm:w-12 lg:hidden',
+          mobileFabSecondaryRightClassName,
+          mobileFabStackBottomClassName
+        )}
         aria-label="View Photo Collection"
       >
-        <FaImages className="h-5 w-5" />
+        <FaImages className="h-5 w-5 drop-shadow-sm" />
       </button>
 
       {/* Mobile Photo Collection Modal */}

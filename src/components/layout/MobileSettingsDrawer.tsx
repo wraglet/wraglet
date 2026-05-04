@@ -48,7 +48,9 @@ const MobileSettingsDrawer = ({
   return (
     <>
       {/* Overlay */}
-      <div
+      <button
+        type="button"
+        aria-label="Close settings"
         className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity lg:hidden ${
           isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
@@ -57,25 +59,26 @@ const MobileSettingsDrawer = ({
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 bottom-0 left-0 z-50 w-80 max-w-[85vw] bg-white shadow-2xl transition-transform duration-300 ease-in-out lg:hidden ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-80 max-w-[85vw] border-r border-neutral-200 bg-white shadow-xl transition-transform duration-300 ease-in-out lg:hidden ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-neutral-200 p-4">
-            <h2 className="text-lg font-semibold text-gray-900">Settings</h2>
+          <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3">
+            <h2 className="text-base font-semibold text-gray-900">Settings</h2>
             <button
               onClick={onClose}
-              className="rounded-full p-2 transition-colors hover:bg-gray-100"
+              className="rounded-full p-1.5 transition-colors hover:bg-gray-100"
+              aria-label="Close settings"
             >
-              <XMarkIcon className="h-6 w-6 text-gray-600" />
+              <XMarkIcon className="h-5 w-5 text-gray-600" />
             </button>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4" aria-label="Settings categories">
-            <ul className="space-y-2">
+          <nav className="flex-1 p-3" aria-label="Settings categories">
+            <ul className="space-y-1.5">
               {settingsCategories.map((cat) => {
                 const isActive = pathname === cat.href
                 const Icon = cat.icon
@@ -84,14 +87,14 @@ const MobileSettingsDrawer = ({
                     <Link
                       href={cat.href}
                       onClick={onClose} // Close drawer when navigating
-                      className={`flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors ${
+                      className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                         isActive
-                          ? 'bg-blue-50 font-semibold text-blue-600'
-                          : 'text-neutral-700 hover:bg-blue-100'
+                          ? 'bg-sky-50 font-semibold text-[#0EA5E9]'
+                          : 'text-neutral-700 hover:bg-sky-50 hover:text-[#0EA5E9]'
                       }`}
                       aria-current={isActive ? 'page' : undefined}
                     >
-                      <Icon className="h-6 w-6" aria-hidden="true" />
+                      <Icon className="h-4 w-4" aria-hidden="true" />
                       {cat.label}
                     </Link>
                   </li>

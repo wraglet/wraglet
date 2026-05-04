@@ -2,7 +2,9 @@
 
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import type { PublicUser } from '@/interfaces'
+import { profileHrefFromUsername } from '@/lib/profileHref'
 import { IBlog } from '@/models/Blog'
 import { IBlogComment } from '@/models/BlogComment'
 import { ChatBubbleLeftIcon, ShareIcon } from '@heroicons/react/24/outline'
@@ -43,6 +45,7 @@ const CommentItem = ({
 }: CommentItemProps) => {
   const [isDeleting, setIsDeleting] = useState(false)
   const isOwner = currentUserId === comment.author._id
+  const authorProfileHref = profileHrefFromUsername(comment.author.username)
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this comment?')) return
@@ -56,18 +59,40 @@ const CommentItem = ({
   }
 
   return (
-    <div className="flex space-x-3 py-3">
-      <Avatar
-        gender={comment.author.gender || DEFAULT_GENDER}
-        src={comment.author.profilePicture?.url || null}
-        size="h-8 w-8"
-      />
+    <div className="flex gap-2 py-1.5">
+      {authorProfileHref ? (
+        <Link
+          href={authorProfileHref}
+          className="shrink-0 rounded-full ring-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-[#0EA5E9]/40"
+        >
+          <Avatar
+            gender={comment.author.gender || DEFAULT_GENDER}
+            src={comment.author.profilePicture?.url || null}
+            size="h-8 w-8"
+          />
+        </Link>
+      ) : (
+        <Avatar
+          gender={comment.author.gender || DEFAULT_GENDER}
+          src={comment.author.profilePicture?.url || null}
+          size="h-8 w-8"
+        />
+      )}
       <div className="flex-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="text-sm font-semibold text-gray-900">
-              {comment.author.firstName} {comment.author.lastName}
-            </span>
+            {authorProfileHref ? (
+              <Link
+                href={authorProfileHref}
+                className="text-xs font-bold text-gray-900 hover:text-[#0EA5E9]"
+              >
+                {comment.author.firstName} {comment.author.lastName}
+              </Link>
+            ) : (
+              <span className="text-xs font-bold text-gray-900">
+                {comment.author.firstName} {comment.author.lastName}
+              </span>
+            )}
             <span className="text-xs text-gray-500">
               {formatDistanceToNow(new Date(comment.createdAt || Date.now()), {
                 addSuffix: true
@@ -85,7 +110,7 @@ const CommentItem = ({
             </button>
           )}
         </div>
-        <p className="mt-1 text-sm text-gray-700">{comment.content}</p>
+        <p className="mt-1 text-xs text-gray-700">{comment.content}</p>
       </div>
     </div>
   )
@@ -235,10 +260,10 @@ const BlogInteractions = ({
   }
 
   return (
-    <div className="mt-6 border-t border-gray-200 pt-6">
+    <div className="mt-3 border-t border-[#E7ECF0] pt-2">
       {/* Interaction Buttons */}
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <BlogReactionControls
             blog={blog}
             currentUser={currentUser}
@@ -247,19 +272,21 @@ const BlogInteractions = ({
 
           {/* Comment Button */}
           <button
+            type="button"
             onClick={() => setShowComments(!showComments)}
-            className="flex items-center space-x-1.5 rounded-lg bg-gray-100 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200"
+            className="flex items-center gap-1 rounded-full border border-gray-300 bg-white px-2 py-0.5 text-xs text-gray-600 transition-colors hover:bg-gray-50"
           >
-            <ChatBubbleLeftIcon className="h-4 w-4" />
+            <ChatBubbleLeftIcon className="h-3.5 w-3.5" />
             <span className="font-medium">{commentCount}</span>
           </button>
 
           {/* Share Button */}
           <button
+            type="button"
             onClick={handleShare}
-            className="flex items-center space-x-1.5 rounded-lg bg-gray-100 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-200"
+            className="flex items-center gap-1 rounded-full border border-gray-300 bg-white px-2 py-0.5 text-xs text-gray-600 transition-colors hover:bg-gray-50"
           >
-            <ShareIcon className="h-4 w-4" />
+            <ShareIcon className="h-3.5 w-3.5" />
             <span className="font-medium">Share</span>
           </button>
         </div>
@@ -267,10 +294,10 @@ const BlogInteractions = ({
 
       {/* Comments Section */}
       {showComments && (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {/* Add Comment Form */}
           {currentUser ? (
-            <form onSubmit={handleComment} className="flex space-x-3">
+            <form onSubmit={handleComment} className="flex gap-2">
               <Avatar
                 gender={currentUser.gender}
                 src={currentUser.profilePicture?.url || null}
@@ -281,8 +308,8 @@ const BlogInteractions = ({
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Write a comment..."
-                  className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
-                  rows={3}
+                  className="w-full resize-none rounded-2xl border-0 bg-[#E7ECF0] px-3 py-2 text-xs text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-[#0EA5E9]/25 focus:outline-none"
+                  rows={2}
                 />
                 <div className="mt-2 flex justify-end">
                   <Button
@@ -290,7 +317,7 @@ const BlogInteractions = ({
                     disabled={
                       !newComment.trim() || postCommentMutation.isPending
                     }
-                    className="h-8 px-3 text-xs"
+                    className="h-8 rounded-full bg-sky-500 px-4 text-xs font-medium text-white hover:bg-sky-600 disabled:opacity-50"
                   >
                     {postCommentMutation.isPending
                       ? 'Posting...'
@@ -300,8 +327,8 @@ const BlogInteractions = ({
               </div>
             </form>
           ) : (
-            <div className="rounded-lg bg-gray-50 p-4 text-center">
-              <p className="text-sm text-gray-600">
+            <div className="rounded-md bg-[#E7ECF0]/80 px-3 py-2 text-center">
+              <p className="text-xs text-gray-600">
                 Please login to comment on this blog.
               </p>
             </div>
@@ -335,8 +362,8 @@ const BlogInteractions = ({
                 <div ref={commentsEndRef} />
               </div>
             ) : (
-              <div className="py-6 text-center">
-                <p className="text-sm text-gray-500">
+              <div className="py-4 text-center">
+                <p className="text-xs text-gray-500">
                   No comments yet. Be the first to comment!
                 </p>
               </div>

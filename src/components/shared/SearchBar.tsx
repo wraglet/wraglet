@@ -3,18 +3,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SearchResponse, SearchResultItem } from '@/interfaces'
+import { cn } from '@/lib/utils'
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 import Avatar from '@/components/shared/Avatar'
+import Button from '@/components/shared/Button'
 
 interface SearchBarProps {
   placeholder?: string
   className?: string
+  variant?: 'default' | 'header'
 }
 
 const SearchBar = ({
   placeholder = 'Search Wraglet...',
-  className
+  className,
+  variant = 'default'
 }: SearchBarProps) => {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResultItem[]>([])
@@ -176,10 +180,18 @@ const SearchBar = ({
     }
   }
 
+  const isHeader = variant === 'header'
+
   return (
-    <div ref={searchRef} className={`relative ${className}`}>
+    <div ref={searchRef} className={cn('relative', className)}>
       <div className="relative">
-        <MagnifyingGlassIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <MagnifyingGlassIcon
+          className={cn(
+            'pointer-events-none absolute top-1/2 left-2.5 z-10 h-3.5 w-3.5 -translate-y-1/2 sm:left-3 sm:h-4 sm:w-4',
+            isHeader ? 'text-white/80' : 'text-gray-400'
+          )}
+          aria-hidden
+        />
         <input
           ref={inputRef}
           type="search"
@@ -191,21 +203,48 @@ const SearchBar = ({
               setShowSuggestions(true)
             }
           }}
-          className="h-[30px] w-full rounded-2xl border border-solid border-[#E5E5E5] bg-[#E7ECF0] pr-10 pl-10 text-sm text-[#333333] focus:ring-2 focus:ring-blue-300 focus:outline-hidden [&::-webkit-search-cancel-button]:hidden"
+          className={cn(
+            'w-full text-sm focus:outline-none [&::-webkit-search-cancel-button]:hidden',
+            isHeader
+              ? 'h-8 rounded-full border border-white/25 bg-white/15 py-1.5 pr-9 pl-9 text-xs text-white shadow-inner backdrop-blur-sm placeholder:text-white/65 focus:border-white/45 focus:bg-white/25 focus:ring-2 focus:ring-white/35 sm:h-9 sm:py-2 sm:pr-10 sm:pl-10 sm:text-sm'
+              : 'h-[30px] rounded-2xl border border-solid border-[#E5E5E5] bg-[#E7ECF0] pr-10 pl-10 text-[#333333] focus:ring-2 focus:ring-blue-300'
+          )}
           placeholder={placeholder}
           autoComplete="off"
         />
         {query && (
-          <button
+          <Button
+            type="button"
             onClick={handleClear}
-            className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className={cn(
+              'absolute top-1/2 right-2 -translate-y-1/2 sm:right-3',
+              isHeader
+                ? 'text-white/80 hover:text-white'
+                : 'text-gray-400 hover:text-gray-600'
+            )}
+            aria-label="Clear search"
           >
             <XMarkIcon className="h-4 w-4" />
-          </button>
+          </Button>
         )}
-        {isLoading && (
+        {isLoading && !query && (
           <div className="absolute top-1/2 right-3 -translate-y-1/2">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+            <div
+              className={cn(
+                'h-4 w-4 animate-spin rounded-full border-2 border-t-transparent',
+                isHeader ? 'border-white/80' : 'border-blue-500'
+              )}
+            />
+          </div>
+        )}
+        {isLoading && query && (
+          <div className="absolute top-1/2 right-10 -translate-y-1/2">
+            <div
+              className={cn(
+                'h-4 w-4 animate-spin rounded-full border-2 border-t-transparent',
+                isHeader ? 'border-white/80' : 'border-blue-500'
+              )}
+            />
           </div>
         )}
       </div>

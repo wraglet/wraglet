@@ -1,7 +1,9 @@
 'use client'
 
 import { FormEvent, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import type { Gender } from '@/interfaces'
+import { profileHrefFromUsername } from '@/lib/profileHref'
 import { IPost } from '@/models/Post'
 import useUserStore from '@/store/user'
 import {
@@ -24,7 +26,19 @@ import { LuArrowBigDown, LuArrowBigUp } from 'react-icons/lu'
 
 import CommentComponent from '@/components/feed/Comment'
 import Avatar from '@/components/shared/Avatar'
+import Button from '@/components/shared/Button'
+import Input from '@/components/shared/Input'
 import ReactionIcon from '@/components/shared/ReactionIcon'
+
+const ACTION_PILL_BASE =
+  'flex items-center gap-1 rounded-full border px-2 py-0.5 transition-colors'
+const ACTION_PILL_NEUTRAL = `${ACTION_PILL_BASE} border-gray-400 text-gray-600 hover:bg-gray-50`
+const ACTION_PILL_UPVOTE = `${ACTION_PILL_BASE} border-gray-400 text-gray-600 hover:border-green-500 hover:bg-green-50`
+const ACTION_PILL_UPVOTE_ACTIVE = `${ACTION_PILL_BASE} border-green-500 bg-green-50 text-green-600`
+const ACTION_PILL_DOWNVOTE = `${ACTION_PILL_BASE} border-gray-400 text-gray-600 hover:border-red-500 hover:bg-red-50`
+const ACTION_PILL_DOWNVOTE_ACTIVE = `${ACTION_PILL_BASE} border-red-500 bg-red-50 text-red-600`
+const COMMENT_INPUT_CLASS =
+  'h-[30px] w-full rounded-full border-none bg-[#E7ECF0] px-3 text-xs shadow-none'
 
 interface PostInteractionsProps {
   post: IPost
@@ -377,6 +391,10 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
       (reaction) => reaction.userId && reaction.userId._id === user._id
     )
 
+  const currentUserProfileHref = user?.username
+    ? profileHrefFromUsername(user.username)
+    : null
+
   return (
     <div>
       {/* Interaction counts section */}
@@ -457,7 +475,8 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
                   className="fill-white"
                 />
                 {reactions.map((reaction, index) => (
-                  <button
+                  <Button
+                    type="button"
                     key={`${reaction.name}-${index}`}
                     className="cursor-pointer transition-transform hover:scale-125"
                     onClick={() => {
@@ -474,7 +493,7 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
                       src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/lottie/${reaction.name}.json`}
                       style={{ width: '24px', height: '24px' }}
                     />
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}
@@ -482,35 +501,38 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
 
           <div className="flex items-center gap-2">
             {/* Voting buttons */}
-            <button
+            <Button
+              type="button"
               onClick={() => handleVote('upvote')}
-              className={`flex items-center gap-1 rounded-full border px-2 py-0.5 transition-colors ${
+              className={`${
                 userVote === 'upvote'
-                  ? 'border-green-500 bg-green-50 text-green-600'
-                  : 'border-gray-400 text-gray-600 hover:border-green-500 hover:bg-green-50'
+                  ? ACTION_PILL_UPVOTE_ACTIVE
+                  : ACTION_PILL_UPVOTE
               }`}
             >
               <LuArrowBigUp className="text-xs" />
-            </button>
+            </Button>
 
-            <button
+            <Button
+              type="button"
               onClick={() => handleVote('downvote')}
-              className={`flex items-center gap-1 rounded-full border px-2 py-0.5 transition-colors ${
+              className={`${
                 userVote === 'downvote'
-                  ? 'border-red-500 bg-red-50 text-red-600'
-                  : 'border-gray-400 text-gray-600 hover:border-red-500 hover:bg-red-50'
+                  ? ACTION_PILL_DOWNVOTE_ACTIVE
+                  : ACTION_PILL_DOWNVOTE
               }`}
             >
               <LuArrowBigDown className="text-xs" />
-            </button>
+            </Button>
 
             {/* Comment button */}
-            <div
-              className="flex cursor-pointer items-center gap-1 rounded-full border border-solid border-gray-400 px-2 py-0.5 transition-colors hover:bg-gray-50"
+            <Button
+              type="button"
+              className={ACTION_PILL_NEUTRAL}
               onClick={toggleComment}
             >
               <FaRegComment className="text-xs text-gray-600" />
-            </div>
+            </Button>
 
             {/* Share button is intentionally removed for shared posts */}
           </div>
@@ -545,20 +567,33 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
           className="flex items-center gap-2 border-t border-solid border-[#E7ECF0] pt-4"
         >
           {user && user.gender ? (
-            <Avatar
-              gender={user.gender as Gender}
-              size="h-6 w-6"
-              src={user.profilePicture?.url || null}
-            />
+            currentUserProfileHref ? (
+              <Link
+                href={currentUserProfileHref}
+                className="shrink-0 rounded-full ring-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-[#0EA5E9]/40"
+              >
+                <Avatar
+                  gender={user.gender as Gender}
+                  size="h-6 w-6"
+                  src={user.profilePicture?.url || null}
+                />
+              </Link>
+            ) : (
+              <Avatar
+                gender={user.gender as Gender}
+                size="h-6 w-6"
+                src={user.profilePicture?.url || null}
+              />
+            )
           ) : (
             <div className="h-6 w-6 animate-pulse rounded-full bg-gray-200" />
           )}
           <div className="flex-1">
-            <input
+            <Input
               type="text"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="h-[30px] w-full rounded-full bg-[#E7ECF0] px-3 text-xs outline-none"
+              className={COMMENT_INPUT_CLASS}
               placeholder="Write a comment..."
             />
           </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import type { Gender } from '@/interfaces'
 import { useIsClient } from '@/lib/hooks/useIsClient'
 import useUserStore from '@/store/user'
@@ -14,6 +14,8 @@ const MobileBottomNav = () => {
   const { user } = useUserStore()
   const hydrated = useIsClient()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const feedTab = searchParams.get('tab')
 
   if (!hydrated || !user) {
     return null
@@ -25,7 +27,7 @@ const MobileBottomNav = () => {
       label: 'Home',
       icon: (
         <svg
-          className="h-6 w-6"
+          className="h-5 w-5 sm:h-6 sm:w-6"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -42,17 +44,17 @@ const MobileBottomNav = () => {
     {
       href: '/feed?tab=blogs',
       label: 'Blog',
-      icon: <BlogOutlineIcon className="h-6 w-6" />
+      icon: <BlogOutlineIcon className="h-5 w-5 sm:h-6 sm:w-6" />
     },
     {
-      href: '/videos',
+      href: '/feed?tab=videos',
       label: 'Videos',
-      icon: <VideoIcon className="h-6 w-6" />
+      icon: <VideoIcon className="h-5 w-5 sm:h-6 sm:w-6" />
     },
     {
       href: '/settings/profile',
       label: 'Settings',
-      icon: <Cog6ToothIcon className="h-6 w-6" />
+      icon: <Cog6ToothIcon className="h-5 w-5 sm:h-6 sm:w-6" />
     },
     {
       href: `/${user.username}`,
@@ -60,7 +62,7 @@ const MobileBottomNav = () => {
       icon: (
         <Avatar
           gender={user.gender as Gender}
-          className="h-6 w-6"
+          className="h-5 w-5 sm:h-6 sm:w-6"
           alt={`${user.firstName}'s Profile`}
           src={user.profilePicture?.url!}
         />
@@ -69,25 +71,46 @@ const MobileBottomNav = () => {
   ]
 
   return (
-    <nav className="fixed right-0 bottom-0 left-0 z-50 border-t border-neutral-200 bg-white/95 backdrop-blur-sm lg:hidden">
-      <div className="flex h-16 items-center justify-around px-2">
+    <nav
+      className="fixed right-0 bottom-0 left-0 z-50 border-t border-neutral-200 bg-white/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-sm lg:hidden"
+      aria-label="Primary"
+    >
+      <div className="flex h-[3.5rem] items-center justify-around px-0.5 sm:h-16 sm:px-1">
         {navItems.map((item) => {
-          const isActive =
-            pathname === item.href ||
-            (item.href === '/settings/profile' &&
-              pathname.startsWith('/settings'))
+          const isActive = (() => {
+            if (item.href === '/feed') {
+              return (
+                pathname === '/feed' && (feedTab === null || feedTab === 'all')
+              )
+            }
+            if (item.href === '/feed?tab=blogs') {
+              return pathname === '/feed' && feedTab === 'blogs'
+            }
+            if (item.href === '/feed?tab=videos') {
+              return pathname === '/feed' && feedTab === 'videos'
+            }
+            if (
+              item.href === '/settings/profile' &&
+              pathname.startsWith('/settings')
+            ) {
+              return true
+            }
+            return pathname === item.href
+          })()
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-1 rounded-lg px-2 py-2 transition-colors ${
+              className={`flex flex-col items-center gap-0.5 rounded-lg px-1 py-1 transition-colors sm:gap-1 sm:px-2 sm:py-2 ${
                 isActive
                   ? 'text-[#0EA5E9]'
                   : 'text-gray-600 hover:text-[#0EA5E9]'
               }`}
             >
-              <div className={isActive ? 'scale-110' : ''}>{item.icon}</div>
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <div className={isActive ? 'scale-105' : ''}>{item.icon}</div>
+              <span className="max-w-[4.5rem] text-center text-[9px] leading-tight font-medium sm:max-w-none sm:text-[10px] sm:leading-none">
+                {item.label}
+              </span>
             </Link>
           )
         })}

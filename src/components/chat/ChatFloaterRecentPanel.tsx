@@ -1,6 +1,7 @@
 'use client'
 
 import { getConversationFloaterDisplay } from '@/utils/conversationFloaterDisplay'
+import { PlusIcon } from '@heroicons/react/24/outline'
 
 import type { IConversation } from '@/types/conversation'
 import FloaterConversationAvatarButton from '@/components/chat/FloaterConversationAvatarButton'
@@ -43,7 +44,7 @@ const ChatFloaterRecentPanel = ({
   ]
 
   return (
-    <div className="fixed right-8 bottom-36 z-50 flex flex-col items-center gap-2 lg:bottom-24">
+    <div className="flex flex-col items-end gap-2.5">
       {orderedIds.map((id) => {
         const convo = byId.get(id)
         if (!convo) return null
@@ -68,11 +69,12 @@ const ChatFloaterRecentPanel = ({
       })}
       <button
         type="button"
-        className="mt-2 flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-2xl text-white shadow hover:bg-blue-600"
+        title="New conversation"
+        className="mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-sky-200/70 bg-gradient-to-br from-white via-white to-sky-50/90 text-sky-600 shadow-[0_6px_20px_-6px_rgba(14,165,233,0.45)] ring-2 ring-white/90 transition hover:scale-105 hover:from-sky-500 hover:via-sky-500 hover:to-sky-600 hover:text-white hover:shadow-lg hover:ring-sky-300/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 active:scale-95"
         onClick={onAddChat}
         aria-label="Start new chat"
       >
-        +
+        <PlusIcon className="h-5 w-5" aria-hidden />
       </button>
     </div>
   )

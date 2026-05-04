@@ -1,27 +1,17 @@
 'use client'
 
-import { Fragment } from 'react'
 import { signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { Gender } from '@/interfaces'
-import useBlogModalStore from '@/store/blogModal'
 import useFeedPostsStore from '@/store/feedPosts'
 import useGlobalStore from '@/store/global'
 import useUserStore from '@/store/user'
-import {
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
-  Transition
-} from '@headlessui/react'
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { FaCircleUser } from 'react-icons/fa6'
 import {
   HiCog,
   HiOutlineArrowRightOnRectangle,
-  HiOutlineCog,
-  HiOutlineDocumentText,
-  HiOutlinePencilSquare
+  HiOutlineCog
 } from 'react-icons/hi2'
 
 import { DEFAULT_GENDER } from '@/data/constants'
@@ -31,7 +21,6 @@ const AvatarMenu = () => {
   const { user, clearUser } = useUserStore()
   const { clearGlobalState } = useGlobalStore()
   const { clearFeedPosts } = useFeedPostsStore()
-  const { openModal: openBlogModal } = useBlogModalStore()
 
   const handleLogout = () => {
     signOut()
@@ -40,109 +29,66 @@ const AvatarMenu = () => {
     clearFeedPosts()
   }
   return (
-    <Menu as="li" className="inline-flex">
-      <MenuButton className="relative h-8 w-8 cursor-pointer rounded-full border border-solid border-white">
+    <Menu as="div" className="relative inline-flex items-center">
+      <MenuButton className="relative flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-white/55 p-0 shadow-md ring-2 ring-white/30 transition hover:border-white/85 hover:ring-white/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0ea5e9]">
         <Avatar
           gender={(user?.gender || DEFAULT_GENDER) as Gender}
-          size="h-8 w-8"
+          className="min-h-0 min-w-0 !border-0"
+          size="h-full w-full"
           src={user?.profilePicture?.url || null}
-          alt={'Avatar'}
+          alt="Avatar"
         />
       </MenuButton>
-      <Transition
-        as={Fragment}
-        enter="transition ease-out duration-100"
-        enterFrom="transform opacity-0 scale-95"
-        enterTo="transform opacity-100 scale-100"
-        leave="transition ease-in duration-75"
-        leaveFrom="transform opacity-100 scale-100"
-        leaveTo="transform opacity-0 scale-95"
+      <MenuItems
+        portal
+        transition
+        anchor={{ to: 'bottom end', gap: '0.5rem', padding: '0.5rem' }}
+        className="z-[100] w-56 max-w-[min(14rem,calc(100vw-1rem))] origin-top-right divide-y divide-gray-100 rounded-xl bg-white shadow-xl ring-1 ring-black/5 transition duration-100 ease-out focus:outline-hidden data-closed:scale-95 data-closed:opacity-0"
       >
-        <MenuItems className="absolute right-6 mt-12 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-hidden">
-          <div className="px-1 py-1">
-            <MenuItem>
-              <Link
-                href={`/${user?.username}`}
-                className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 data-focus:bg-[#1B87EA] data-focus:text-white"
-              >
-                <FaCircleUser className="mr-2 h-5 w-5" aria-hidden="true" />
-                {user?.firstName}
-              </Link>
-            </MenuItem>
-            <MenuItem>
-              <Link
-                href="/settings/account"
-                className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 transition-colors hover:bg-blue-50 focus:bg-blue-100 focus:text-blue-700"
-              >
-                <HiOutlineCog
-                  className="mr-2 h-5 w-5 group-hover:hidden group-focus:hidden"
-                  aria-hidden="true"
-                />
-                <HiCog
-                  className="mr-2 hidden h-5 w-5 group-hover:inline group-focus:inline"
-                  aria-hidden="true"
-                />
-                Account Settings
-              </Link>
-            </MenuItem>
-          </div>
+        <div className="px-1 py-1">
+          <MenuItem>
+            <Link
+              href={`/${user?.username}`}
+              className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 data-focus:bg-[#1B87EA] data-focus:text-white"
+            >
+              <FaCircleUser className="mr-2 h-5 w-5" aria-hidden="true" />
+              {user?.firstName}
+            </Link>
+          </MenuItem>
+          <MenuItem>
+            <Link
+              href="/settings/account"
+              className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 transition-colors hover:bg-blue-50 focus:bg-blue-100 focus:text-blue-700"
+            >
+              <HiOutlineCog
+                className="mr-2 h-5 w-5 group-hover:hidden group-focus:hidden"
+                aria-hidden="true"
+              />
+              <HiCog
+                className="mr-2 hidden h-5 w-5 group-hover:inline group-focus:inline"
+                aria-hidden="true"
+              />
+              Account Settings
+            </Link>
+          </MenuItem>
+        </div>
 
-          {/* Blog Section */}
-          <div className="px-1 py-1">
-            <MenuItem>
-              <Link
-                href="/blog/dashboard"
-                className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 transition-colors hover:bg-purple-50 focus:bg-purple-100 focus:text-purple-700"
-              >
-                <HiOutlineDocumentText
-                  className="mr-2 h-5 w-5"
-                  aria-hidden="true"
-                />
-                My Blogs
-              </Link>
-            </MenuItem>
-            <MenuItem>
-              <button
-                onClick={() => {
-                  // Close the menu first
-                  const menuButton = document.querySelector(
-                    '[data-headlessui-state]'
-                  )
-                  if (menuButton) {
-                    ;(menuButton as HTMLElement).click()
-                  }
-                  // Navigate to feed and open blog modal
-                  window.location.href = '/feed?tab=blogs'
-                  setTimeout(() => openBlogModal(), 100)
-                }}
-                className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 transition-colors hover:bg-green-50 focus:bg-green-100 focus:text-green-700"
-              >
-                <HiOutlinePencilSquare
-                  className="mr-2 h-5 w-5"
-                  aria-hidden="true"
-                />
-                Write Blog
-              </button>
-            </MenuItem>
-          </div>
-
-          <div className="px-1 py-1">
-            <MenuItem>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 data-focus:bg-[#1B87EA] data-focus:text-white"
-              >
-                <HiOutlineArrowRightOnRectangle
-                  className="mr-2 h-5 w-5 text-red-400 group-data-focus:text-white"
-                  aria-hidden="true"
-                />
-                Logout
-              </button>
-            </MenuItem>
-          </div>
-        </MenuItems>
-      </Transition>
+        <div className="px-1 py-1">
+          <MenuItem>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 data-focus:bg-[#1B87EA] data-focus:text-white"
+            >
+              <HiOutlineArrowRightOnRectangle
+                className="mr-2 h-5 w-5 text-red-400 group-data-focus:text-white"
+                aria-hidden="true"
+              />
+              Logout
+            </button>
+          </MenuItem>
+        </div>
+      </MenuItems>
     </Menu>
   )
 }

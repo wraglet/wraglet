@@ -65,7 +65,7 @@ const ProfilePage = ({ params }: ProfilePageProps) => {
 
   return (
     <>
-      <main className="relative flex min-h-screen w-full flex-col items-center gap-y-6 overflow-hidden pb-20 lg:pb-6">
+      <main className="relative flex min-h-screen w-full flex-col items-center gap-y-4 overflow-hidden pb-[max(5rem,calc(4rem+env(safe-area-inset-bottom,0px)))] sm:gap-y-5 lg:gap-y-6 lg:pb-6">
         <Header username={username} />
         <ProfilePostsClientWrapper
           initialPosts={initialPosts}
@@ -89,7 +89,7 @@ const ProfilePage = ({ params }: ProfilePageProps) => {
           </TransitionChild>
 
           <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4">
+            <div className="flex min-h-[100dvh] items-center justify-center px-2 py-3 sm:min-h-full sm:p-4">
               <TransitionChild
                 as={Fragment}
                 enter="ease-out duration-300"
@@ -99,14 +99,15 @@ const ProfilePage = ({ params }: ProfilePageProps) => {
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <DialogPanel className="relative max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-xl bg-white shadow-2xl transition-all">
+                <DialogPanel className="relative flex max-h-[min(92dvh,100svh)] w-full max-w-5xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl transition-all max-sm:rounded-lg sm:max-h-[90dvh]">
                   <button
+                    type="button"
                     onClick={closeBlogModal}
-                    className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                    className="absolute top-2 right-2 z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 focus:ring-2 focus:ring-sky-500 focus:outline-none sm:top-4 sm:right-4"
                   >
                     <XMarkIcon className="h-5 w-5" />
                   </button>
-                  <div className="max-h-[90vh] overflow-y-auto">
+                  <div className="max-h-[min(92dvh,100svh)] min-h-0 flex-1 overflow-y-auto sm:max-h-[90dvh]">
                     <BlogCreateForm onSuccess={closeBlogModal} />
                   </div>
                 </DialogPanel>

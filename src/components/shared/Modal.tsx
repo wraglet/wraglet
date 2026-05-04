@@ -28,11 +28,11 @@ const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-white/40" />
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
         </TransitionChild>
 
         <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center">
+          <div className="flex min-h-full items-center justify-center p-4">
             <TransitionChild
               as={Fragment}
               enter="ease-out duration-300"
@@ -42,19 +42,23 @@ const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <DialogPanel className="w-full max-w-md transform overflow-visible rounded-md bg-white align-middle shadow-md transition-all">
-                <div className="flex w-full items-center justify-between border-b border-solid border-[#DFE4EA] p-5">
+              <DialogPanel className="mx-auto max-h-[min(90dvh,100%)] w-full max-w-md transform overflow-y-auto rounded-xl border border-neutral-200 bg-white align-middle shadow-xl transition-all">
+                <div className="flex w-full items-center justify-between border-b border-solid border-[#DFE4EA] px-4 py-3">
                   <DialogTitle
                     as="h3"
-                    className="text-lg leading-6 font-medium text-gray-900"
+                    className="text-base leading-6 font-semibold text-gray-900"
                   >
                     {title}
                   </DialogTitle>
 
-                  <HiMiniXMark
-                    className="cursor-pointer text-2xl hover:scale-125"
+                  <button
+                    type="button"
+                    className="rounded-full p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#0EA5E9]"
                     onClick={onClose}
-                  />
+                    aria-label="Close modal"
+                  >
+                    <HiMiniXMark className="h-5 w-5" />
+                  </button>
                 </div>
                 <div className="flex w-full flex-col">{children}</div>
               </DialogPanel>

@@ -28,6 +28,43 @@ interface ChangelogEntry {
 
 const changelogData: ChangelogEntry[] = [
   {
+    date: '2026-05-04',
+    version: '0.9.2',
+    title: 'UI polish, mobile layouts, and Storybook aligned with production',
+    description:
+      'Beautified shell and content surfaces with stronger mobile responsiveness—header, floaters, blog, settings, and posts—plus navigation fixes on small screens and Storybook stories that use the same fixtures and types as the live app',
+    features: [
+      'UI refinements: spacing, typography, and hierarchy across the header, chat/notification floaters, and authenticated chrome',
+      'Mobile responsiveness: breakpoints, stacking, and touch targets improved for feed, blog, and settings',
+      'Blog surfaces (detail, cards, edit, image upload): clearer layout and cover treatment on phones and tablets',
+      'Settings: section layout and forms read better on narrow viewports',
+      'Post components: card and interaction UI (votes, comments, sharing affordances) polished for feed readability',
+      'Mobile navigation: drawer/sheet behavior and nav alignment fixes so the shell matches intent on small screens',
+      'FeedBlogCard stories (full card and compact no-cover) use IBlog-shaped data from storybookUsers, matching production',
+      'BlogDetail stories share the published-blog fixture and AuthorInterface author model with the app',
+      'Shared STORYBOOK_BLOG_COVER_GRADIENT and reusable IBlog samples (`storybookIBlogPublishedSample`, `storybookIBlogFeedCompact`) for stories',
+      'Blog edit and image-upload stories use the shared cover asset instead of one-off SVGs',
+      'Storybook static build kept green so the catalog stays shippable with the repo'
+    ],
+    type: 'patch',
+    icon: <Sparkles className="h-6 w-6" />
+  },
+  {
+    date: '2026-04-28',
+    version: '0.9.1',
+    title: 'Testing stack, E2E, and seed data hardening',
+    description:
+      'Clearer Vitest and Playwright standards, safer E2E seeding, and broader browser coverage for critical paths',
+    features: [
+      'Testing source of truth in docs/TESTING.md: Vitest, React Testing Library, Playwright; no Jest for new work',
+      'Global setup and seed-e2e-user script: production guards, wraglet.local email rules, and stable post/blog fixtures for journeys',
+      'E2E specs expanded for public pages, navigation, auth guard, authenticated flows, journeys, content, and cookie-backed API checks',
+      'Contributor docs (README, DEVELOPMENT, e2e helpers) updated so CI and local runs behave the same way'
+    ],
+    type: 'patch',
+    icon: <Check className="h-6 w-6" />
+  },
+  {
     date: '2026-04-04',
     version: '0.9.0',
     title: 'Wraglet Blogs & Next.js 16 Platform Upgrade',

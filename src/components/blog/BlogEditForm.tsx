@@ -14,10 +14,8 @@ import {
 import Color from '@tiptap/extension-color'
 import Highlight from '@tiptap/extension-highlight'
 import Image from '@tiptap/extension-image'
-import Link from '@tiptap/extension-link'
 import TextAlign from '@tiptap/extension-text-align'
 import { TextStyle } from '@tiptap/extension-text-style'
-import Underline from '@tiptap/extension-underline'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import axios from 'axios'
@@ -25,6 +23,8 @@ import toast from 'react-hot-toast'
 
 import BlogImageUpload from '@/components/blog/BlogImageUpload'
 import ImageUploadCropModal from '@/components/profile/ImageUploadCropModal'
+import Button from '@/components/shared/Button'
+import Input from '@/components/shared/Input'
 
 // Dynamic import for TipTap to avoid SSR issues
 const TipTapEditor = dynamic(() => Promise.resolve(EditorContent), {
@@ -51,6 +51,17 @@ const CATEGORIES = [
   'Education',
   'Other'
 ]
+
+const TOP_BAR_BUTTON_CLASS =
+  'rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:text-gray-500'
+const TEXT_INPUT_CLASS =
+  'w-full rounded-lg border border-neutral-200 px-4 py-3 text-sm transition-colors focus:border-sky-500 focus:ring-2 focus:ring-sky-500 focus:outline-none'
+const CONTENT_TYPE_BUTTON_CLASS =
+  'flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:border-neutral-300 hover:bg-gray-50'
+const BLOCK_CONTROL_BUTTON_CLASS =
+  'rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600'
+const BLOCK_REMOVE_BUTTON_CLASS =
+  'rounded p-1.5 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600'
 
 type ContentBlock = {
   id: string
@@ -312,24 +323,24 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
       <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-4 pr-16 shadow-sm">
         <h1 className="text-lg font-medium text-gray-900">Edit Blog</h1>
         <div className="flex items-center gap-3">
-          <button
+          <Button
             type="button"
             onClick={() =>
               handleSubmit({ preventDefault: () => {} } as FormEvent)
             }
             disabled={!canSubmit || isLoading}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`${TOP_BAR_BUTTON_CLASS} ${
               status === 'published'
                 ? 'bg-sky-500 text-white hover:bg-sky-600 disabled:bg-gray-300'
                 : 'bg-gray-600 text-white hover:bg-gray-700 disabled:bg-gray-300'
-            } disabled:cursor-not-allowed disabled:text-gray-500`}
+            }`}
           >
             {isLoading
               ? 'Updating...'
               : status === 'published'
                 ? 'Update & Publish'
                 : 'Update Draft'}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -342,7 +353,7 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
               <label className="mb-2 block text-sm font-medium text-gray-700">
                 Title <span className="text-red-500">*</span>
               </label>
-              <input
+              <Input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -404,7 +415,7 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full rounded-lg border border-neutral-200 px-4 py-3 text-sm transition-colors focus:border-sky-500 focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                  className={TEXT_INPUT_CLASS}
                 >
                   {CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
@@ -421,11 +432,11 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Tags
                 </label>
-                <input
+                <Input
                   type="text"
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
-                  className="w-full rounded-lg border border-neutral-200 px-4 py-3 text-sm transition-colors focus:border-sky-500 focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                  className={TEXT_INPUT_CLASS}
                   placeholder="technology, programming, web development..."
                 />
                 <p className="mt-1 text-xs text-gray-500">
@@ -501,38 +512,38 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <button
+                  <Button
                     type="button"
                     onClick={() => addContentBlock('text')}
-                    className="flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:border-neutral-300 hover:bg-gray-50"
+                    className={CONTENT_TYPE_BUTTON_CLASS}
                   >
                     <PlusIcon className="h-3 w-3" />
                     📝 Text
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => addContentBlock('code')}
-                    className="flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:border-neutral-300 hover:bg-gray-50"
+                    className={CONTENT_TYPE_BUTTON_CLASS}
                   >
                     <PlusIcon className="h-3 w-3" />
                     💻 Code
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => addContentBlock('image')}
-                    className="flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:border-neutral-300 hover:bg-gray-50"
+                    className={CONTENT_TYPE_BUTTON_CLASS}
                   >
                     <PlusIcon className="h-3 w-3" />
                     🖼️ Image
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => addContentBlock('video')}
-                    className="flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:border-neutral-300 hover:bg-gray-50"
+                    className={CONTENT_TYPE_BUTTON_CLASS}
                   >
                     <PlusIcon className="h-3 w-3" />
                     🎥 Video
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -636,11 +647,12 @@ const ContentBlockEditor = ({
 }: ContentBlockEditorProps) => {
   const editor = useEditor({
     extensions: [
-      StarterKit,
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-sky-600 hover:text-sky-800 underline'
+      StarterKit.configure({
+        link: {
+          openOnClick: false,
+          HTMLAttributes: {
+            class: 'text-sky-600 hover:text-sky-800 underline'
+          }
         }
       }),
       Image.configure({
@@ -651,7 +663,6 @@ const ContentBlockEditor = ({
       TextAlign.configure({
         types: ['heading', 'paragraph']
       }),
-      Underline,
       TextStyle,
       Color,
       Highlight.configure({
@@ -711,33 +722,33 @@ const ContentBlockEditor = ({
 
         <div className="flex items-center gap-1">
           {onMoveUp && (
-            <button
+            <Button
               type="button"
               onClick={onMoveUp}
-              className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              className={BLOCK_CONTROL_BUTTON_CLASS}
               title="Move up"
             >
               <ArrowUpIcon className="h-4 w-4" />
-            </button>
+            </Button>
           )}
           {onMoveDown && (
-            <button
+            <Button
               type="button"
               onClick={onMoveDown}
-              className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              className={BLOCK_CONTROL_BUTTON_CLASS}
               title="Move down"
             >
               <ArrowDownIcon className="h-4 w-4" />
-            </button>
+            </Button>
           )}
-          <button
+          <Button
             type="button"
             onClick={onRemove}
-            className="rounded p-1.5 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600"
+            className={BLOCK_REMOVE_BUTTON_CLASS}
             title="Remove block"
           >
             <TrashIcon className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </div>
 

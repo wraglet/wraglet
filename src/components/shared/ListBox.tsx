@@ -1,10 +1,9 @@
-import { FC, Fragment, InputHTMLAttributes } from 'react'
+import { FC, InputHTMLAttributes } from 'react'
 import {
   Listbox,
   ListboxButton,
   ListboxOption,
-  ListboxOptions,
-  Transition
+  ListboxOptions
 } from '@headlessui/react'
 import { HiCheck, HiChevronUpDown } from 'react-icons/hi2'
 
@@ -49,43 +48,41 @@ const ListBox: FC<ListBoxProps> = ({
               />
             </span>
           </ListboxButton>
-          <Transition
-            as={Fragment}
-            leave="transition ease-in duration-100"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
+          <ListboxOptions
+            portal
+            transition
+            anchor={{ to: 'bottom start', gap: '0.25rem', padding: '0.5rem' }}
+            className="z-[100] max-h-60 max-w-[calc(100vw-1rem)] overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-hidden sm:text-sm"
           >
-            <ListboxOptions className="absolute z-30 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-hidden sm:text-sm">
-              {options.map((option, i) => (
-                <ListboxOption
-                  key={i}
-                  className={({ active }) =>
-                    `relative cursor-default py-2 pr-4 pl-10 select-none ${
-                      active ? 'bg-amber-100 text-amber-900' : 'text-gray-900'
-                    }`
-                  }
-                  value={typeof option === 'object' ? option.name : option}
-                >
-                  {({ selected }) => (
-                    <>
-                      <span
-                        className={`block truncate ${
-                          selected ? 'font-medium' : 'font-normal'
-                        }`}
-                      >
-                        {typeof option === 'object' ? option.name : option}
+            {options.map((option, i) => (
+              <ListboxOption
+                key={i}
+                className={({ focus }) =>
+                  `relative cursor-default py-2 pr-4 pl-10 select-none ${
+                    focus ? 'bg-amber-100 text-amber-900' : 'text-gray-900'
+                  }`
+                }
+                value={typeof option === 'object' ? option.name : option}
+              >
+                {({ selected }) => (
+                  <>
+                    <span
+                      className={`block truncate ${
+                        selected ? 'font-medium' : 'font-normal'
+                      }`}
+                    >
+                      {typeof option === 'object' ? option.name : option}
+                    </span>
+                    {selected ? (
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
+                        <HiCheck className="h-5 w-5" aria-hidden="true" />
                       </span>
-                      {selected ? (
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
-                          <HiCheck className="h-5 w-5" aria-hidden="true" />
-                        </span>
-                      ) : null}
-                    </>
-                  )}
-                </ListboxOption>
-              ))}
-            </ListboxOptions>
-          </Transition>
+                    ) : null}
+                  </>
+                )}
+              </ListboxOption>
+            ))}
+          </ListboxOptions>
         </div>
       </Listbox>
     </div>

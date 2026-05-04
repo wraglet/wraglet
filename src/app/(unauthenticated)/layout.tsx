@@ -1,6 +1,8 @@
 import { Dosis } from 'next/font/google'
 import Image from 'next/image'
 import Link from 'next/link'
+import { unauthenticatedShellBackdropClassName } from '@/lib/uiChrome'
+import { cn } from '@/lib/utils'
 
 import AuthButtons from '@/components/auth/AuthButtons'
 import UnauthenticatedLayoutClient from '@/components/layout/UnauthenticatedLayoutClient'
@@ -9,7 +11,12 @@ const dosis = Dosis({ subsets: ['latin'], weight: ['700'], display: 'swap' })
 
 const UnauthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <main className="relative flex h-screen flex-col items-center justify-between overflow-hidden bg-gradient-to-br from-[#eaf6fd] via-[#e3f1fa] to-[#b3e0fa]">
+    <main
+      className={cn(
+        'relative flex h-screen flex-col items-center justify-between overflow-hidden',
+        unauthenticatedShellBackdropClassName
+      )}
+    >
       {/* Top logo/wordmark */}
       <div className="animate-fade-in-down justiy-between z-20 flex w-full justify-between px-6 pt-8 pb-2">
         <Link href="/" className="flex items-center gap-2">
@@ -17,6 +24,7 @@ const UnauthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
             src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/logo/android-chrome-192x192.png`}
             width={40}
             height={40}
+            priority
             sizes="40px"
             alt="Wraglet logo"
           />

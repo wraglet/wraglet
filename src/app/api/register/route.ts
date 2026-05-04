@@ -24,10 +24,10 @@ export const POST = async (request: Request) => {
       !email ||
       !firstName ||
       !lastName ||
-      !dob ||
+      dob == null ||
       !gender ||
       !pronoun ||
-      !publicProfileVisible ||
+      typeof publicProfileVisible !== 'boolean' ||
       !password
     ) {
       return new NextResponse('Missing info', { status: 400 })
@@ -51,8 +51,8 @@ export const POST = async (request: Request) => {
     console.log('User created successfully!')
 
     return NextResponse.json(user)
-  } catch (error: any) {
-    console.log('REGISTRATION ERROR: ', error)
+  } catch (error: unknown) {
+    console.error('REGISTRATION ERROR: ', error)
     // Log detailed error information
     console.error(
       'Some error happened while accessing POST at /api/register at route.ts: ',

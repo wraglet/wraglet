@@ -19,11 +19,9 @@ const AuthenticatedLayout = async ({
   }
 
   return (
-    <div className="pb-16 lg:pb-0">
-      <AuthenticatedLayoutClientWrapper currentUser={currentUser}>
-        {children}
-      </AuthenticatedLayoutClientWrapper>
-    </div>
+    <AuthenticatedLayoutClientWrapper currentUser={currentUser}>
+      {children}
+    </AuthenticatedLayoutClientWrapper>
   )
 }
 

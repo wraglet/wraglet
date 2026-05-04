@@ -9,7 +9,6 @@ import {
   useState
 } from 'react'
 import dynamic from 'next/dynamic'
-import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import type { TrendingTopic } from '@/interfaces'
@@ -27,8 +26,8 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 
-import { DEFAULT_GENDER } from '@/data/constants'
-import Avatar from '@/components/shared/Avatar'
+import FeedBlogCard from '@/components/feed/FeedBlogCard'
+import Button from '@/components/shared/Button'
 
 const FeedAbly = dynamic(() => import('@/components/feed/FeedAbly'), {
   ssr: false
@@ -85,7 +84,11 @@ const FeedClientWrapper = () => {
   )
 
   // Fetch blogs when on blogs tab
-  const { data: blogs = [], isLoading: isBlogsLoading } = useQuery({
+  const {
+    data: blogs = [],
+    isLoading: isBlogsLoading,
+    refetch: refetchBlogs
+  } = useQuery({
     queryKey: ['blogs'],
     queryFn: async () => {
       const response = await axios.get('/api/blogs')
@@ -159,71 +162,77 @@ const FeedClientWrapper = () => {
     switch (currentTab) {
       case 'blogs':
         return (
-          <div className="mx-auto w-full max-w-2xl space-y-6">
-            {/* Enhanced Blog Creation Button */}
-            <div className="rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-purple-50 p-6 shadow-sm">
-              <button
+          <div className="mx-auto w-full max-w-2xl space-y-3">
+            <div className="rounded-xl border border-sky-200/90 bg-gradient-to-br from-sky-50 via-white to-violet-50/80 p-2.5 shadow-sm ring-1 ring-sky-100/60 sm:p-4">
+              <Button
+                type="button"
                 onClick={openBlogModal}
-                className="group w-full rounded-xl border-2 border-dashed border-blue-300 p-6 text-left transition-all duration-200 hover:border-blue-500 hover:bg-white hover:shadow-md"
+                className="group flex w-full flex-col items-stretch gap-2 rounded-xl border border-dashed border-sky-300/80 bg-white/70 px-3 py-2.5 text-left transition-all hover:border-sky-400 hover:bg-white hover:shadow-sm sm:flex-row sm:items-center sm:gap-3"
               >
-                <div className="flex items-center space-x-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg transition-transform group-hover:scale-110">
-                    <span className="text-xl">✍️</span>
+                <div className="flex shrink-0 items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-sky-500 to-sky-600 text-sm text-white shadow-sm sm:h-10 sm:w-10 sm:text-base">
+                    ✍️
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 transition-colors group-hover:text-blue-600">
+                  <div className="min-w-0 flex-1 sm:hidden">
+                    <h3 className="text-sm font-semibold text-gray-900">
                       Share your thoughts
                     </h3>
-                    <p className="text-sm text-gray-600 transition-colors group-hover:text-blue-500">
-                      Write a blog post and inspire the community
+                    <p className="line-clamp-2 text-[11px] leading-snug text-gray-600">
+                      Blogs: rich text, cover, categories.
                     </p>
                   </div>
-                  <div className="text-blue-500 transition-colors group-hover:text-blue-600">
-                    <svg
-                      className="h-6 w-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                  </div>
                 </div>
-              </button>
+                <div className="min-w-0 flex-1 max-sm:hidden">
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    Share your thoughts
+                  </h3>
+                  <p className="line-clamp-2 text-xs leading-snug text-gray-600 sm:line-clamp-none">
+                    Rich text, cover image, and categories — long-form for your
+                    feed.
+                  </p>
+                </div>
+                <svg
+                  className="hidden h-5 w-5 shrink-0 text-sky-500 transition-colors group-hover:text-sky-600 sm:block"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+              </Button>
             </div>
 
-            {/* Enhanced Blog List */}
             {(() => {
               if (isBlogsLoading) {
                 return (
-                  <div className="space-y-6">
+                  <div className="space-y-3">
                     {Array.from({ length: 3 }, (_, i) => (
                       <div
                         key={`skeleton-${i}`}
-                        className="animate-pulse rounded-xl bg-white p-6 shadow-sm"
+                        className="animate-pulse rounded-lg border border-neutral-200 bg-white p-4 shadow-sm sm:rounded-lg"
                       >
-                        <div className="mb-4 flex items-center space-x-3">
-                          <div className="h-10 w-10 rounded-full bg-gray-200"></div>
+                        <div className="mb-3 flex items-center gap-2">
+                          <div className="h-9 w-9 rounded-full bg-gray-200" />
                           <div className="flex-1">
-                            <div className="mb-1 h-4 w-32 rounded bg-gray-200"></div>
-                            <div className="h-3 w-20 rounded bg-gray-200"></div>
+                            <div className="mb-1 h-3.5 w-28 rounded bg-gray-200" />
+                            <div className="h-3 w-16 rounded bg-gray-200" />
                           </div>
                         </div>
-                        <div className="mb-4 h-48 rounded-lg bg-gray-200"></div>
-                        <div className="mb-2 h-6 w-3/4 rounded bg-gray-200"></div>
-                        <div className="mb-4 h-4 w-full rounded bg-gray-200"></div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex space-x-4">
-                            <div className="h-4 w-16 rounded bg-gray-200"></div>
-                            <div className="h-4 w-12 rounded bg-gray-200"></div>
-                            <div className="h-4 w-20 rounded bg-gray-200"></div>
+                        <div className="mb-3 h-36 rounded-md bg-gray-200" />
+                        <div className="mb-2 h-4 w-full max-w-xs rounded bg-gray-200" />
+                        <div className="mb-3 h-3 w-full rounded bg-gray-200" />
+                        <div className="flex items-center justify-between border-t border-neutral-100 pt-2">
+                          <div className="flex gap-3">
+                            <div className="h-3 w-12 rounded bg-gray-200" />
+                            <div className="h-3 w-10 rounded bg-gray-200" />
                           </div>
-                          <div className="h-8 w-20 rounded bg-gray-200"></div>
+                          <div className="h-7 w-16 rounded-full bg-gray-200" />
                         </div>
                       </div>
                     ))}
@@ -233,139 +242,34 @@ const FeedClientWrapper = () => {
 
               if (blogs.length > 0) {
                 return (
-                  <div className="space-y-6">
+                  <div className="space-y-3">
                     {blogs.map((blog: IBlog) => (
-                      <div
-                        key={blog._id}
-                        className="overflow-hidden rounded-xl bg-white shadow-sm transition-all duration-200 hover:shadow-lg"
-                      >
-                        {/* Author Header */}
-                        <div className="flex items-center space-x-3 p-6 pb-4">
-                          <Avatar
-                            gender={blog.author?.gender || DEFAULT_GENDER}
-                            src={blog.author?.profilePicture?.url || null}
-                            size="h-10 w-10"
-                            alt={`${blog.author?.firstName} ${blog.author?.lastName}`}
-                          />
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2">
-                              <Link
-                                href={`/${blog.author?.username}`}
-                                className="font-semibold text-gray-900 hover:text-blue-600"
-                              >
-                                {blog.author?.firstName} {blog.author?.lastName}
-                              </Link>
-                              <span className="text-xs text-gray-500">•</span>
-                              <span className="text-xs text-gray-500">
-                                {new Date(
-                                  blog.createdAt || Date.now()
-                                ).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <span className="text-xs text-gray-500">
-                                @{blog.author?.username}
-                              </span>
-                              <span className="text-xs text-gray-500">•</span>
-                              <span className="inline-block rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
-                                {blog.category}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Cover Image */}
-                        {blog.coverImage?.url && (
-                          <div className="aspect-[16/9] overflow-hidden">
-                            <Image
-                              src={blog.coverImage.url}
-                              alt={blog.title}
-                              width={600}
-                              height={337}
-                              className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-                            />
-                          </div>
-                        )}
-
-                        <div className="p-6 pt-4">
-                          <h3 className="mb-3 cursor-pointer text-xl font-bold text-gray-900 transition-colors hover:text-blue-600">
-                            <Link href={`/blog/${blog.slug}`}>
-                              {blog.title}
-                            </Link>
-                          </h3>
-                          <p className="mb-4 line-clamp-3 leading-relaxed text-gray-600">
-                            {blog.summary}
-                          </p>
-
-                          {/* Tags */}
-                          {blog.tags && blog.tags.length > 0 && (
-                            <div className="mb-4 flex flex-wrap gap-2">
-                              {blog.tags
-                                .slice(0, 3)
-                                .map((tag: string, index: number) => (
-                                  <span
-                                    key={`tag-${tag}-${index}`}
-                                    className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-200"
-                                  >
-                                    #{tag}
-                                  </span>
-                                ))}
-                              {blog.tags.length > 3 && (
-                                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
-                                  +{blog.tags.length - 3} more
-                                </span>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Engagement Stats */}
-                          <div className="flex items-center justify-between border-t border-gray-100 pt-4">
-                            <div className="flex items-center space-x-6 text-sm text-gray-500">
-                              <div className="flex items-center space-x-1">
-                                <span className="text-lg">👀</span>
-                                <span>{blog.views || 0} views</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <span className="text-lg">❤️</span>
-                                <span>{blog.likes || 0} reactions</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <span className="text-lg">📖</span>
-                                <span>{blog.readTime}m read</span>
-                              </div>
-                            </div>
-                            <Link href={`/blog/${blog.slug}`}>
-                              <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
-                                Read more
-                              </button>
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
+                      <FeedBlogCard key={blog._id} blog={blog} />
                     ))}
                   </div>
                 )
               }
 
               return (
-                <div className="py-16 text-center">
-                  <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-purple-100">
-                    <span className="text-3xl">📝</span>
+                <div className="rounded-lg border border-neutral-200 bg-white py-8 text-center shadow-sm sm:rounded-lg">
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-sky-100/90 ring-2 ring-sky-200/60">
+                    <span className="text-xl" aria-hidden>
+                      📝
+                    </span>
                   </div>
-                  <h3 className="mb-3 text-xl font-semibold text-gray-900">
+                  <h3 className="mb-1.5 text-base font-semibold text-gray-900">
                     No blogs yet
                   </h3>
-                  <p className="mx-auto mb-6 max-w-md text-gray-500">
-                    Be the first to share your thoughts and insights with the
-                    community!
+                  <p className="mx-auto mb-4 max-w-sm px-4 text-sm leading-snug text-gray-600">
+                    Be the first to share a post with the community.
                   </p>
-                  <button
+                  <Button
                     onClick={openBlogModal}
-                    className="rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 font-medium text-white transition-all hover:from-blue-700 hover:to-purple-700 hover:shadow-lg"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-sky-500 to-sky-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:from-sky-600 hover:to-sky-700"
                     type="button"
                   >
                     ✍️ Write your first blog
-                  </button>
+                  </Button>
                 </div>
               )
             })()}
@@ -405,7 +309,7 @@ const FeedClientWrapper = () => {
       case 'all':
       default:
         return (
-          <div className="mx-auto w-full max-w-2xl space-y-6">
+          <div className="mx-auto w-full max-w-2xl space-y-4">
             <CreatePost
               isLoading={isLoading}
               submitPost={submitPost}
@@ -427,66 +331,23 @@ const FeedClientWrapper = () => {
             )}
 
             {/* Show blogs in unified feed */}
+            {/* Show blogs in unified feed — section label matches `RightNav` widgets */}
             {blogs.length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-gray-900">
+              <div className="space-y-3">
+                <h2 className="text-xs font-bold text-gray-900">
                   Recent Blogs
                 </h2>
-                {blogs.slice(0, 3).map((blog: IBlog) => (
-                  <div
-                    key={blog._id}
-                    className="overflow-hidden rounded-lg bg-white shadow-sm transition-shadow hover:shadow-md"
+                <div className="space-y-3">
+                  {blogs.slice(0, 3).map((blog: IBlog) => (
+                    <FeedBlogCard key={blog._id} blog={blog} />
+                  ))}
+                </div>
+                <div className="pt-1 text-center">
+                  <Link
+                    href="?tab=blogs"
+                    className="text-xs font-medium text-[#0EA5E9] hover:text-sky-700"
                   >
-                    {/* Cover Image */}
-                    {blog.coverImage?.url && (
-                      <div className="aspect-[16/9] overflow-hidden">
-                        <Image
-                          src={blog.coverImage.url}
-                          alt={blog.title}
-                          width={400}
-                          height={225}
-                          className="h-full w-full object-cover transition-transform duration-200 hover:scale-105"
-                        />
-                      </div>
-                    )}
-
-                    <div className="p-6">
-                      <div className="mb-2 flex items-center justify-between">
-                        <span className="inline-block rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
-                          Blog • {blog.category}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {new Date(
-                            blog.createdAt || Date.now()
-                          ).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <h3 className="mb-2 cursor-pointer text-lg font-semibold text-gray-900 hover:text-blue-600">
-                        <Link href={`/blog/${blog.slug}`}>{blog.title}</Link>
-                      </h3>
-                      <p className="mb-4 line-clamp-2 text-gray-600">
-                        {blog.summary}
-                      </p>
-                      <div className="flex items-center justify-between text-sm text-gray-500">
-                        <div className="flex items-center space-x-4">
-                          <span>👀 {blog.views || 0}</span>
-                          <span>❤️ {blog.likes || 0}</span>
-                          <span>📝 {blog.readTime}m read</span>
-                        </div>
-                        <Link href={`/blog/${blog.slug}`}>
-                          <button className="text-blue-600 hover:text-blue-800">
-                            Read more
-                          </button>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <div className="text-center">
-                  <Link href="?tab=blogs">
-                    <button className="text-blue-600 hover:text-blue-800">
-                      View all blogs →
-                    </button>
+                    View all blogs →
                   </Link>
                 </div>
               </div>
@@ -508,14 +369,14 @@ const FeedClientWrapper = () => {
                   {trendingTopicsData && trendingTopicsData.length > 0 && (
                     <div className="mb-4 flex flex-wrap justify-center gap-2">
                       {trendingTopicsData.map((topic) => (
-                        <button
+                        <Button
                           key={topic.tag}
                           type="button"
                           className={`inline-block cursor-pointer rounded-full px-3 py-1 hover:bg-blue-200 ${selectedTopic === topic.tag ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'}`}
                           onClick={() => setSelectedTopic(topic.tag)}
                         >
                           #{topic.tag}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   )}
@@ -553,7 +414,7 @@ const FeedClientWrapper = () => {
           </TransitionChild>
 
           <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4">
+            <div className="flex min-h-[100dvh] items-center justify-center px-2 py-3 sm:min-h-full sm:p-4">
               <TransitionChild
                 as={Fragment}
                 enter="ease-out duration-300"
@@ -563,15 +424,21 @@ const FeedClientWrapper = () => {
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <DialogPanel className="relative max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-xl bg-white shadow-2xl transition-all">
-                  <button
+                <DialogPanel className="relative flex max-h-[min(92dvh,100svh)] w-full max-w-5xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl transition-all max-sm:rounded-lg sm:max-h-[90dvh]">
+                  <Button
+                    type="button"
                     onClick={closeBlogModal}
-                    className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                    className="absolute top-2 right-2 z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 focus:ring-2 focus:ring-sky-500 focus:outline-none sm:top-4 sm:right-4"
                   >
                     <XMarkIcon className="h-5 w-5" />
-                  </button>
-                  <div className="max-h-[90vh] overflow-y-auto">
-                    <BlogCreateForm onSuccess={closeBlogModal} />
+                  </Button>
+                  <div className="max-h-[min(92dvh,100svh)] min-h-0 flex-1 overflow-y-auto sm:max-h-[90dvh]">
+                    <BlogCreateForm
+                      onSuccess={() => {
+                        closeBlogModal()
+                        void refetchBlogs()
+                      }}
+                    />
                   </div>
                 </DialogPanel>
               </TransitionChild>

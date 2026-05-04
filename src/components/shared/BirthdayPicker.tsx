@@ -89,7 +89,7 @@ const BirthdayPicker = ({ dateSetter, date }: BirthdayPickerProps) => {
   return (
     <div className="flex flex-col">
       <h3 className="mb-0.5 pl-1 text-sm text-slate-600">Birthday</h3>
-      <div className="flex space-x-2">
+      <div className="grid grid-cols-3 gap-2">
         <ListBox
           options={months}
           setSelected={handleMonthChange}

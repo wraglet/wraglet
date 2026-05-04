@@ -30,6 +30,23 @@
   ::file-selector-button {
     border-color: var(--color-gray-200, currentColor);
   }
+
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  a[href],
+  summary,
+  input[type='button']:not(:disabled),
+  input[type='submit']:not(:disabled),
+  input[type='reset']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  input[type='button']:disabled,
+  input[type='submit']:disabled,
+  input[type='reset']:disabled {
+    cursor: not-allowed;
+  }
 }
 
 @utility text-balance {
@@ -38,7 +55,7 @@
 
 @layer utilities {
   body {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-inter), Arial, Helvetica, sans-serif;
   }
   .animate-fade-in-up {
     animation: fade-in-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -101,4 +118,21 @@
     opacity: 0;
     transform: scale(1.5);
   }
+}
+
+/*
+ * Unlayered so this wins over Tailwind @layer and suppresses Edge/Chromium
+ * password reveal even when injected in shadow DOM (::-ms-reveal is the hook).
+ */
+input[type='password']::-ms-reveal,
+input[type='password']::-ms-clear,
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }

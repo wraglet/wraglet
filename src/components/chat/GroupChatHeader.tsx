@@ -68,7 +68,7 @@ const GroupChatHeader = ({ participants, isGroup }: GroupChatHeaderProps) => {
   if (!isGroup && participants.length === 1) {
     const user = participants[0]
     return (
-      <div className="sticky top-0 z-10 mt-14 flex items-center border-b bg-white/80 px-6 py-3 backdrop-blur">
+      <div className="sticky top-0 z-10 flex items-center border-b bg-white/80 px-6 py-3 backdrop-blur">
         <Avatar
           src={getProfilePictureUrl(user.profilePicture)}
           gender={user.gender as Gender}
@@ -96,7 +96,7 @@ const GroupChatHeader = ({ participants, isGroup }: GroupChatHeaderProps) => {
             <span key={user._id} className="font-semibold text-gray-900">
               {user.firstName} {user.lastName}
               <span className="ml-1 text-sm text-gray-500">
-                @{user.username}
+                {user.username}
               </span>
             </span>
           ))}

@@ -6,7 +6,8 @@ import { useChannel } from 'ably/react'
 
 type MessagePayload = {
   conversationId?: string
-  unreadCount?: number
+  conversationUnreadCount?: number
+  totalUnreadCount?: number
 }
 
 interface ChatFloaterIncomingListenerProps {
@@ -39,8 +40,8 @@ const ChatFloaterIncomingListener = ({
     }
 
     if (message.name === 'unread') {
-      // PATCH /api/conversations publishes unreadCount: 0 when marking read — do not pin
-      if (data.unreadCount === 0) return
+      // PATCH /api/conversations publishes conversationUnreadCount: 0 when marking read.
+      if (data.conversationUnreadCount === 0) return
       pinIncomingChat(conversationId)
       void queryClient.invalidateQueries({ queryKey: ['conversations'] })
       void queryClient.invalidateQueries({ queryKey: ['header-conversations'] })

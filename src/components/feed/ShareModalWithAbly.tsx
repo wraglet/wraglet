@@ -39,13 +39,14 @@ const ExternalShareButton = ({
   onClick,
   className
 }: ExternalShareButtonProps) => (
-  <button
+  <Button
+    type="button"
     onClick={onClick}
     className={`flex items-center justify-center gap-2 rounded-lg border border-gray-200 p-3 transition-colors hover:border-gray-300 ${className}`}
   >
     <Icon className="h-5 w-5 text-gray-600" />
     <span className="text-sm font-medium text-gray-900">{label}</span>
-  </button>
+  </Button>
 )
 
 interface ShareModalProps {
@@ -207,17 +208,18 @@ const ShareModalWithAbly = ({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+              <DialogPanel className="max-h-[min(90dvh,100%)] w-full max-w-md transform overflow-y-auto rounded-2xl bg-white p-4 text-left align-middle shadow-xl transition-all sm:p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-lg font-medium text-gray-900">
                     Share Post
                   </h3>
-                  <button
+                  <Button
+                    type="button"
                     onClick={onClose}
                     className="text-gray-400 hover:text-gray-600"
                   >
                     <HiX className="h-5 w-5" />
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Share to Feed Section */}
@@ -257,7 +259,8 @@ const ShareModalWithAbly = ({
                     {visibilityOptions.map((option) => {
                       const IconComponent = option.icon
                       return (
-                        <button
+                        <Button
+                          type="button"
                           key={option.value}
                           onClick={() => setSelectedVisibility(option.value)}
                           className={`flex w-full items-center gap-3 rounded-lg border p-3 transition-colors ${
@@ -287,7 +290,7 @@ const ShareModalWithAbly = ({
                               {option.description}
                             </p>
                           </div>
-                        </button>
+                        </Button>
                       )
                     })}
                   </div>
@@ -295,10 +298,12 @@ const ShareModalWithAbly = ({
                   {/* Share Button */}
                   <Button
                     onClick={handleShareToFeed}
+                    variant="default"
+                    size="default"
                     className="w-full"
                     disabled={isSharing}
                   >
-                    {isSharing ? 'Sharing...' : 'Share Now'}
+                    {isSharing ? 'Sharing...' : 'Share to Feed'}
                   </Button>
                 </div>
 
