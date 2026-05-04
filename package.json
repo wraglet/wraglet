@@ -87,7 +87,7 @@
     "@playwright/test": "^1.59.1",
     "@storybook/addon-a11y": "^10.3.6",
     "@storybook/addon-docs": "^10.3.6",
-    "@storybook/addon-vitest": "patch:@storybook/addon-vitest@npm%3A10.3.6#~/.yarn/patches/@storybook-addon-vitest-npm-10.3.6-52bb1fc7ee.patch",
+    "@storybook/addon-vitest": "patch:@storybook/addon-vitest@npm%3A10.3.6#.yarn/patches/@storybook-addon-vitest-npm-10.3.6-52bb1fc7ee.patch",
     "@storybook/nextjs-vite": "^10.3.6",
     "@tailwindcss/postcss": "^4.1.0",
     "@testing-library/dom": "^10.4.1",

@@ -3868,9 +3868,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/addon-vitest@patch:@storybook/addon-vitest@npm%3A10.3.6#~/.yarn/patches/@storybook-addon-vitest-npm-10.3.6-52bb1fc7ee.patch":
+"@storybook/addon-vitest@patch:@storybook/addon-vitest@npm%3A10.3.6#.yarn/patches/@storybook-addon-vitest-npm-10.3.6-52bb1fc7ee.patch::locator=wraglet%40workspace%3A.":
   version: 10.3.6
-  resolution: "@storybook/addon-vitest@patch:@storybook/addon-vitest@npm%3A10.3.6#~/.yarn/patches/@storybook-addon-vitest-npm-10.3.6-52bb1fc7ee.patch::version=10.3.6&hash=da6c5f"
+  resolution: "@storybook/addon-vitest@patch:@storybook/addon-vitest@npm%3A10.3.6#.yarn/patches/@storybook-addon-vitest-npm-10.3.6-52bb1fc7ee.patch::version=10.3.6&hash=da6c5f&locator=wraglet%40workspace%3A."
   dependencies:
     "@storybook/global": "npm:^5.0.0"
     "@storybook/icons": "npm:^2.0.1"
@@ -13358,7 +13358,7 @@ __metadata:
     "@radix-ui/react-slot": "npm:^1.1.0"
     "@storybook/addon-a11y": "npm:^10.3.6"
     "@storybook/addon-docs": "npm:^10.3.6"
-    "@storybook/addon-vitest": "patch:@storybook/addon-vitest@npm%3A10.3.6#~/.yarn/patches/@storybook-addon-vitest-npm-10.3.6-52bb1fc7ee.patch"
+    "@storybook/addon-vitest": "patch:@storybook/addon-vitest@npm%3A10.3.6#.yarn/patches/@storybook-addon-vitest-npm-10.3.6-52bb1fc7ee.patch"
     "@storybook/nextjs-vite": "npm:^10.3.6"
     "@tailwindcss/forms": "npm:^0.5.9"
     "@tailwindcss/postcss": "npm:^4.1.0"
