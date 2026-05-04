@@ -11,4 +11,4 @@ blob-report
 package-lock.json
 pnpm-lock.yaml
 .vercel
-next-env.d.ts
+**/*.d.ts

@@ -4,7 +4,13 @@
 /node_modules
 /.pnp
 .pnp.js
-.yarn/install-state.gz
+# Yarn Berry: keep patches/releases/plugins; never commit install state or cache
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
 
 # testing
 /coverage
@@ -43,3 +49,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+*storybook.log
+storybook-static

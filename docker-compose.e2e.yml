@@ -1,0 +1,23 @@
+# Ephemeral MongoDB for local Playwright runs (`yarn test:func`).
+# Uses host port 27017 — matches MONGODB_URI=mongodb://localhost:27017/... in .env.example.
+# Set E2E_SKIP_DOCKER_MONGO=1 if you already run Mongo on 27017 or use Atlas.
+name: wraglet-e2e
+
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - '27017:27017'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'mongosh',
+          '--quiet',
+          '--eval',
+          'db.adminCommand({ ping: 1 }).ok'
+        ]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+      start_period: 3s
