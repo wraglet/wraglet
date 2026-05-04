@@ -1,8 +1,6 @@
 import { Suspense } from 'react'
 import { notFound, redirect } from 'next/navigation'
 import getCurrentUser from '@/actions/getCurrentUser'
-import getDiscoverUsers from '@/actions/getDiscoverUsers'
-import type { PublicUser } from '@/interfaces'
 import client from '@/lib/db'
 import { initModels } from '@/lib/models'
 import Blog from '@/models/Blog'
@@ -10,9 +8,6 @@ import type { IBlog } from '@/models/Blog'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 
 import BlogEditForm from '@/components/blog/BlogEditForm'
-import LeftNav from '@/components/feed/LeftNav'
-import MobileResponsiveWrapper from '@/components/feed/MobileResponsiveWrapper'
-import RightNav from '@/components/feed/RightNav'
 
 import Loading from '@/app/loading'
 
@@ -26,7 +21,7 @@ const getBlog = async (
 ): Promise<IBlog | { error: 'unauthorized' } | null> => {
   try {
     await client()
-    initModels()
+    await initModels()
 
     const raw = await Blog.findOne({ slug })
       .populate({
@@ -39,11 +34,11 @@ const getBlog = async (
       return null
     }
 
-    // Check if the current user is the author
     const authorId =
       typeof raw.author === 'object' && raw.author && '_id' in raw.author
         ? String((raw.author as { _id: { toString(): string } })._id)
         : String(raw.author)
+
     if (authorId !== userId) {
       return { error: 'unauthorized' }
     }
@@ -70,43 +65,19 @@ const BlogEditPage = async ({ params }: BlogEditPageProps) => {
   }
 
   if ('error' in blogResult) {
-    redirect(`/blog/${slug}`) // Redirect to view page if not authorized
+    redirect(`/blog/${slug}`)
   }
 
-  const blog = blogResult
-
-  const discoverUsers =
-    (await getDiscoverUsers().catch((err: unknown) => {
-      console.error(
-        'Error happened while getting getDiscoverUsers() on Blog Edit component: ',
-        err
-      )
-      return []
-    })) || []
-
-  const uniqueDiscoverUsers = discoverUsers.filter(
-    (user: PublicUser, index: number, array: PublicUser[]) =>
-      array.findIndex((u) => u._id === user._id) === index
-  )
-
   return (
-    <>
-      <main className="mx-auto flex min-h-screen w-full max-w-7xl items-start px-4">
-        <LeftNav />
-        <div className="mx-auto flex h-[calc(100vh-3.5rem)] flex-1 px-4 md:px-8">
-          <div className="w-full overflow-y-auto pt-14 pb-20 lg:pb-4">
-            <Suspense fallback={<Loading />}>
-              <BlogEditForm blog={blog} />
-            </Suspense>
-          </div>
+    <main className="mx-auto flex min-h-screen w-full max-w-7xl items-start px-4">
+      <div className="mx-auto flex h-[calc(100vh-3.5rem)] flex-1 px-4 md:px-8">
+        <div className="w-full overflow-y-auto pt-14 pb-20 lg:pb-4">
+          <Suspense fallback={<Loading />}>
+            <BlogEditForm blog={blogResult} />
+          </Suspense>
         </div>
-        <Suspense fallback={<Loading />}>
-          <RightNav otherUsers={uniqueDiscoverUsers} />
-        </Suspense>
-      </main>
-
-      <MobileResponsiveWrapper otherUsers={uniqueDiscoverUsers} />
-    </>
+      </div>
+    </main>
   )
 }
 

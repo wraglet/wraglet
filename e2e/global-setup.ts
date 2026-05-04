@@ -1,9 +1,14 @@
 import { execSync } from 'node:child_process'
 import path from 'node:path'
+import { config as loadEnv } from 'dotenv'
+
+const root = path.resolve(__dirname, '..')
+loadEnv({ path: path.join(root, '.env') })
+loadEnv({ path: path.join(root, '.env.local'), override: true })
 
 /**
  * Seeds the E2E user before tests when credentials are configured.
- * Playwright config loads .env / .env.local first so this sees the same variables.
+ * Loads `.env` / `.env.local` here so this process sees the same variables as `playwright.config.ts`.
  * Injects `E2E_SEED_ENABLED`; the seed script requires `@wraglet.local` email unless
  * `E2E_SEED_ALLOW_ANY_EMAIL` is set (see scripts/seed-e2e-user.ts).
  */
@@ -15,7 +20,12 @@ function globalSetup() {
     return
   }
 
-  const root = path.resolve(__dirname, '..')
+  if (!process.env.MONGODB_URI) {
+    throw new Error(
+      '[e2e] E2E_TEST_USER_PASSWORD is set but MONGODB_URI is missing. Add MONGODB_URI to .env or .env.local, start MongoDB, or unset E2E_TEST_USER_PASSWORD to run public E2E only (see docs/TESTING.md).'
+    )
+  }
+
   try {
     execSync('yarn seed:e2e', {
       cwd: root,
@@ -24,7 +34,7 @@ function globalSetup() {
     })
   } catch (err) {
     console.error(
-      '[e2e] yarn seed:e2e failed — check MONGODB_URI, E2E_TEST_USER_PASSWORD, and that the email ends with @wraglet.local (or set E2E_SEED_ALLOW_ANY_EMAIL=true in isolated CI).'
+      '[e2e] yarn seed:e2e failed. Check: MongoDB is reachable; MONGODB_URI; password meets sign-up rules; E2E_TEST_USER_EMAIL ends with @wraglet.local (or E2E_SEED_ALLOW_ANY_EMAIL); seeded blog slug not owned by another user (e2e/fixtures/seed-constants.ts). See docs/TESTING.md.'
     )
     throw err
   }

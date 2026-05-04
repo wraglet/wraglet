@@ -10,6 +10,10 @@ type UserWithId = IUserDocument & {
   _id: Types.ObjectId
 }
 
+const getCredentialValue = (value: unknown): string => {
+  return typeof value === 'string' ? value : ''
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     CredentialsProvider({
@@ -19,10 +23,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         try {
-          await client()
-          console.log('Connected to MongoDB')
+          const emailOrUsername = getCredentialValue(credentials?.email)
+            .trim()
+            .toLowerCase()
+          const password = getCredentialValue(credentials?.password)
 
-          const emailOrUsername = (credentials?.email as string).toLowerCase()
+          if (!emailOrUsername || !password) {
+            return null
+          }
+
+          await client()
 
           // Check if the input is an email (contains @ but not at the start, and has a domain)
           const isEmail =
@@ -43,17 +53,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             searchQuery = { username: username }
           }
 
-          console.log('Search query:', searchQuery)
           const user = (await User.findOne(
             searchQuery
           ).lean()) as UserWithId | null
 
-          if (user) {
+          if (user?.hashedPassword) {
             const isPasswordCorrect = await bcrypt.compare(
-              credentials?.password as string,
+              password,
               user.hashedPassword
             )
-            console.log('Password comparison result:', isPasswordCorrect)
 
             if (isPasswordCorrect) {
               return {
@@ -65,8 +73,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 profilePicture: user.profilePicture
               }
             }
-          } else {
-            console.log('User not found with email/username:', emailOrUsername)
           }
         } catch (error) {
           console.error('Error during authorization:', error)
@@ -124,7 +130,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           : 'next-auth.session-token',
       options: {
         httpOnly: true,
-        sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
+        sameSite: 'lax',
         path: '/',
         secure: process.env.NODE_ENV === 'production'
         // Optionally set domain for production if needed:

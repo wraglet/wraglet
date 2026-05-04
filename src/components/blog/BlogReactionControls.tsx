@@ -121,10 +121,10 @@ const BlogReactionControls = ({
           }
           setShowEmojis(!showEmojis)
         }}
-        className={`flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+        className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-colors ${
           userReaction
-            ? 'bg-red-50 text-red-600 hover:bg-red-100'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100'
+            : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
         } ${!currentUser ? 'cursor-not-allowed opacity-50' : ''}`}
       >
         {userReaction ? (
@@ -138,7 +138,7 @@ const BlogReactionControls = ({
             <ReactionIcon type={userReaction.type} onClick={async () => {}} />
           </span>
         ) : (
-          <FaRegHeart className="h-4 w-4" />
+          <FaRegHeart className="h-3.5 w-3.5" />
         )}
         <span className="font-medium">{displayCount}</span>
       </div>

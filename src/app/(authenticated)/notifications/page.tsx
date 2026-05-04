@@ -14,7 +14,7 @@ import { formatDistanceToNow } from 'date-fns'
 
 import { DEFAULT_GENDER } from '@/data/constants'
 import Avatar from '@/components/shared/Avatar'
-import { ShadcnButton } from '@/components/shared/ShadcnButton'
+import Button from '@/components/shared/Button'
 
 const NotificationsPage = () => {
   const queryClient = useQueryClient()
@@ -204,14 +204,14 @@ const NotificationsPage = () => {
               )}
             </div>
             {unreadCount > 0 && (
-              <ShadcnButton
+              <Button
                 variant="outline"
                 size="sm"
                 onClick={() => markAllAsReadMutation.mutate()}
                 disabled={markAllAsReadMutation.isPending}
               >
                 Mark all as read
-              </ShadcnButton>
+              </Button>
             )}
           </div>
         </div>
@@ -290,14 +290,14 @@ const NotificationsPage = () => {
         {/* Load More */}
         {hasNextPage && (
           <div className="border-t border-gray-200 px-6 py-4">
-            <ShadcnButton
+            <Button
               variant="outline"
               className="w-full"
               onClick={() => fetchNextPage()}
               disabled={isFetchingNextPage}
             >
               {isFetchingNextPage ? 'Loading...' : 'Load more notifications'}
-            </ShadcnButton>
+            </Button>
           </div>
         )}
       </div>

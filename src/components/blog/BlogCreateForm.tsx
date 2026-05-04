@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { FormEvent, useState, type ReactNode } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import {
@@ -13,10 +13,8 @@ import {
 import Color from '@tiptap/extension-color'
 import Highlight from '@tiptap/extension-highlight'
 import Image from '@tiptap/extension-image'
-import Link from '@tiptap/extension-link'
 import TextAlign from '@tiptap/extension-text-align'
 import { TextStyle } from '@tiptap/extension-text-style'
-import Underline from '@tiptap/extension-underline'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import axios from 'axios'
@@ -24,6 +22,8 @@ import toast from 'react-hot-toast'
 
 import BlogImageUpload from '@/components/blog/BlogImageUpload'
 import ImageUploadCropModal from '@/components/profile/ImageUploadCropModal'
+import Button from '@/components/shared/Button'
+import Input from '@/components/shared/Input'
 
 // Dynamic import for TipTap to avoid SSR issues
 const TipTapEditor = dynamic(() => Promise.resolve(EditorContent), {
@@ -50,6 +50,17 @@ const CATEGORIES = [
   'Education',
   'Other'
 ]
+
+const TOP_BAR_BUTTON_CLASS =
+  'rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:text-gray-500'
+const TEXT_INPUT_CLASS =
+  'w-full rounded-lg border border-neutral-200 px-4 py-3 text-sm transition-colors focus:border-sky-500 focus:ring-2 focus:ring-sky-500 focus:outline-none'
+const CONTENT_TYPE_BUTTON_CLASS =
+  'flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:border-neutral-300 hover:bg-gray-50'
+const BLOCK_CONTROL_BUTTON_CLASS =
+  'rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600'
+const BLOCK_REMOVE_BUTTON_CLASS =
+  'rounded p-1.5 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600'
 
 type ContentBlock = {
   id: string
@@ -348,43 +359,60 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
     return 'text-gray-500'
   }
 
+  let primaryActionLabel: ReactNode
+  if (isLoading) {
+    primaryActionLabel = 'Creating…'
+  } else if (status === 'published') {
+    primaryActionLabel = (
+      <>
+        <span className="sm:hidden">Publish</span>
+        <span className="hidden sm:inline">Publish Blog</span>
+      </>
+    )
+  } else {
+    primaryActionLabel = (
+      <>
+        <span className="sm:hidden">Save draft</span>
+        <span className="hidden sm:inline">Save Draft</span>
+      </>
+    )
+  }
+
   return (
     <div className="z-40 flex h-full flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-4 pr-16 shadow-sm">
-        <h1 className="text-lg font-medium text-gray-900">Create New Blog</h1>
-        <div className="flex items-center gap-3">
-          <button
+      <div className="flex flex-col gap-3 border-b border-neutral-200 bg-white px-4 py-3 pr-14 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4 sm:pr-16">
+        <h1 className="min-w-0 text-base font-medium break-words text-gray-900 sm:text-lg">
+          Create New Blog
+        </h1>
+        <div className="flex w-full shrink-0 sm:w-auto sm:justify-end">
+          <Button
             type="button"
             onClick={() =>
               handleSubmit({ preventDefault: () => {} } as FormEvent)
             }
             disabled={!canSubmit || isLoading}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`w-full sm:w-auto ${TOP_BAR_BUTTON_CLASS} ${
               status === 'published'
                 ? 'bg-sky-500 text-white hover:bg-sky-600 disabled:bg-gray-300'
                 : 'bg-gray-600 text-white hover:bg-gray-700 disabled:bg-gray-300'
-            } disabled:cursor-not-allowed disabled:text-gray-500`}
+            }`}
           >
-            {isLoading
-              ? 'Creating...'
-              : status === 'published'
-                ? 'Publish Blog'
-                : 'Save Draft'}
-          </button>
+            {primaryActionLabel}
+          </Button>
         </div>
       </div>
 
       {/* Main Form */}
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-4xl p-6">
+        <div className="mx-auto max-w-4xl p-4 sm:p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-700">
                 Title <span className="text-red-500">*</span>
               </label>
-              <input
+              <Input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -446,7 +474,7 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full rounded-lg border border-neutral-200 px-4 py-3 text-sm transition-colors focus:border-sky-500 focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                  className={TEXT_INPUT_CLASS}
                 >
                   {CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
@@ -463,7 +491,7 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Tags
                 </label>
-                <input
+                <Input
                   type="text"
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
@@ -533,48 +561,48 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
 
             {/* Content Blocks */}
             <div>
-              <div className="mb-4 flex items-center justify-between">
-                <div>
+              <div className="mb-4 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
                   <h2 className="text-sm font-medium text-gray-700">
                     Content Blocks
                   </h2>
-                  <p className="text-xs text-gray-500">
-                    Build your blog with different content types
+                  <p className="text-xs text-pretty text-gray-500">
+                    Add text, code, images, or video blocks.
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  <button
+                <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
+                  <Button
                     type="button"
                     onClick={() => addContentBlock('text')}
-                    className="flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:border-neutral-300 hover:bg-gray-50"
+                    className={`${CONTENT_TYPE_BUTTON_CLASS} min-h-10 w-full justify-center sm:w-auto`}
                   >
-                    <PlusIcon className="h-3 w-3" />
+                    <PlusIcon className="h-3 w-3 shrink-0" />
                     📝 Text
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => addContentBlock('code')}
-                    className="flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:border-neutral-300 hover:bg-gray-50"
+                    className={`${CONTENT_TYPE_BUTTON_CLASS} min-h-10 w-full justify-center sm:w-auto`}
                   >
-                    <PlusIcon className="h-3 w-3" />
+                    <PlusIcon className="h-3 w-3 shrink-0" />
                     💻 Code
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => addContentBlock('image')}
-                    className="flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:border-neutral-300 hover:bg-gray-50"
+                    className={`${CONTENT_TYPE_BUTTON_CLASS} min-h-10 w-full justify-center sm:w-auto`}
                   >
-                    <PlusIcon className="h-3 w-3" />
+                    <PlusIcon className="h-3 w-3 shrink-0" />
                     🖼️ Image
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => addContentBlock('video')}
-                    className="flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:border-neutral-300 hover:bg-gray-50"
+                    className={`${CONTENT_TYPE_BUTTON_CLASS} min-h-10 w-full justify-center sm:w-auto`}
                   >
-                    <PlusIcon className="h-3 w-3" />
+                    <PlusIcon className="h-3 w-3 shrink-0" />
                     🎥 Video
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -618,7 +646,7 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
             {/* Content Character Count */}
             <div className="flex justify-end">
               <span
-                className={`text-xs ${getCharacterCounterColor(
+                className={`max-w-full text-right text-xs text-pretty ${getCharacterCounterColor(
                   contentCount,
                   MAX_CONTENT_CHARACTERS
                 )}`}
@@ -679,11 +707,12 @@ const ContentBlockEditor = ({
   // TipTap editor for text blocks
   const editor = useEditor({
     extensions: [
-      StarterKit,
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-sky-600 hover:text-sky-800 underline'
+      StarterKit.configure({
+        link: {
+          openOnClick: false,
+          HTMLAttributes: {
+            class: 'text-sky-600 hover:text-sky-800 underline'
+          }
         }
       }),
       Image.configure({
@@ -694,7 +723,6 @@ const ContentBlockEditor = ({
       TextAlign.configure({
         types: ['heading', 'paragraph']
       }),
-      Underline,
       TextStyle,
       Color,
       Highlight.configure({
@@ -741,66 +769,78 @@ const ContentBlockEditor = ({
   return (
     <div className="rounded-lg border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-md">
       {/* Block Header */}
-      <div className="flex items-center justify-between rounded-t-lg border-b border-neutral-200 bg-gray-50 p-4">
-        <div className="flex items-center gap-3">
-          <Bars3Icon className="h-4 w-4 cursor-move text-gray-400" />
-          <span className="text-lg">{getBlockIcon(block.type)}</span>
-          <div>
-            <span className="text-sm font-medium text-gray-900">
+      <div className="flex flex-col gap-3 rounded-t-lg border-b border-neutral-200 bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+        <div className="flex min-w-0 flex-1 items-start gap-2 sm:items-center sm:gap-3">
+          <Bars3Icon className="mt-0.5 h-4 w-4 shrink-0 cursor-move text-gray-400 sm:mt-0" />
+          <span className="shrink-0 text-lg">{getBlockIcon(block.type)}</span>
+          <div className="min-w-0">
+            <span className="block text-sm font-medium text-gray-900">
               {getBlockTitle(block.type)} {index + 1}
             </span>
             {block.type === 'text' && (
-              <p className="text-xs text-gray-500">
-                Rich text editor with formatting options
+              <p className="text-xs text-pretty text-gray-500">
+                <span className="sm:hidden">Rich text & formatting</span>
+                <span className="hidden sm:inline">
+                  Rich text editor with formatting options
+                </span>
               </p>
             )}
             {block.type === 'code' && (
-              <p className="text-xs text-gray-500">
-                Syntax highlighted code snippets
+              <p className="text-xs text-pretty text-gray-500">
+                <span className="sm:hidden">Syntax-highlighted code</span>
+                <span className="hidden sm:inline">
+                  Syntax highlighted code snippets
+                </span>
               </p>
             )}
             {block.type === 'image' && (
-              <p className="text-xs text-gray-500">
-                Upload images with captions and alt text
+              <p className="text-xs text-pretty text-gray-500">
+                <span className="sm:hidden">Image, caption & alt text</span>
+                <span className="hidden sm:inline">
+                  Upload images with captions and alt text
+                </span>
               </p>
             )}
             {block.type === 'video' && (
-              <p className="text-xs text-gray-500">
-                Video embeds with captions
+              <p className="text-xs text-pretty text-gray-500">
+                <span className="sm:hidden">Embed with caption</span>
+                <span className="hidden sm:inline">
+                  Video embeds with captions
+                </span>
               </p>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex shrink-0 items-center justify-end gap-1 self-stretch border-t border-neutral-200 pt-2 sm:self-auto sm:border-t-0 sm:pt-0">
           {onMoveUp && (
-            <button
+            <Button
               type="button"
               onClick={onMoveUp}
-              className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              className={BLOCK_CONTROL_BUTTON_CLASS}
               title="Move up"
             >
               <ArrowUpIcon className="h-4 w-4" />
-            </button>
+            </Button>
           )}
           {onMoveDown && (
-            <button
+            <Button
               type="button"
               onClick={onMoveDown}
-              className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              className={BLOCK_CONTROL_BUTTON_CLASS}
               title="Move down"
             >
               <ArrowDownIcon className="h-4 w-4" />
-            </button>
+            </Button>
           )}
-          <button
+          <Button
             type="button"
             onClick={onRemove}
-            className="rounded p-1.5 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600"
+            className={BLOCK_REMOVE_BUTTON_CLASS}
             title="Remove block"
           >
             <TrashIcon className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </div>
 

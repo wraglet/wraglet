@@ -18,3 +18,8 @@ test('GET /api/users/topics-trending works without auth', async ({
   expect(data.success).toBe(true)
   expect(Array.isArray(data.topics)).toBe(true)
 })
+
+test('GET /api/token without auth returns 401', async ({ request }) => {
+  const res = await request.get('/api/token')
+  expect(res.status()).toBe(401)
+})

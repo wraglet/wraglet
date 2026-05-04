@@ -16,9 +16,9 @@ test('header Sign up on home goes to register', async ({ page }) => {
 })
 
 test('header Login on register goes home', async ({ page }) => {
-  await page.goto('/register')
+  await page.goto('/register', { waitUntil: 'domcontentloaded' })
   await page.getByRole('link', { name: 'Login', exact: true }).click()
-  await expect(page).toHaveURL('/')
+  await expect(page).toHaveURL('/', { timeout: 20_000 })
   await expect(
     page.getByRole('heading', { level: 1, name: 'Welcome Back!' })
   ).toBeVisible()

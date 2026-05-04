@@ -1,5 +1,5 @@
-import type { Metadata } from 'next'
-import localFont from 'next/font/local'
+import type { Metadata, Viewport } from 'next'
+import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
@@ -10,40 +10,53 @@ import Providers from '@/providers'
 
 export const dynamic = 'force-dynamic'
 
-const geistSans = localFont({
-  src: './../fonts/GeistVF.woff',
-  variable: '--font-geist-sans',
-  weight: '100 900'
-})
-const geistMono = localFont({
-  src: './../fonts/GeistMonoVF.woff',
-  variable: '--font-geist-mono',
-  weight: '100 900'
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+  weight: ['400', '500', '600', '700']
 })
 
 const title = 'Wraglet'
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover'
+}
+
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.wraglet.com'),
   title: title,
   description:
     "Wraglet is more than a social platform; it's a movement towards profound connections. Embrace a future where impactful brevity takes center stage, and every voice resonates. Join Wraglet today and be part of the evolution of meaningful online interaction.",
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' }
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+    ]
+  },
   twitter: {
     images: {
-      url: 'https://cdn.wraglet.com/images/logo/logo.png',
+      url: '/android-chrome-512x512.png',
       alt: 'Wraglet - Redefining Social Connection',
       type: 'image/png',
-      width: 300,
-      height: 300
+      width: 512,
+      height: 512
     }
   },
   openGraph: {
     title: title,
     images: {
-      url: 'https://cdn.wraglet.com/images/logo/logo.png',
+      url: '/android-chrome-512x512.png',
       alt: 'Wraglet - Redefining Social Connection',
       type: 'image/png',
-      width: 300,
-      height: 300
+      width: 512,
+      height: 512
     },
     siteName: title,
     description:
@@ -55,7 +68,7 @@ const Layout = async ({ children }: { children: React.ReactNode }) => {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
+        className={`${inter.variable} ${inter.className} font-sans antialiased`}
       >
         <Providers>
           <ToasterContext />

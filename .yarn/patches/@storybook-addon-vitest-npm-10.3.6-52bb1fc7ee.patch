@@ -1,0 +1,13 @@
+diff --git a/dist/node/vitest.js b/dist/node/vitest.js
+index 9d58637c5a1839a813bda3f900b7b7ed1cf4682e..c2fb82a77f54604462860bd9d7ffba24ed856557 100644
+--- a/dist/node/vitest.js
++++ b/dist/node/vitest.js
+@@ -258,7 +258,7 @@ var DOUBLE_SPACES = "  ", getTestName = (name) => `${name}${DOUBLE_SPACES}`, Vit
+     this.vitest && this.vitest.onCancel(() => {
+     });
+     try {
+-      await this.vitest.init();
++      await this.vitest.standalone();
+     } catch (e) {
+       let message = "Failed to initialize Vitest", isV8 = e.message?.includes("@vitest/coverage-v8"), isIstanbul = e.message?.includes("@vitest/coverage-istanbul");
+       (e.message?.includes("Failed to load url") && (isIstanbul || isV8) || // Vitest will sometimes not throw the correct missing-package-detection error, so we have to check for this as well

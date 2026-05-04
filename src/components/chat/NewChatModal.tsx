@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { XMarkIcon } from '@heroicons/react/24/outline'
 
 import Avatar from '@/components/shared/Avatar'
 
@@ -11,7 +12,6 @@ interface NewChatModalProps {
   users: any[]
   isLoading: boolean
   error: string | null
-  variant?: 'wraglet' | 'default'
 }
 
 export const NewChatModal: React.FC<NewChatModalProps> = ({
@@ -20,70 +20,89 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({
   onSelectUser,
   users,
   isLoading,
-  error,
-  variant = 'default'
+  error
 }) => {
   const [search, setSearch] = useState('')
-  const filtered = users.filter(
-    (u) =>
-      u && u.username && u.username.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = users.filter((user) => {
+    if (!user) return false
+    const query = search.toLowerCase()
+    const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`
+
+    return [user.username, fullName]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(query))
+  })
   if (!open) return null
+
+  let content: React.ReactNode
+  if (isLoading) {
+    content = (
+      <div className="py-8 text-center text-sm text-gray-400">
+        Loading users...
+      </div>
+    )
+  } else if (error) {
+    content = (
+      <div className="py-8 text-center text-sm text-red-400">{error}</div>
+    )
+  } else {
+    content = (
+      <ul className="max-h-72 space-y-1 overflow-y-auto">
+        {filtered.length === 0 && (
+          <li className="py-4 text-center text-sm text-gray-400">
+            No users found
+          </li>
+        )}
+        {filtered.map((u) => (
+          <li key={`new-chat-${u._id}`}>
+            <button
+              type="button"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-sky-50"
+              onClick={() => onSelectUser(u)}
+            >
+              <Avatar
+                src={u.profilePicture?.url || null}
+                alt={`${u.firstName}'s avatar`}
+                size="h-9 w-9"
+                gender={u.gender}
+              />
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate text-sm font-semibold text-gray-900">
+                  {u.firstName} {u.lastName}
+                </span>
+                <span className="truncate text-xs text-gray-500">
+                  {u.username}
+                </span>
+              </div>
+            </button>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div
-        className={
-          variant === 'wraglet'
-            ? 'w-full max-w-md rounded-2xl border border-blue-100 bg-white p-8 shadow-2xl'
-            : 'w-full max-w-md rounded-lg bg-white p-6 shadow-xl'
-        }
-      >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-blue-600">Start New Chat</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-xl border border-neutral-200 bg-white p-4 shadow-xl">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-gray-900">
+            Start New Chat
+          </h2>
           <button
             onClick={onClose}
-            className="px-2 text-2xl font-bold text-gray-400 hover:text-blue-500"
+            className="rounded-full p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#0EA5E9]"
+            aria-label="Close new chat"
           >
-            ×
+            <XMarkIcon className="h-5 w-5" />
           </button>
         </div>
         <input
-          className="mb-6 w-full rounded-lg border border-blue-200 px-4 py-2 text-base focus:border-blue-400 focus:outline-none"
+          className="mb-3 h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm transition-colors focus:border-[#0EA5E9] focus:ring-2 focus:ring-sky-100 focus:outline-none"
           placeholder="Search users..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        {isLoading ? (
-          <div className="py-8 text-center text-gray-400">Loading users...</div>
-        ) : error ? (
-          <div className="py-8 text-center text-red-400">{error}</div>
-        ) : (
-          <ul className="max-h-72 divide-y overflow-y-auto">
-            {filtered.length === 0 && (
-              <li className="py-4 text-center text-gray-400">No users found</li>
-            )}
-            {filtered.map((u) => (
-              <li
-                key={`new-chat-${u._id}`}
-                className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-3 transition hover:bg-blue-50"
-                onClick={() => onSelectUser(u)}
-              >
-                <Avatar
-                  src={u.profilePicture?.url}
-                  alt={`${u.firstName}'s avatar`}
-                  size="h-10 w-10"
-                  gender={u.gender}
-                />
-                <div className="flex flex-col">
-                  <span className="font-semibold text-gray-900">
-                    {u.firstName} {u.lastName}
-                  </span>
-                  <span className="text-xs text-gray-500">@{u.username}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        {content}
       </div>
     </div>
   )

@@ -159,7 +159,7 @@ export default function AddPhotoModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <DialogPanel className="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white p-6 shadow-xl transition-all">
+              <DialogPanel className="max-h-[min(90dvh,100%)] w-full max-w-3xl transform overflow-y-auto rounded-2xl bg-white p-4 shadow-xl transition-all sm:p-6">
                 <div className="relative mb-6">
                   <h2 className="text-lg font-semibold text-gray-900">
                     Add Photos

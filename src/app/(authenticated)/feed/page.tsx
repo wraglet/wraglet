@@ -1,5 +1,4 @@
 import { Suspense } from 'react'
-import getCurrentUser from '@/actions/getCurrentUser'
 import getDiscoverUsers from '@/actions/getDiscoverUsers'
 
 import FeedNewChatModalWrapper from '@/components/chat/FeedNewChatModalWrapper'
@@ -19,8 +18,6 @@ const FeedPage = async () => {
       )
       return [] // Return empty array on error
     })) || [] // Ensure it's always an array
-
-  const currentUser = await getCurrentUser()
 
   // Deduplicate users by _id to prevent duplicate keys
   const uniqueDiscoverUsers = discoverUsers.filter(
@@ -50,10 +47,10 @@ const FeedPage = async () => {
 
   return (
     <>
-      <main className="mx-auto flex min-h-screen w-full max-w-7xl items-start px-4">
+      <main className="fixed top-[56px] right-0 left-0 z-0 mx-auto flex w-full max-w-7xl items-start px-3 max-lg:bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] sm:px-4 lg:bottom-0">
         <LeftNav />
-        <div className="mx-auto flex h-[calc(100vh-3.5rem)] flex-1 px-4 md:px-8">
-          <div className="w-full overflow-y-auto pt-14 pb-20 lg:pb-4">
+        <div className="mx-auto flex min-h-0 flex-1 self-stretch px-0 sm:px-4 md:px-8">
+          <div className="h-full min-h-0 w-full overflow-y-auto pb-[max(10rem,calc(5.5rem+env(safe-area-inset-bottom,0px)))] lg:pb-4">
             <Suspense fallback={<Loading />}>
               <FeedClientWrapper />
             </Suspense>

@@ -5,8 +5,7 @@ const protectedPaths = [
   '/search',
   '/messages',
   '/settings',
-  '/notifications',
-  '/blog/dashboard'
+  '/notifications'
 ]
 
 for (const path of protectedPaths) {

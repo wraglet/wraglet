@@ -18,6 +18,7 @@ import {
   Transition,
   TransitionChild
 } from '@headlessui/react'
+import { PhotoIcon } from '@heroicons/react/24/outline'
 import { useDropzone } from 'react-dropzone'
 import Cropper from 'react-easy-crop'
 import { FaCrop } from 'react-icons/fa6'
@@ -54,7 +55,7 @@ const baseStyle: CSSProperties = {
 }
 
 const focusedStyle: CSSProperties = {
-  borderColor: '#2196f3'
+  borderColor: '#0EA5E9'
 }
 
 const acceptStyle: CSSProperties = {
@@ -74,7 +75,10 @@ const UploadPostImage: FC<Props> = ({
   const dialogRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [image, setImage] = useState<string>(postImage)
-  const isValid = image !== '' && image !== postImage
+  const trimmedImage = image.trim()
+  const hasImage = trimmedImage.length > 0
+  const trimmedPost = postImage.trim()
+  const isValid = hasImage && trimmedImage !== trimmedPost
 
   useEffect(() => {
     setImage(postImage)
@@ -89,6 +93,7 @@ const UploadPostImage: FC<Props> = ({
     width: number
     height: number
   }>(null)
+  const canApplyCrop = hasImage && croppedAreaPixels !== null
   const [limitErr, setLimitErr] = useState<string | null>(null)
 
   const onCropComplete = useCallback(
@@ -145,20 +150,16 @@ const UploadPostImage: FC<Props> = ({
   )
 
   const handleCrop = async () => {
-    if (croppedAreaPixels) {
-      const croppedImage = await getCroppedImg(
-        image,
-        croppedAreaPixels,
-        rotation
-      )
-      setImage(croppedImage)
-      setIsCropping(false)
-    }
+    if (!trimmedImage || !croppedAreaPixels) return
+    const croppedImage = await getCroppedImg(image, croppedAreaPixels, rotation)
+    setImage(croppedImage)
+    setIsCropping(false)
   }
 
   const handleConfirm = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
-    setPostImage(image)
+    if (!trimmedImage) return
+    setPostImage(trimmedImage)
     close()
   }
 
@@ -193,7 +194,7 @@ const UploadPostImage: FC<Props> = ({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="bg-opacity-25 fixed inset-0 bg-black"></div>
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm"></div>
         </TransitionChild>
 
         <TransitionChild
@@ -205,47 +206,62 @@ const UploadPostImage: FC<Props> = ({
           leaveFrom="opacity-100 scale-100"
           leaveTo="opacity-0 scale-95"
         >
-          <DialogPanel className="fixed inset-0 z-10 flex items-center justify-center">
-            <div className="relative grid w-[530px] gap-5 rounded-2xl bg-white p-10">
+          <DialogPanel className="fixed inset-0 z-10 flex items-center justify-center overflow-y-auto p-4">
+            <div className="relative grid max-h-[min(90dvh,100%)] w-full max-w-lg gap-4 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-4 shadow-xl sm:p-5">
               <button
                 type="button"
                 onClick={handleClose}
-                className="absolute top-6 right-6 rounded-md p-1 hover:bg-slate-100"
+                className="absolute top-3 right-3 rounded-full p-1.5 hover:bg-slate-100"
+                aria-label="Close upload image"
               >
                 <CrossWhite fill="#374151" />
               </button>
               <div>
-                <h1 className="text-primary text-xl font-bold">Upload Image</h1>
+                <h1 className="text-base font-semibold text-gray-900">
+                  Upload Image
+                </h1>
                 <p className="text-sm font-medium text-slate-400">
                   Choose an image to include to your post
                 </p>
               </div>
               {!isCropping ? (
-                <div className="block h-64 w-full overflow-hidden">
-                  <Suspense
-                    fallback={<Skeleton className="h-full w-full bg-white" />}
+                hasImage ? (
+                  <div className="block h-64 w-full overflow-hidden rounded-lg border border-sky-100 bg-neutral-50 shadow-sm">
+                    <Suspense
+                      fallback={<Skeleton className="h-full w-full bg-white" />}
+                    >
+                      <Image
+                        src={trimmedImage}
+                        alt="Post image preview"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        width={800}
+                        height={450}
+                        className="h-full max-h-64 w-full object-contain object-center"
+                        unoptimized={
+                          trimmedImage.startsWith('data:') ||
+                          trimmedImage.startsWith('blob:')
+                        }
+                      />
+                    </Suspense>
+                  </div>
+                ) : (
+                  <div
+                    className="flex h-56 w-full flex-col items-center justify-center rounded-lg border border-dashed border-sky-200/80 bg-sky-50/40 px-4 text-center"
+                    aria-hidden
                   >
-                    <Image
-                      src={
-                        image ??
-                        `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/img-placeholder.png`
-                      }
-                      alt="Post Image to upload"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      width={1}
-                      height={1}
-                      style={{
-                        height: 'auto',
-                        width: '100%'
-                      }}
-                      className="object-cover object-center"
-                    />
-                  </Suspense>
-                </div>
+                    <PhotoIcon className="mb-2 h-12 w-12 text-sky-400" />
+                    <p className="text-sm font-medium text-gray-700">
+                      No image selected yet
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Add a photo below to preview it here
+                    </p>
+                  </div>
+                )
               ) : (
                 <div className="relative h-64 w-full">
                   <Cropper
-                    image={image}
+                    image={trimmedImage}
                     crop={crop}
                     zoom={zoom}
                     rotation={rotation}
@@ -264,7 +280,8 @@ const UploadPostImage: FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => setIsCropping(true)}
-                  className="text-primary flex items-center gap-x-2 hover:text-gray-500"
+                  disabled={!hasImage}
+                  className="text-primary flex items-center gap-x-2 hover:enabled:text-gray-500 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <FaCrop size={16} />
                   &nbsp;
@@ -286,10 +303,10 @@ const UploadPostImage: FC<Props> = ({
                 <div className="flex h-[200px] flex-col justify-center gap-y-6">
                   <div className="flex flex-col gap-y-5">
                     <div className="flex items-center justify-between">
-                      <span className="text-xl font-medium text-black">
+                      <span className="text-sm font-medium text-black">
                         Zoom
                       </span>
-                      <span className="text-xl font-bold text-gray-900">
+                      <span className="text-sm font-semibold text-gray-900">
                         {(((zoom - 1) / 2) * 100).toFixed(0)}
                       </span>
                     </div>
@@ -305,10 +322,10 @@ const UploadPostImage: FC<Props> = ({
                   </div>
                   <div className="flex flex-col gap-y-5">
                     <div className="flex items-center justify-between">
-                      <span className="text-xl font-medium text-black">
+                      <span className="text-sm font-medium text-black">
                         Rotation
                       </span>
-                      <span className="text-xl font-bold text-gray-900">
+                      <span className="text-sm font-semibold text-gray-900">
                         {rotation}
                       </span>
                     </div>
@@ -363,19 +380,19 @@ const UploadPostImage: FC<Props> = ({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="rounded-md border border-solid border-gray-200 px-3 py-1 text-base font-medium text-[#01205D] shadow-xs hover:bg-slate-100 active:bg-slate-200"
+                  className="rounded-md border border-solid border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 shadow-xs hover:bg-slate-100 active:bg-slate-200"
                 >
                   Cancel
                 </button>
                 {isCropping ? (
                   <button
                     onClick={handleCrop}
-                    type="submit"
+                    type="button"
                     className={`${
-                      isValid
+                      canApplyCrop
                         ? 'border-sky-500 bg-sky-500 text-white hover:bg-sky-600 active:bg-sky-700'
                         : 'pointer-events-none cursor-default border-gray-200 bg-slate-200 text-slate-400 select-none'
-                    } rounded-md border border-solid px-3 py-1 text-base font-medium shadow-sm transition-all`}
+                    } rounded-md border border-solid px-3 py-1.5 text-sm font-medium shadow-sm transition-all`}
                   >
                     Crop
                   </button>
@@ -388,7 +405,7 @@ const UploadPostImage: FC<Props> = ({
                       isValid
                         ? 'border-sky-500 bg-sky-500 text-white hover:bg-sky-600 active:bg-sky-700'
                         : 'pointer-events-none cursor-default border-gray-200 bg-slate-200 text-slate-400 select-none'
-                    } rounded-md border border-solid px-3 py-1 text-base font-medium shadow-sm transition-all`}
+                    } rounded-md border border-solid px-3 py-1.5 text-sm font-medium shadow-sm transition-all`}
                   >
                     Confirm
                   </button>

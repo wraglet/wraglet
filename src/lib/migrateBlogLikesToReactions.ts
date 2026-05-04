@@ -3,12 +3,18 @@ import PostReaction from '@/models/PostReaction'
 import type { Types } from 'mongoose'
 
 let didCheckLikedByRename = false
+const shouldRunLegacyBlogLikesMigration =
+  process.env.ENABLE_BLOG_LEGACY_LIKES_MIGRATION === 'true'
 
 /**
  * Renames MongoDB field `likedBy` → `reactedBy` on all blogs (one-time per process).
  * Skips documents that already have `reactedBy` so $rename does not conflict.
  */
 export const ensureBlogLikedByRenamedToReactedBy = async (): Promise<void> => {
+  if (!shouldRunLegacyBlogLikesMigration) {
+    didCheckLikedByRename = true
+    return
+  }
   if (didCheckLikedByRename) return
   try {
     const coll = Blog.collection
@@ -45,6 +51,8 @@ export const ensureBlogLikedByRenamedToReactedBy = async (): Promise<void> => {
 export const migrateLegacyBlogLikesToReactions = async (
   blogId: Types.ObjectId
 ): Promise<void> => {
+  if (!shouldRunLegacyBlogLikesMigration) return
+
   await ensureBlogLikedByRenamedToReactedBy()
 
   const blog = await Blog.findById(blogId)

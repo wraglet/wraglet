@@ -2,6 +2,8 @@
 
 import { useForm } from 'react-hook-form'
 
+import Button from '@/components/shared/Button'
+
 const user = {
   profileVisible: true
 }
@@ -13,36 +15,51 @@ const PrivacySettings = () => {
     }
   })
 
-  const onSubmit = (data: any) => {
-    // TODO: Save privacy settings
+  const onSubmit = () => {
     alert('Privacy settings updated!')
   }
 
   return (
-    <div className="mx-auto w-full">
-      <h2 className="mb-6 text-2xl font-bold">Privacy & Security</h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="flex items-center gap-2">
+    <div className="mx-auto w-full space-y-4">
+      <div className="hidden lg:block">
+        <h1 className="text-xl font-bold tracking-tight text-gray-900">
+          Privacy & Security
+        </h1>
+        <p className="mt-1 text-sm text-gray-600">
+          Control who can see and interact with your profile.
+        </p>
+      </div>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-4 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm"
+      >
+        <div className="flex items-start gap-3 rounded-lg border border-neutral-100 bg-gray-50 px-3 py-2.5">
           <input
             id="profileVisible"
             type="checkbox"
             {...register('profileVisible')}
+            className="mt-0.5 h-3.5 w-3.5 rounded border-gray-300 text-[#0EA5E9] focus:ring-[#0EA5E9]"
           />
-          <label htmlFor="profileVisible" className="font-medium">
-            Show my profile publicly
-          </label>
+          <div>
+            <label
+              htmlFor="profileVisible"
+              className="text-sm font-semibold text-gray-700"
+            >
+              Show my profile publicly
+            </label>
+            <p className="text-xs text-gray-500">
+              Allow others to view your profile and posts.
+            </p>
+          </div>
         </div>
-        <button
-          type="submit"
-          className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-        >
+        <Button type="submit" variant="default" size="sm">
           Save Changes
-        </button>
+        </Button>
       </form>
-      <div className="mt-6">
-        <button className="rounded bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300">
+      <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+        <Button type="button" variant="outline" size="sm">
           Manage Blocked Users
-        </button>
+        </Button>
       </div>
     </div>
   )

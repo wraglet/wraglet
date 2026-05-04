@@ -3,6 +3,10 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import { getAblyInstance } from '@/lib/ably'
+import {
+  getConversationUnreadCount,
+  getTotalUnreadMessageCount
+} from '@/lib/conversationUnread'
 import client from '@/lib/db'
 import Conversation from '@/models/Conversation'
 import Message from '@/models/Message'
@@ -28,14 +32,10 @@ export const GET = async (req: Request) => {
     // For each conversation, calculate unreadCount
     const data = await Promise.all(
       conversations.map(async (c: any) => {
-        const lastRead = (c.lastRead || []).find(
-          (lr: any) => lr.user.toString() === userId.toString()
+        const unreadCount = await getConversationUnreadCount(
+          c,
+          userId.toString()
         )
-        const lastReadAt = lastRead?.at || new Date(0)
-        const unreadCount = await Message.countDocuments({
-          conversation: c._id,
-          createdAt: { $gt: lastReadAt }
-        })
         return {
           ...c,
           unreadCount
@@ -45,6 +45,7 @@ export const GET = async (req: Request) => {
 
     return NextResponse.json({ success: true, data })
   } catch (error) {
+    console.error('Fetch conversations error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to fetch conversations' },
       { status: 500 }
@@ -89,7 +90,9 @@ export const POST = async (req: Request) => {
               conversationId: existing._id,
               from: userId
             })
-        } catch (e) {}
+        } catch (error) {
+          console.error('Notify existing conversation error:', error)
+        }
         return NextResponse.json({ success: true, data: existing })
       }
     }
@@ -110,9 +113,12 @@ export const POST = async (req: Request) => {
           from: userId
         })
       }
-    } catch (e) {}
+    } catch (error) {
+      console.error('Notify new conversation error:', error)
+    }
     return NextResponse.json({ success: true, data: conversation })
   } catch (error) {
+    console.error('Create conversation error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to create conversation' },
       { status: 500 }
@@ -151,9 +157,11 @@ export const PATCH = async (req: Request) => {
     )
     // Optionally, notify via Ably
     const ably = getAblyInstance()
+    const totalUnreadCount = await getTotalUnreadMessageCount(userId.toString())
     ably.channels.get(`user-${userId}-messages`).publish('unread', {
       conversationId,
-      unreadCount: 0
+      conversationUnreadCount: 0,
+      totalUnreadCount
     })
     // Return updated conversation
     const updated = await Conversation.findById(conversationId)
@@ -165,6 +173,7 @@ export const PATCH = async (req: Request) => {
       .lean()
     return NextResponse.json({ success: true, data: updated })
   } catch (error) {
+    console.error('Mark conversation read error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to mark as read' },
       { status: 500 }

@@ -37,7 +37,7 @@ const LeftSideNav = () => {
   ]
 
   return (
-    <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-[280px] flex-shrink-0 lg:block xl:w-[320px]">
+    <aside className="hidden h-full w-[280px] flex-shrink-0 lg:block xl:w-[320px]">
       <div className="flex h-full flex-col">
         <div className="flex-1 space-y-4 p-4">
           <Link

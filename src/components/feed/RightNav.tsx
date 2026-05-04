@@ -5,11 +5,16 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { UserInterface } from '@/interfaces'
 import { useFollow } from '@/lib/hooks/useFollow'
+import {
+  profileHrefFromUsername,
+  usernameToDisplayHandle
+} from '@/lib/profileHref'
 import { useQuery } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { FaHashtag } from 'react-icons/fa'
 
 import Avatar from '@/components/shared/Avatar'
+import Button from '@/components/shared/Button'
 
 // User suggestion card with real-time follow state
 const UserSuggestion = ({
@@ -32,59 +37,70 @@ const UserSuggestion = ({
     }
   }
 
+  const profileHref =
+    profileHrefFromUsername(user.username) ?? `/${user.username}`
+
   return (
-    <div className="flex items-center gap-3">
-      <div className="relative">
-        <Avatar
-          src={user.profilePicture?.url || null}
-          alt={user.username}
-          size="h-11 w-11"
-          gender={user.gender}
-        />
-        {/* Badge for trending users */}
-        {user.isTrending && (
-          <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-500">
-            <span className="text-xs text-white">🔥</span>
-          </div>
-        )}
-        {/* Badge for recent active users */}
-        {user.isRecentActive && !user.isTrending && (
-          <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
-            <span className="text-xs text-white">⚡</span>
-          </div>
-        )}
-        {/* Badge for new users */}
-        {user.isNew && !user.isTrending && !user.isRecentActive && (
-          <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500">
-            <span className="text-xs text-white">🆕</span>
-          </div>
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1">
-          <p className="truncate text-sm font-semibold text-gray-900">
-            {user.firstName} {user.lastName}
-          </p>
-          {/* Show badge text for trending users */}
+    <div className="flex items-center gap-2">
+      <Link
+        href={profileHref}
+        className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-0.5 py-0.5 transition-colors outline-none hover:bg-sky-50/70 focus-visible:ring-2 focus-visible:ring-[#0EA5E9]/30"
+      >
+        <div className="relative shrink-0">
+          <Avatar
+            src={user.profilePicture?.url || null}
+            alt={user.username}
+            size="h-9 w-9"
+            gender={user.gender}
+          />
+          {/* Badge for trending users */}
           {user.isTrending && (
-            <span className="rounded bg-orange-100 px-1 text-xs text-orange-600">
-              Trending
-            </span>
+            <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-500">
+              <span className="text-xs text-white">🔥</span>
+            </div>
+          )}
+          {/* Badge for recent active users */}
+          {user.isRecentActive && !user.isTrending && (
+            <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500">
+              <span className="text-xs text-white">⚡</span>
+            </div>
+          )}
+          {/* Badge for new users */}
+          {user.isNew && !user.isTrending && !user.isRecentActive && (
+            <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#0EA5E9]">
+              <span className="text-xs text-white">🆕</span>
+            </div>
           )}
         </div>
-        <p className="truncate text-xs text-gray-500">{user.username}</p>
-      </div>
-      <button
-        className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+        <div className="min-w-0 flex-1 text-left">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0">
+            <p className="truncate text-xs font-bold text-gray-900">
+              {user.firstName} {user.lastName}
+            </p>
+            {/* Show badge text for trending users */}
+            {user.isTrending && (
+              <span className="shrink-0 rounded bg-orange-100 px-1 text-[10px] leading-none font-medium text-orange-600">
+                Trending
+              </span>
+            )}
+          </div>
+          <p className="truncate text-[11px] leading-tight text-gray-500">
+            {usernameToDisplayHandle(user.username)}
+          </p>
+        </div>
+      </Link>
+      <Button
+        type="button"
+        className={`h-7 shrink-0 rounded-full px-2.5 py-0 text-[11px] font-medium transition-colors ${
           isFollowing
             ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            : 'bg-blue-500 text-white hover:bg-blue-600'
+            : 'bg-sky-100 text-[#0EA5E9] hover:bg-[#0EA5E9] hover:text-white'
         } disabled:opacity-50`}
         onClick={handleFollow}
         disabled={loading}
       >
         {isFollowing ? 'Following' : loading ? 'Following...' : 'Follow'}
-      </button>
+      </Button>
     </div>
   )
 }
@@ -98,16 +114,21 @@ const TrendingTopic = ({
   onClick: (tag: string) => void
 }) => {
   return (
-    <button
+    <Button
+      type="button"
       onClick={() => onClick(topic.tag)}
-      className="flex w-full items-center justify-between rounded-lg p-3 transition-all duration-200 hover:bg-sky-50"
+      className="flex w-full items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-sky-50/80"
     >
-      <div className="flex items-center gap-2">
-        <FaHashtag className="h-4 w-4 text-sky-500" />
-        <span className="text-sm font-medium text-gray-900">#{topic.tag}</span>
+      <div className="flex min-w-0 items-center gap-1.5">
+        <FaHashtag className="h-3.5 w-3.5 shrink-0 text-[#0EA5E9]" />
+        <span className="truncate text-xs font-semibold text-gray-900">
+          #{topic.tag}
+        </span>
       </div>
-      <span className="text-xs text-gray-500">{topic.count} posts</span>
-    </button>
+      <span className="shrink-0 pl-1 text-[11px] text-gray-500">
+        {topic.count} posts
+      </span>
+    </Button>
   )
 }
 
@@ -136,28 +157,43 @@ const TrendingPostPreview = ({ post }: { post: any }) => {
     return String(post.content)
   }
 
+  const authorHref = profileHrefFromUsername(post.author?.username)
+  const authorLabel =
+    `${post.author?.firstName || 'Unknown'} ${post.author?.lastName || ''}`.trim()
+
   return (
-    <Link
-      href={`/post/${post._id}`}
-      className="flex items-start gap-3 rounded-lg p-3 transition-all duration-200 hover:bg-sky-50"
-    >
+    <div className="flex items-start gap-2 rounded-md px-1.5 py-1.5 transition-colors hover:bg-sky-50/70">
       {post.images?.[0] && (
-        <Image
-          src={post.images[0].url}
-          alt="Post preview"
-          width={48}
-          height={48}
-          className="rounded object-cover"
-        />
+        <Link href={`/post/${post._id}`} className="shrink-0 rounded">
+          <Image
+            src={post.images[0].url}
+            alt="Post preview"
+            width={40}
+            height={40}
+            className="size-10 rounded object-cover"
+          />
+        </Link>
       )}
       <div className="min-w-0 flex-1">
-        <p className="line-clamp-2 text-sm text-gray-900">
-          {getPostContent(post)}
-        </p>
-        <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
-          <span>
-            {post.author?.firstName || 'Unknown'} {post.author?.lastName || ''}
-          </span>
+        <Link
+          href={`/post/${post._id}`}
+          className="block rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[#0EA5E9]/30"
+        >
+          <p className="line-clamp-2 text-xs leading-snug text-gray-900">
+            {getPostContent(post)}
+          </p>
+        </Link>
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0 text-[11px] text-gray-500">
+          {authorHref ? (
+            <Link
+              href={authorHref}
+              className="text-gray-500 hover:text-[#0EA5E9] focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-[#0EA5E9]/30 focus-visible:outline-none"
+            >
+              {authorLabel}
+            </Link>
+          ) : (
+            <span>{authorLabel}</span>
+          )}
           <span>•</span>
           <span>
             {post.createdAt
@@ -168,7 +204,7 @@ const TrendingPostPreview = ({ post }: { post: any }) => {
           </span>
         </div>
       </div>
-    </Link>
+    </div>
   )
 }
 
@@ -179,23 +215,50 @@ const ActivityItem = ({ activity }: { activity: any }) => {
     return null
   }
 
+  const actorHref = profileHrefFromUsername(activity.user.username)
+  const displayName =
+    `${activity.user.firstName || 'Unknown'} ${activity.user.lastName || ''}`.trim()
+
   return (
-    <div className="flex items-start gap-3 rounded-lg p-3 transition-all duration-200 hover:bg-sky-50">
-      <Avatar
-        gender={activity.user.gender}
-        className="h-8 w-8"
-        alt={`${activity.user.firstName || 'User'}'s Profile`}
-        src={activity.user.profilePicture?.url || null}
-      />
+    <div className="flex items-start gap-2 rounded-md px-1.5 py-1.5 transition-colors hover:bg-sky-50/70">
+      {actorHref ? (
+        <Link
+          href={actorHref}
+          className="mt-0.5 shrink-0 rounded-full ring-offset-1 outline-none focus-visible:ring-2 focus-visible:ring-[#0EA5E9]/40"
+        >
+          <Avatar
+            gender={activity.user.gender}
+            size="h-7 w-7"
+            alt={`${activity.user.firstName || 'User'}'s Profile`}
+            src={activity.user.profilePicture?.url || null}
+          />
+        </Link>
+      ) : (
+        <Avatar
+          gender={activity.user.gender}
+          size="h-7 w-7"
+          className="mt-0.5 shrink-0"
+          alt={`${activity.user.firstName || 'User'}'s Profile`}
+          src={activity.user.profilePicture?.url || null}
+        />
+      )}
       <div className="min-w-0 flex-1">
-        <p className="text-sm text-gray-900">
-          <span className="font-medium">
-            {activity.user.firstName || 'Unknown'}{' '}
-            {activity.user.lastName || ''}
-          </span>{' '}
-          {activity.action || 'did something'}
+        <p className="text-xs leading-snug text-gray-900">
+          {actorHref ? (
+            <Link
+              href={actorHref}
+              className="font-semibold text-gray-900 hover:text-[#0EA5E9] focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-[#0EA5E9]/30 focus-visible:outline-none"
+            >
+              {displayName}
+            </Link>
+          ) : (
+            <span className="font-semibold">{displayName}</span>
+          )}{' '}
+          <span className="font-normal text-gray-700">
+            {activity.action || 'did something'}
+          </span>
         </p>
-        <p className="text-xs text-gray-500">
+        <p className="mt-0.5 text-[11px] text-gray-500">
           {activity.timestamp
             ? formatDistanceToNow(new Date(activity.timestamp), {
                 addSuffix: true
@@ -267,14 +330,14 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
   }, [otherUsers])
 
   return (
-    <aside className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-200 sticky top-14 hidden h-[calc(100vh-3.5rem)] w-[280px] flex-shrink-0 overflow-y-auto lg:block xl:w-[320px]">
-      <div className="flex h-full flex-col gap-4 py-4">
+    <aside className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-200 hidden h-full w-[260px] flex-shrink-0 overflow-y-auto lg:block xl:w-[288px]">
+      <div className="flex h-full flex-col gap-2 py-2 pr-0.5">
         {/* Discover People - Single, improved section */}
-        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-5 text-base font-semibold text-gray-900">
+        <div className="rounded-lg border border-solid border-neutral-200 bg-white p-3 drop-shadow-sm">
+          <h2 className="mb-2 text-xs font-bold text-gray-900">
             Discover People
           </h2>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             {otherUsers.slice(0, 5).map((user, index) => (
               <UserSuggestion
                 key={`rightnav-discover-${user._id}-${index}`}
@@ -282,30 +345,33 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
               />
             ))}
             {otherUsers.length === 0 && (
-              <p className="py-4 text-center text-sm text-gray-500">
+              <p className="py-2 text-center text-xs text-gray-500">
                 No new people to discover right now
               </p>
             )}
             {otherUsers.length > 5 && (
-              <button className="mt-2 text-sm text-blue-600 hover:text-blue-800">
+              <Button
+                type="button"
+                className="h-auto justify-center py-1 text-xs font-medium text-[#0EA5E9] hover:text-sky-700"
+              >
                 See more people
-              </button>
+              </Button>
             )}
           </div>
         </div>
 
         {/* Trending Topics */}
-        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-5 text-base font-semibold text-gray-900">
+        <div className="rounded-lg border border-solid border-neutral-200 bg-white p-3 drop-shadow-sm">
+          <h2 className="mb-2 text-xs font-bold text-gray-900">
             Trending Topics
           </h2>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-0.5">
             {topicsLoading ? (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {[1, 2, 3].map((i) => (
                   <div
                     key={`topic-loading-${i}`}
-                    className="h-10 animate-pulse rounded bg-gray-200"
+                    className="h-8 animate-pulse rounded-md bg-gray-100"
                   ></div>
                 ))}
               </div>
@@ -320,7 +386,7 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
                   />
                 ))
             ) : (
-              <p className="py-4 text-center text-sm text-gray-500">
+              <p className="py-2 text-center text-xs text-gray-500">
                 No trending topics
               </p>
             )}
@@ -328,19 +394,19 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
         </div>
 
         {/* Trending Posts Preview */}
-        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-5 text-base font-semibold text-gray-900">
+        <div className="rounded-lg border border-solid border-neutral-200 bg-white p-3 drop-shadow-sm">
+          <h2 className="mb-2 text-xs font-bold text-gray-900">
             Trending Posts
           </h2>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-0.5">
             {trendingPostsLoading ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {[1, 2, 3].map((i) => (
-                  <div key={`trending-loading-${i}`} className="flex gap-3">
-                    <div className="h-12 w-12 animate-pulse rounded bg-gray-200"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 w-full animate-pulse rounded bg-gray-200"></div>
-                      <div className="h-3 w-24 animate-pulse rounded bg-gray-200"></div>
+                  <div key={`trending-loading-${i}`} className="flex gap-2">
+                    <div className="size-10 shrink-0 animate-pulse rounded bg-gray-100" />
+                    <div className="min-w-0 flex-1 space-y-1.5 py-0.5">
+                      <div className="h-3 w-full animate-pulse rounded bg-gray-100" />
+                      <div className="h-2.5 w-20 animate-pulse rounded bg-gray-100" />
                     </div>
                   </div>
                 ))}
@@ -355,7 +421,7 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
                   />
                 ))
             ) : (
-              <p className="py-4 text-center text-sm text-gray-500">
+              <p className="py-2 text-center text-xs text-gray-500">
                 No trending posts
               </p>
             )}
@@ -363,19 +429,19 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
         </div>
 
         {/* Activity Feed */}
-        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-5 text-base font-semibold text-gray-900">
+        <div className="rounded-lg border border-solid border-neutral-200 bg-white p-3 drop-shadow-sm">
+          <h2 className="mb-2 text-xs font-bold text-gray-900">
             Recent Activity
           </h2>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-0.5">
             {activitiesLoading ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {[1, 2, 3].map((i) => (
-                  <div key={`activity-loading-${i}`} className="flex gap-3">
-                    <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 w-full animate-pulse rounded bg-gray-200"></div>
-                      <div className="h-3 w-24 animate-pulse rounded bg-gray-200"></div>
+                  <div key={`activity-loading-${i}`} className="flex gap-2">
+                    <div className="size-7 shrink-0 animate-pulse rounded-full bg-gray-100" />
+                    <div className="min-w-0 flex-1 space-y-1.5 py-0.5">
+                      <div className="h-3 w-full animate-pulse rounded bg-gray-100" />
+                      <div className="h-2.5 w-16 animate-pulse rounded bg-gray-100" />
                     </div>
                   </div>
                 ))}
@@ -390,7 +456,7 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
                   />
                 ))
             ) : (
-              <p className="py-4 text-center text-sm text-gray-500">
+              <p className="py-2 text-center text-xs text-gray-500">
                 No recent activity
               </p>
             )}

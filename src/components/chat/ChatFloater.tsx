@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { mobileFabStackBottomClassName } from '@/lib/uiChrome'
 import useChatFloaterStore from '@/store/chatFloater'
 import useUserStore from '@/store/user'
 import { getConversationFloaterDisplay } from '@/utils/conversationFloaterDisplay'
@@ -43,7 +44,7 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
       const res = await fetch('/api/users')
       const json = await res.json()
       setUsers(json.users || [])
-    } catch (e) {
+    } catch {
       setUsersError('Failed to load users')
     } finally {
       setUsersLoading(false)
@@ -63,8 +64,8 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
         openChat(json.data._id)
         setShowChatHeads(false)
       }
-    } catch (e) {
-      // Optionally show error
+    } catch {
+      setUsersError('Failed to start chat')
     }
   }
 
@@ -75,27 +76,34 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
 
   return (
     <>
-      {showChatHeads && (
-        <ChatFloaterRecentPanel
-          conversations={conversations}
-          minimizedChats={minimizedChats}
-          currentUserId={currentUser?._id}
-          onOpenConversation={handleOpenConversationFromPanel}
-          onAddChat={handleOpenNewChat}
-        />
-      )}
       {currentUser?._id && (
         <ChannelProvider channelName={`user-${currentUser._id}-messages`}>
           <ChatFloaterIncomingListener
             userId={currentUser._id}
             onIncomingPinned={() => setShowChatHeads(true)}
           />
-          <span onClick={() => setShowChatHeads((v) => !v)}>
-            <ChatFloaterBadgeButton userId={currentUser._id} />
-          </span>
+          <div
+            className={`fixed right-3 z-50 flex flex-col items-end gap-2 sm:right-5 ${mobileFabStackBottomClassName} lg:right-6 lg:bottom-6`}
+          >
+            {showChatHeads && (
+              <ChatFloaterRecentPanel
+                conversations={conversations}
+                minimizedChats={minimizedChats}
+                currentUserId={currentUser?._id}
+                onOpenConversation={handleOpenConversationFromPanel}
+                onAddChat={handleOpenNewChat}
+              />
+            )}
+            <ChatFloaterBadgeButton
+              userId={currentUser._id}
+              onClick={() => setShowChatHeads((v) => !v)}
+            />
+          </div>
         </ChannelProvider>
       )}
-      <div className="fixed right-24 bottom-20 z-50 flex gap-4 lg:bottom-4">
+      <div
+        className={`fixed right-[4.25rem] z-50 flex gap-4 ${mobileFabStackBottomClassName} lg:bottom-4`}
+      >
         {openChats.map((chat) => {
           const convo = conversations.find(
             (c: any) => c._id === chat.conversationId
@@ -166,7 +174,6 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
         users={users}
         isLoading={usersLoading}
         error={usersError}
-        variant="wraglet"
       />
     </>
   )

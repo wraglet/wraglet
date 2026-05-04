@@ -2,6 +2,10 @@
 
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import {
+  profileHrefFromUsername,
+  usernameToDisplayHandle
+} from '@/lib/profileHref'
 import { IPost } from '@/models/Post'
 import { IShare } from '@/models/Share'
 import { ChannelProvider } from 'ably/react'
@@ -36,6 +40,9 @@ interface ShareContentProps {
 }
 
 const ShareContent = ({ share }: ShareContentProps) => {
+  const originalAuthorHref = profileHrefFromUsername(
+    share.originalPost.author.username
+  )
   // Transform share to look like a post for interactions
   const shareAsPost = {
     ...share,
@@ -63,31 +70,66 @@ const ShareContent = ({ share }: ShareContentProps) => {
         {/* Original Post Header */}
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link
-              href={`/${share.originalPost.author.username}`}
-              className="flex items-center gap-2 hover:underline"
-            >
-              <Avatar
-                gender={share.originalPost.author?.gender}
-                src={share.originalPost.author.profilePicture?.url || null}
-                size="h-8 w-8"
-              />
-              <div>
-                <p className="text-sm font-medium text-gray-900">
-                  {share.originalPost.author.firstName}{' '}
-                  {share.originalPost.author.lastName}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {share.originalPost.createdAt &&
-                    formatDistanceToNow(
-                      new Date(share.originalPost.createdAt),
-                      {
-                        addSuffix: true
-                      }
+            {originalAuthorHref ? (
+              <Link
+                href={originalAuthorHref}
+                className="flex items-center gap-2 hover:underline"
+              >
+                <Avatar
+                  gender={share.originalPost.author?.gender}
+                  src={share.originalPost.author.profilePicture?.url || null}
+                  size="h-8 w-8"
+                />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {share.originalPost.author.firstName}{' '}
+                    {share.originalPost.author.lastName}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {usernameToDisplayHandle(
+                      share.originalPost.author.username
                     )}
-                </p>
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {share.originalPost.createdAt &&
+                      formatDistanceToNow(
+                        new Date(share.originalPost.createdAt),
+                        {
+                          addSuffix: true
+                        }
+                      )}
+                  </p>
+                </div>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Avatar
+                  gender={share.originalPost.author?.gender}
+                  src={share.originalPost.author.profilePicture?.url || null}
+                  size="h-8 w-8"
+                />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {share.originalPost.author.firstName}{' '}
+                    {share.originalPost.author.lastName}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {usernameToDisplayHandle(
+                      share.originalPost.author.username
+                    )}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {share.originalPost.createdAt &&
+                      formatDistanceToNow(
+                        new Date(share.originalPost.createdAt),
+                        {
+                          addSuffix: true
+                        }
+                      )}
+                  </p>
+                </div>
               </div>
-            </Link>
+            )}
           </div>
           <button className="rounded-full p-1 hover:bg-gray-100">
             <HiDotsHorizontal className="h-5 w-5 text-gray-500" />

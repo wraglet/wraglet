@@ -3,6 +3,10 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import { getAblyInstance } from '@/lib/ably'
+import {
+  getConversationUnreadCount,
+  getTotalUnreadMessageCount
+} from '@/lib/conversationUnread'
 import client from '@/lib/db'
 import Conversation from '@/models/Conversation'
 import Message from '@/models/Message'
@@ -25,6 +29,7 @@ export const GET = async (req: Request) => {
 
     return NextResponse.json({ success: true, data: messages })
   } catch (error) {
+    console.error('Fetch messages error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to fetch messages' },
       { status: 500 }
@@ -68,9 +73,18 @@ export const POST = async (req: Request) => {
     if (convoAfter && Array.isArray(convoAfter.participants)) {
       for (const participant of convoAfter.participants) {
         if (participant.toString() !== userId.toString()) {
+          const participantId = participant.toString()
+          const conversationUnreadCount = await getConversationUnreadCount(
+            convoAfter,
+            participantId
+          )
+          const totalUnreadCount =
+            await getTotalUnreadMessageCount(participantId)
+
           ably.channels.get(`user-${participant}-messages`).publish('unread', {
-            conversationId
-            // Optionally, you can recalculate unreadCount here if needed
+            conversationId,
+            conversationUnreadCount,
+            totalUnreadCount
           })
         }
       }

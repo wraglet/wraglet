@@ -6,7 +6,7 @@ import useMessagesModalStore from '@/store/messagesModal'
 import { NewChatModal } from '@/components/chat/NewChatModal'
 
 const FeedNewChatModalWrapper = ({ otherUsers }: { otherUsers: any[] }) => {
-  const { isOpen, targetUser, closeModal } = useMessagesModalStore()
+  const { isOpen, closeModal } = useMessagesModalStore()
 
   const handleSelectUser = useCallback(
     async (user: any) => {
@@ -18,7 +18,7 @@ const FeedNewChatModalWrapper = ({ otherUsers }: { otherUsers: any[] }) => {
         })
         const json = await res.json()
         if (json.success && json.data?._id) {
-          window.location.href = `/messages/${json.data._id}`
+          globalThis.location.href = `/messages/${json.data._id}`
         } else {
           alert('Failed to start chat')
         }
@@ -38,7 +38,6 @@ const FeedNewChatModalWrapper = ({ otherUsers }: { otherUsers: any[] }) => {
       isLoading={false}
       error={null}
       onSelectUser={handleSelectUser}
-      variant="wraglet"
     />
   )
 }

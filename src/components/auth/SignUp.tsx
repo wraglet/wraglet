@@ -5,6 +5,7 @@ import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Gender, Pronoun } from '@/interfaces'
+import { authFormInputClassName } from '@/lib/authFormInputClassName'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import axios from 'axios'
@@ -54,7 +55,7 @@ const signUpSchema = z.object({
 type SignUpFormData = z.infer<typeof signUpSchema>
 
 const SignUp: FC = () => {
-  const { push } = useRouter()
+  const router = useRouter()
   const formMethods = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -102,10 +103,11 @@ const SignUp: FC = () => {
 
   const mutation = useMutation({
     mutationFn: async (data: SignUpFormData) => {
-      const { email, ...rest } = data
+      const { email, password, agreeToTerms: _agreeToTerms, ...rest } = data
       const formData = {
         ...rest,
-        email: email.toLowerCase()
+        email: email.toLowerCase(),
+        password
       }
 
       try {
@@ -114,20 +116,29 @@ const SignUp: FC = () => {
         if (response.status !== 200) {
           throw new Error('Network response was not ok')
         }
+
+        const signInResult = await signIn('credentials', {
+          email: formData.email,
+          password,
+          redirect: false
+        })
+
+        if (signInResult?.error) {
+          throw new Error(
+            'Account created but automatic sign-in failed. Please log in manually.'
+          )
+        }
+
         return response.data
       } catch (error) {
         console.error('Error during registration request:', error)
         throw error
       }
     },
-    onSuccess: (data) => {
-      console.log('data: ', data)
-      signIn('credentials', {
-        email: formMethods.getValues('email').toLowerCase(),
-        password: formMethods.getValues('password')
-      })
+    onSuccess: () => {
       toast.success('Account created successfully!')
-      push('/feed')
+      router.replace('/feed')
+      router.refresh()
     },
     onError: (error) => {
       console.error('Error while signing up:', error)
@@ -158,7 +169,8 @@ const SignUp: FC = () => {
                   <Input
                     placeholder="First name"
                     type="text"
-                    className="relative w-full cursor-default appearance-none rounded-lg border border-neutral-200 bg-white py-2 pr-3 pl-3 text-left shadow-md focus:outline-hidden focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm"
+                    className={authFormInputClassName}
+                    error={errors.firstName?.message}
                     {...field}
                   />
                 </FormControl>
@@ -177,7 +189,8 @@ const SignUp: FC = () => {
                   <Input
                     placeholder="Last name"
                     type="text"
-                    className="relative w-full cursor-default appearance-none rounded-lg border border-neutral-200 bg-white py-2 pr-3 pl-3 text-left shadow-md focus:outline-hidden focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm"
+                    className={authFormInputClassName}
+                    error={errors.lastName?.message}
                     {...field}
                   />
                 </FormControl>
@@ -197,7 +210,8 @@ const SignUp: FC = () => {
                 <Input
                   placeholder="Email"
                   type="email"
-                  className="relative w-full cursor-default appearance-none rounded-lg border border-neutral-200 bg-white py-2 pr-3 pl-3 text-left shadow-md focus:outline-hidden focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm"
+                  className={authFormInputClassName}
+                  error={errors.email?.message}
                   {...field}
                 />
               </FormControl>
@@ -216,7 +230,8 @@ const SignUp: FC = () => {
                 <Input
                   placeholder="Password"
                   type="password"
-                  className="relative w-full cursor-default appearance-none rounded-lg border border-neutral-200 bg-white py-2 pr-10 pl-3 text-left shadow-md focus:outline-hidden focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm"
+                  className={authFormInputClassName}
+                  error={errors.password?.message}
                   {...field}
                 />
               </FormControl>
@@ -299,9 +314,7 @@ const SignUp: FC = () => {
         </div>
         <div className="my-2 border-t border-solid border-[#E3F1FA]/70" />
         <div className="flex flex-col gap-2">
-          <h3 className="font-geist-sans mb-1 text-sm text-slate-600">
-            Privacy Settings
-          </h3>
+          <h3 className="mb-1 text-sm text-slate-600">Privacy Settings</h3>
           <FormField
             control={control}
             name="publicProfileVisible"
@@ -328,7 +341,7 @@ const SignUp: FC = () => {
         </div>
         <div className="my-2 border-t border-solid border-[#E3F1FA]/70" />
         <div className="flex flex-col gap-2">
-          <h3 className="font-geist-sans mb-1 text-sm text-slate-600">
+          <h3 className="mb-1 text-sm text-slate-600">
             <span>By signing up, you agree to our </span>
             <Link
               href="/terms-of-service"

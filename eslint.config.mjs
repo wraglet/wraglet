@@ -1,4 +1,7 @@
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+
 import nextVitals from 'eslint-config-next/core-web-vitals'
+import storybook from 'eslint-plugin-storybook'
 import unusedImports from 'eslint-plugin-unused-imports'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
@@ -10,6 +13,7 @@ export default defineConfig([
     '.next/**',
     'out/**',
     'build/**',
+    'storybook-static/**',
     'next-env.d.ts',
     'coverage/**',
     'playwright-report/**',
@@ -21,6 +25,8 @@ export default defineConfig([
       'unused-imports': unusedImports
     },
     rules: {
+      // Warn on path-like import patterns so relative `./foo` and `@/` stay deliberate;
+      // e2e/scripts/barrels opt out below. (See eslint `no-restricted-imports` patterns.)
       'no-restricted-imports': [
         'warn',
         {
@@ -49,5 +55,6 @@ export default defineConfig([
     rules: {
       'no-restricted-imports': 'off'
     }
-  }
+  },
+  ...storybook.configs['flat/recommended']
 ])

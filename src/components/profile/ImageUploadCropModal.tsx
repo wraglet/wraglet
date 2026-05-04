@@ -39,7 +39,9 @@ const ImageUploadCropModal: FC<ImageUploadCropModalProps> = ({
   onCrop,
   apiLabel
 }) => {
-  const initialImage = image || defaultImage
+  const initialImage =
+    (image?.trim() ? image.trim() : '') ||
+    (defaultImage?.trim() ? defaultImage.trim() : '')
   const [imageSrc, setImageSrc] = useState<string>(initialImage)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
@@ -173,9 +175,9 @@ const ImageUploadCropModal: FC<ImageUploadCropModalProps> = ({
                       }
                 }
               >
-                {image && (
+                {Boolean(image?.trim()) && (
                   <Image
-                    src={image}
+                    src={image!.trim()}
                     alt="Preview"
                     width={previewStyle === 'circle' ? 160 : 600}
                     height={previewStyle === 'circle' ? 160 : 180}
@@ -233,21 +235,27 @@ const ImageUploadCropModal: FC<ImageUploadCropModalProps> = ({
                     : { height: 220, background: '#222' }
                 }
               >
-                <Cropper
-                  image={imageSrc}
-                  crop={crop}
-                  zoom={zoom}
-                  rotation={rotation}
-                  aspect={aspect}
-                  cropShape={cropShape}
-                  showGrid={cropShape === 'rect'}
-                  minZoom={1}
-                  onCropChange={setCrop}
-                  onZoomChange={setZoom}
-                  onRotationChange={setRotation}
-                  onCropComplete={onCropComplete}
-                  restrictPosition={false}
-                />
+                {imageSrc.trim() ? (
+                  <Cropper
+                    image={imageSrc}
+                    crop={crop}
+                    zoom={zoom}
+                    rotation={rotation}
+                    aspect={aspect}
+                    cropShape={cropShape}
+                    showGrid={cropShape === 'rect'}
+                    minZoom={1}
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onRotationChange={setRotation}
+                    onCropComplete={onCropComplete}
+                    restrictPosition={false}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-sm text-gray-500">
+                    No image to crop. Go back and choose a file.
+                  </div>
+                )}
               </div>
               <div
                 className={`mt-4 flex w-full flex-col ${aspect > 2 ? 'max-w-lg' : 'max-w-xs'}`}

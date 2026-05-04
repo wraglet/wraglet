@@ -3,6 +3,7 @@
 import { FC } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { authFormInputClassName } from '@/lib/authFormInputClassName'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { FormProvider, useForm } from 'react-hook-form'
@@ -10,7 +11,7 @@ import toast from 'react-hot-toast'
 import { z } from 'zod'
 
 import Button from '@/components/shared/Button'
-import { ShadcnInput } from '@/components/shared/ShadcnInput'
+import Input from '@/components/shared/Input'
 
 const loginSchema = z.object({
   emailOrUsername: z.string().min(1, 'Email or username is required'),
@@ -26,6 +27,7 @@ interface LoginFormProps {
 const LoginForm: FC<LoginFormProps> = ({ buttonIcon }) => {
   const { push } = useRouter()
   const formMethods = useForm<LoginFormData>({
+    mode: 'onChange',
     resolver: zodResolver(loginSchema),
     defaultValues: {
       emailOrUsername: '',
@@ -40,8 +42,9 @@ const LoginForm: FC<LoginFormProps> = ({ buttonIcon }) => {
 
   const mutation = useMutation({
     mutationFn: async (data: LoginFormData) => {
+      const emailOrUsername = data.emailOrUsername.trim().toLowerCase()
       const response = await signIn('credentials', {
-        email: data.emailOrUsername.toLowerCase(),
+        email: emailOrUsername,
         password: data.password,
         redirect: false
       })
@@ -71,34 +74,36 @@ const LoginForm: FC<LoginFormProps> = ({ buttonIcon }) => {
         onSubmit={handleSubmit(onSubmit)}
         className="flex w-full flex-col gap-4"
       >
-        <ShadcnInput
+        <Input
           {...formMethods.register('emailOrUsername')}
           placeholder="Email or Username"
           type="text"
           autoFocus
           error={errors.emailOrUsername?.message}
           aria-label="Email or Username"
-          className="relative w-full cursor-default appearance-none rounded-lg border border-neutral-200 bg-white py-2 pr-3 pl-3 text-left shadow-md focus:outline-hidden focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm"
+          className={authFormInputClassName}
         />
-        <ShadcnInput
+        <Input
           {...formMethods.register('password')}
           type="password"
           placeholder="Password"
           autoComplete="current-password"
           error={errors.password?.message}
           aria-label="Password"
-          className="relative w-full cursor-default appearance-none rounded-lg border border-neutral-200 bg-white py-2 pr-10 pl-3 text-left shadow-md focus:outline-hidden focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm"
+          className={authFormInputClassName}
         />
         <div className="mt-1 mb-2 flex w-full items-center justify-between">
-          <button
+          <Button
             type="button"
-            className="text-xs text-[#0EA5E9] transition-colors hover:underline focus:underline"
+            variant="link"
+            size="sm"
+            className="h-auto p-0 text-xs text-[#0EA5E9] transition-colors hover:underline focus:underline"
             tabIndex={0}
             aria-label="Forgot Password?"
             onClick={() => toast('Password reset coming soon!')}
           >
             Forgot Password?
-          </button>
+          </Button>
         </div>
         <Button
           type="submit"

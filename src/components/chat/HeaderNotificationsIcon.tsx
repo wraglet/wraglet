@@ -1,8 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import useUserStore from '@/store/user'
+import {
+  headerFlyoutNotificationsListClassName,
+  headerFlyoutPanelClassName
+} from '@/lib/headerFlyout'
 import { useQuery } from '@tanstack/react-query'
 import { useChannel } from 'ably/react'
 import { formatDistanceToNow } from 'date-fns'
@@ -16,6 +19,9 @@ interface HeaderNotificationsIconProps {
   ablyError?: boolean
 }
 
+const headerTriggerClass =
+  'relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-1 focus-visible:ring-offset-[#0ea5e9] sm:h-10 sm:w-10 sm:focus-visible:ring-offset-2'
+
 const HeaderNotificationsIcon = ({
   userId,
   initialUnreadCount = 0,
@@ -24,7 +30,6 @@ const HeaderNotificationsIcon = ({
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const { user: currentUser } = useUserStore()
 
   const {
     data: notifications = [],
@@ -40,13 +45,11 @@ const HeaderNotificationsIcon = ({
       }
       return json.notifications || []
     },
-    enabled: dropdownOpen
+    enabled: true
   })
 
   // Listen for real-time notification updates
   useChannel(`user-${userId}-notifications`, (message) => {
-    console.log('Notification Ably event:', message)
-
     if (message.name === 'new-notification') {
       if (typeof message.data?.unreadCount === 'number') {
         setUnreadCount(message.data.unreadCount)
@@ -136,6 +139,14 @@ const HeaderNotificationsIcon = ({
     }
   }
 
+  const getPostNotificationLink = (notification: any) => {
+    if (notification.data?.postId) {
+      return `/post/${notification.data.postId}`
+    }
+
+    return '/feed'
+  }
+
   const getNotificationLink = (notification: any) => {
     switch (notification.type) {
       case 'follow':
@@ -144,10 +155,7 @@ const HeaderNotificationsIcon = ({
 
       case 'comment':
         // Redirect to the specific post
-        if (notification.data?.postId) {
-          return `/post/${notification.data.postId}`
-        }
-        return '/feed'
+        return getPostNotificationLink(notification)
 
       case 'reaction':
         // Redirect to the share if it's a share reaction, otherwise to the post
@@ -161,10 +169,7 @@ const HeaderNotificationsIcon = ({
       case 'new_post':
       case 'share':
         // Redirect to the specific post (for both new posts and shares)
-        if (notification.data?.postId) {
-          return `/post/${notification.data.postId}`
-        }
-        return '/feed'
+        return getPostNotificationLink(notification)
 
       case 'admin':
       case 'system':
@@ -176,21 +181,85 @@ const HeaderNotificationsIcon = ({
     }
   }
 
+  let notificationList: ReactNode
+  if (loading) {
+    notificationList = (
+      <li className="p-4 text-center text-gray-400">Loading...</li>
+    )
+  } else if (notifications.length === 0) {
+    notificationList = (
+      <li className="p-4 text-center text-gray-400">No notifications yet</li>
+    )
+  } else {
+    notificationList = notifications.map((notification: any) => {
+      const isUnread = !notification.read
+
+      return (
+        <li key={notification._id}>
+          <Link
+            href={getNotificationLink(notification)}
+            onClick={() => handleNotificationClick(notification)}
+            className={`flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-blue-50 ${
+              isUnread ? 'bg-blue-50/50 font-medium' : ''
+            }`}
+          >
+            <div className="flex-shrink-0">
+              {notification.sender ? (
+                <Avatar
+                  src={notification.sender.profilePicture?.url}
+                  gender={notification.sender.gender}
+                  alt={notification.sender.firstName}
+                  size="h-10 w-10"
+                />
+              ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-lg">
+                  {getNotificationIcon(notification.type)}
+                </div>
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between">
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={`text-sm ${isUnread ? 'text-gray-900' : 'text-gray-700'}`}
+                  >
+                    {notification.message}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {formatDistanceToNow(new Date(notification.createdAt), {
+                      addSuffix: true
+                    })}
+                  </p>
+                </div>
+
+                {isUnread && (
+                  <div className="ml-2 h-2 w-2 rounded-full bg-blue-500" />
+                )}
+              </div>
+            </div>
+          </Link>
+        </li>
+      )
+    })
+  }
+
   return (
     <div className="relative flex" ref={dropdownRef}>
       <button
-        className="relative focus:outline-none"
+        type="button"
+        className={headerTriggerClass}
         onClick={() => setDropdownOpen((open) => !open)}
         aria-label="Open notifications"
       >
-        <BellIcon className="h-5 w-5 text-white" />
+        <BellIcon className="h-5 w-5" />
         {ablyError ? (
-          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-gray-400 text-xs font-bold text-white">
+          <span className="absolute -top-0.5 -right-0.5 flex min-h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full border-2 border-sky-600 bg-slate-500 px-0.5 text-[10px] font-bold text-white shadow-sm">
             ?
           </span>
         ) : (
           unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-red-600 text-xs font-bold text-white">
+            <span className="absolute -top-0.5 -right-0.5 flex min-h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full border-2 border-sky-600 bg-rose-500 px-1 text-[10px] leading-none font-bold text-white tabular-nums shadow-sm">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )
@@ -198,81 +267,27 @@ const HeaderNotificationsIcon = ({
       </button>
 
       {dropdownOpen && (
-        <div className="absolute right-0 z-50 mt-9 w-80 rounded-lg border bg-white shadow-lg">
-          <div className="flex items-center justify-between border-b p-3">
-            <span className="font-semibold text-gray-700">Notifications</span>
+        <div className={headerFlyoutPanelClassName}>
+          <div className="flex min-w-0 shrink-0 items-center justify-between gap-2 border-b p-3">
+            <span className="min-w-0 font-semibold text-gray-700">
+              Notifications
+            </span>
             {unreadCount > 0 && (
               <button
+                type="button"
                 onClick={handleMarkAllAsRead}
-                className="text-xs text-blue-600 hover:underline"
+                className="shrink-0 text-xs text-blue-600 hover:underline"
               >
                 Mark all as read
               </button>
             )}
           </div>
 
-          <ul className="max-h-80 overflow-y-auto">
-            {loading ? (
-              <li className="p-4 text-center text-gray-400">Loading...</li>
-            ) : notifications.length === 0 ? (
-              <li className="p-4 text-center text-gray-400">
-                No notifications yet
-              </li>
-            ) : (
-              notifications.map((notification: any) => (
-                <li key={notification._id}>
-                  <Link
-                    href={getNotificationLink(notification)}
-                    onClick={() => handleNotificationClick(notification)}
-                    className={`flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-blue-50 ${
-                      !notification.read ? 'bg-blue-50/50 font-medium' : ''
-                    }`}
-                  >
-                    <div className="flex-shrink-0">
-                      {notification.sender ? (
-                        <Avatar
-                          src={notification.sender.profilePicture?.url}
-                          gender={notification.sender.gender}
-                          alt={notification.sender.firstName}
-                          size="h-10 w-10"
-                        />
-                      ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-lg">
-                          {getNotificationIcon(notification.type)}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between">
-                        <div className="min-w-0 flex-1">
-                          <p
-                            className={`text-sm ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}
-                          >
-                            {notification.message}
-                          </p>
-                          <p className="mt-1 text-xs text-gray-500">
-                            {formatDistanceToNow(
-                              new Date(notification.createdAt),
-                              {
-                                addSuffix: true
-                              }
-                            )}
-                          </p>
-                        </div>
-
-                        {!notification.read && (
-                          <div className="ml-2 h-2 w-2 rounded-full bg-blue-500" />
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-              ))
-            )}
+          <ul className={headerFlyoutNotificationsListClassName}>
+            {notificationList}
           </ul>
 
-          <div className="border-t p-2 text-center">
+          <div className="shrink-0 border-t p-2 text-center">
             <Link
               href="/notifications"
               className="text-sm font-medium text-blue-600 hover:underline"

@@ -144,39 +144,42 @@ const BlogImageUpload = ({
 
   return (
     <div className={className}>
-      {typeof value === 'string' && value && showPreview && !imgError && (
-        <div className="group relative">
-          <Image
-            src={value}
-            alt="Uploaded image"
-            width={400}
-            height={200}
-            className="h-auto w-full object-cover"
-            unoptimized
-            onError={() => setImgError(true)}
-          />
-          {/* Remove button overlay */}
-          <button
-            type="button"
-            onClick={() => onChange(undefined)}
-            className="absolute top-2 right-2 z-10 rounded-full bg-black/60 p-1 text-white opacity-80 hover:bg-red-600"
-            title="Remove image"
-          >
-            <XMarkIcon className="h-5 w-5" />
-          </button>
-          {/* Replace button below */}
-          <div className="mt-2 flex justify-center">
+      {typeof value === 'string' &&
+        value.trim() !== '' &&
+        showPreview &&
+        !imgError && (
+          <div className="group relative">
+            <Image
+              src={value}
+              alt="Uploaded image"
+              width={400}
+              height={200}
+              className="h-auto w-full object-cover"
+              unoptimized
+              onError={() => setImgError(true)}
+            />
+            {/* Remove button overlay */}
             <button
               type="button"
-              onClick={handleClick}
-              disabled={isUploading}
-              className="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+              onClick={() => onChange(undefined)}
+              className="absolute top-2 right-2 z-10 rounded-full bg-black/60 p-1 text-white opacity-80 hover:bg-red-600"
+              title="Remove image"
             >
-              {isUploading ? 'Uploading...' : 'Replace image'}
+              <XMarkIcon className="h-5 w-5" />
             </button>
+            {/* Replace button below */}
+            <div className="mt-2 flex justify-center">
+              <button
+                type="button"
+                onClick={handleClick}
+                disabled={isUploading}
+                className="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+              >
+                {isUploading ? 'Uploading...' : 'Replace image'}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
       {imgError && (
         <div className="flex h-[200px] w-full items-center justify-center bg-gray-100">
           <span className="text-xs text-red-500">

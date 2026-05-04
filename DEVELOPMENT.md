@@ -26,7 +26,7 @@ Make sure you have the following tools installed on your system:
 
 3. **Setup .env file**
 
-   ```js
+   ```env
    MONGODB_URI = 'your-mongodb-url'
 
    AUTH_SECRET = 'any-long-string'

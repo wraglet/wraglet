@@ -16,7 +16,7 @@ const s3Client = new S3Client({
   }
 })
 
-export async function PATCH(request: Request) {
+export const PATCH = async (request: Request) => {
   try {
     await client()
     const currentUser = await getCurrentUser()

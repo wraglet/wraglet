@@ -1,8 +1,6 @@
 'use client'
 
-import getUserByUsername from '@/actions/getUserByUsername'
 import type { Gender } from '@/interfaces'
-import { useQuery } from '@tanstack/react-query'
 
 import ProfilePictureHover from '@/components/profile/ProfilePictureHover'
 import Avatar from '@/components/shared/Avatar'
@@ -20,16 +18,6 @@ const ProfilePicture = ({
   userProfilePictureUrl,
   isCurrentUser
 }: ProfilePictureProps) => {
-  // Get latest user data from React Query
-  const { data: userData } = useQuery({
-    queryKey: ['user', username],
-    queryFn: () => getUserByUsername(username),
-    initialData: {
-      profilePicture: { url: userProfilePictureUrl },
-      gender: userGender
-    }
-  })
-
   const defaultProfilePictureUrl =
     userGender === 'Male'
       ? `${process.env.NEXT_PUBLIC_R2_FILES_URL}/images/placeholder/male-placeholder.png`
@@ -37,8 +25,8 @@ const ProfilePicture = ({
 
   // Use profile picture if it exists, otherwise fallback to default
   const finalProfilePictureUrl =
-    userData?.profilePicture?.url && userData.profilePicture.url !== ''
-      ? userData.profilePicture.url
+    userProfilePictureUrl && userProfilePictureUrl !== ''
+      ? userProfilePictureUrl
       : defaultProfilePictureUrl
 
   return (

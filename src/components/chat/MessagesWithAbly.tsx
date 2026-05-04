@@ -42,7 +42,7 @@ const MessagesWithAbly = () => {
       const res = await fetch('/api/users')
       const json = await res.json()
       setUsers(json.users || [])
-    } catch (e) {
+    } catch {
       setUsersError('Failed to load users')
     } finally {
       setUsersLoading(false)
@@ -64,8 +64,8 @@ const MessagesWithAbly = () => {
         refetchConversations()
         setShowContactsSidebar(false) // Close sidebar on mobile when chat is selected
       }
-    } catch (e) {
-      // Optionally show error
+    } catch {
+      setUsersError('Failed to start chat')
     }
   }
 
@@ -92,10 +92,12 @@ const MessagesWithAbly = () => {
   }
 
   return (
-    <div className="flex h-full w-full grow overflow-hidden rounded-lg border bg-white pb-16 lg:pb-0">
+    <div className="flex min-h-0 w-full grow overflow-hidden rounded-lg border bg-white">
       {/* Mobile overlay */}
       {showContactsSidebar && (
-        <div
+        <button
+          type="button"
+          aria-label="Close conversations"
           className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden"
           onClick={() => setShowContactsSidebar(false)}
         />
@@ -103,7 +105,7 @@ const MessagesWithAbly = () => {
 
       {/* Conversation List - Desktop always visible, Mobile as drawer */}
       <aside
-        className={` ${showContactsSidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} fixed top-0 bottom-0 left-0 z-40 w-[320px] max-w-[85vw] flex-shrink-0 overflow-y-auto border-r bg-white p-4 transition-transform duration-300 ease-in-out lg:relative lg:w-[320px] lg:max-w-xs lg:translate-x-0`}
+        className={` ${showContactsSidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} fixed top-0 bottom-0 left-0 z-40 w-[320px] max-w-[85vw] flex-shrink-0 overflow-y-auto border-r border-neutral-200 bg-white p-4 shadow-xl transition-transform duration-300 ease-in-out lg:relative lg:w-[320px] lg:max-w-xs lg:translate-x-0 lg:shadow-none`}
       >
         <div className="mt-14 mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -113,10 +115,10 @@ const MessagesWithAbly = () => {
             >
               <ChevronLeftIcon className="h-5 w-5 text-gray-600" />
             </button>
-            <span className="text-lg font-bold">Chats</span>
+            <span className="text-base font-semibold text-gray-900">Chats</span>
           </div>
           <button
-            className="rounded bg-blue-500 px-2 py-1 text-sm text-white hover:bg-blue-600"
+            className="rounded-full bg-sky-100 px-3 py-1.5 text-xs font-semibold text-[#0EA5E9] transition hover:bg-[#0EA5E9] hover:text-white"
             onClick={handleOpenNewChat}
           >
             + New Chat
@@ -129,7 +131,6 @@ const MessagesWithAbly = () => {
           isLoading={usersLoading}
           error={usersError}
           onSelectUser={handleSelectUser}
-          variant="wraglet"
         />
         <Contacts
           conversations={conversations}
@@ -169,7 +170,7 @@ const MessagesWithAbly = () => {
           <div className="flex h-full flex-col items-center justify-center gap-4 text-gray-400">
             <button
               onClick={() => setShowContactsSidebar(true)}
-              className="rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 lg:hidden"
+              className="rounded-full bg-sky-100 px-4 py-2 text-sm font-semibold text-[#0EA5E9] transition hover:bg-[#0EA5E9] hover:text-white lg:hidden"
             >
               View Conversations
             </button>
