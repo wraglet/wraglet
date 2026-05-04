@@ -1,0 +1,20 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta title="Wraglet/Introduction" />
+
+# Wraglet UI
+
+Stories mirror **production** layout: page wash and header gradient are defined in **`@/lib/uiChrome`** and used by `AuthenticatedLayoutClientWrapper` and decorators so previews stay aligned with the live app.
+
+## Fixtures
+
+**`src/data/storybookUsers.ts`** — conceptual keys (`PRIMARY`, `STORYBOOK_USERNAME`, etc.). Handles use a leading `@` like production; use `usernameToDisplayHandle` where the UI shows a handle.
+
+## Commands
+
+- `yarn storybook` — local dev
+- `yarn build-storybook` — static build to `storybook-static/`
+
+## Sidebar
+
+Groups are ordered **Wraglet** (this intro first) → **Foundations** → **UI Components** → **Layouts** → **Features** → **Compositions** → everything else.
