@@ -39,19 +39,16 @@ export const PATCH = async (
       userId: currentUser._id
     })
 
-    let reaction
     let isNewReaction = false
 
     if (existingReaction) {
-      // Update existing reaction
-      reaction = await PostReaction.findByIdAndUpdate(
+      await PostReaction.findByIdAndUpdate(
         existingReaction._id,
         { type, updatedAt: new Date() },
         { new: true }
       )
     } else {
-      // Create new reaction
-      reaction = new PostReaction({
+      const reaction = new PostReaction({
         postId: shareId,
         type,
         userId: currentUser._id,

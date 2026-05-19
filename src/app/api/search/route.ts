@@ -3,12 +3,13 @@ import { SearchResponse, SearchResultItem } from '@/interfaces'
 import client from '@/lib/db'
 import Post from '@/models/Post'
 import User from '@/models/User'
+import { formatSearchUserSubtitle } from '@/utils/displayFormat'
 
 export const GET = async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('q')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const limit = Number.parseInt(searchParams.get('limit') || '10', 10)
     const type = searchParams.get('type') // Optional filter by type
 
     if (!query || query.trim().length < 1) {
@@ -48,7 +49,7 @@ export const GET = async (request: NextRequest) => {
           _id: user._id.toString(),
           type: 'user',
           title: `${user.firstName} ${user.lastName}`,
-          subtitle: `${user.username}${user.bio ? ` • ${user.bio.substring(0, 50)}${user.bio.length > 50 ? '...' : ''}` : ''}`,
+          subtitle: formatSearchUserSubtitle(user.username, user.bio),
           avatar: user.profilePicture?.url,
           gender: user.gender,
           url: `/${user.username}`,
@@ -88,8 +89,7 @@ export const GET = async (request: NextRequest) => {
       })
     }
 
-    // TODO: Add blog and video search when those models are implemented
-    // For now, we can add placeholder logic or skip
+    // Blog and video search can be added here when those indexes are ready.
 
     // Sort by relevance score
     searchResults.sort(

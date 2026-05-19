@@ -21,9 +21,19 @@ export const PATCH = async (request: Request) => {
   try {
     await client()
 
-    const body = await request.json()
     const currentUser = await getCurrentUser()
+    if (!currentUser?._id) {
+      return new NextResponse('Unauthorized', { status: 401 })
+    }
+
+    const body = await request.json()
     const { coverPhoto } = body
+    if (
+      typeof coverPhoto !== 'string' ||
+      !coverPhoto.startsWith('data:image/')
+    ) {
+      return new NextResponse('Invalid cover photo', { status: 400 })
+    }
 
     // Decode base64 image data
     const base64Data = Buffer.from(

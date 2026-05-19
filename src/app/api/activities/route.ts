@@ -3,10 +3,11 @@ import getCurrentUser from '@/actions/getCurrentUser'
 import client from '@/lib/db'
 import Follow from '@/models/Follow'
 import Post from '@/models/Post'
+import { getPostContentPreviewSnippet } from '@/utils/postContentPreview'
 
 export const GET = async (request: Request) => {
   const { searchParams } = new URL(request.url)
-  const limit = parseInt(searchParams.get('limit') || '10', 10)
+  const limit = Number.parseInt(searchParams.get('limit') || '10', 10)
 
   try {
     await client()
@@ -42,7 +43,7 @@ export const GET = async (request: Request) => {
         timestamp: post.createdAt,
         data: {
           postId: post._id,
-          content: post.content.substring(0, 50) + '...'
+          content: getPostContentPreviewSnippet(post.content)
         }
       })
     }
