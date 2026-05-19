@@ -1,0 +1,11 @@
+[
+  {
+    "route": "/api/blogs/upload-image",
+    "method": "POST",
+    "status": 200,
+    "responseBody": {
+      "url": "https://cdn.example/blogs/content/mock.jpg",
+      "key": "blogs/content/mock.jpg"
+    }
+  }
+]

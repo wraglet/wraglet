@@ -1,0 +1,71 @@
+[
+  {
+    "route": "/api/posts",
+    "method": "GET",
+    "status": 200,
+    "delay": 0,
+    "query": "feedType=trending&limit=10",
+    "description": "Trending feed success",
+    "responseBody": {
+      "posts": [
+        {
+          "_id": "507f1f77bcf86cd799439011",
+          "content": {
+            "text": "Hello Wraglet"
+          },
+          "audience": "public",
+          "createdAt": "2026-03-01T00:00:00.000Z",
+          "author": {
+            "_id": "507f1f77bcf86cd799439099",
+            "firstName": "Ada",
+            "lastName": "Lovelace",
+            "username": "@ada",
+            "gender": "Female",
+            "pronoun": "They/Them",
+            "profilePicture": null
+          },
+          "reactions": [],
+          "comments": []
+        }
+      ],
+      "nextCursor": null
+    }
+  },
+  {
+    "route": "/api/posts",
+    "method": "GET",
+    "status": 401,
+    "description": "Unauthenticated feed",
+    "responseBody": {
+      "posts": [],
+      "nextCursor": null
+    }
+  },
+  {
+    "route": "/api/posts",
+    "method": "POST",
+    "status": 200,
+    "delay": 400,
+    "description": "Create text post",
+    "responseBody": {
+      "_id": "507f1f77bcf86cd799439012",
+      "content": {
+        "text": "New post"
+      },
+      "audience": "public",
+      "author": {
+        "_id": "507f1f77bcf86cd799439099",
+        "firstName": "Ada",
+        "lastName": "Lovelace",
+        "username": "@ada",
+        "gender": "Female",
+        "pronoun": "They/Them",
+        "profilePicture": null
+      },
+      "reactions": [],
+      "comments": [],
+      "createdAt": "2026-03-09T12:00:00.000Z",
+      "updatedAt": "2026-03-09T12:00:00.000Z"
+    }
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "route": "/api/blogs/:slug/react",
+    "method": "PATCH",
+    "status": 200,
+    "description": "Add or change blog reaction",
+    "responseBody": {
+      "_id": "507f1f77bcf86cd799439014",
+      "title": "Sample blog",
+      "slug": "sample-blog",
+      "summary": "Short summary",
+      "status": "published",
+      "category": "Technology",
+      "views": 42,
+      "author": {
+        "_id": "507f1f77bcf86cd799439099",
+        "firstName": "Ada",
+        "lastName": "Lovelace",
+        "username": "@ada",
+        "gender": "Female",
+        "pronoun": "They/Them",
+        "profilePicture": null
+      },
+      "reactions": [],
+      "comments": [],
+      "contentBlocks": [
+        {
+          "id": "block-1",
+          "type": "text",
+          "content": "Hello",
+          "order": 0
+        }
+      ],
+      "createdAt": "2026-02-15T10:00:00.000Z"
+    }
+  }
+]

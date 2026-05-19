@@ -1,0 +1,35 @@
+[
+  {
+    "route": "/api/token",
+    "method": "GET",
+    "status": 200,
+    "delay": 300,
+    "description": "Ably token request payload",
+    "responseBody": {
+      "keyName": "example.keyName",
+      "ttl": 3600000,
+      "capability": "{\"*\":[\"*\"]}",
+      "clientId": "507f1f77bcf86cd799439099",
+      "timestamp": 1770000000000,
+      "nonce": "example-nonce",
+      "mac": "example-mac"
+    }
+  },
+  {
+    "route": "/api/token",
+    "method": "GET",
+    "status": 401,
+    "responseBody": {
+      "error": "Unauthorized"
+    }
+  },
+  {
+    "route": "/api/token",
+    "method": "GET",
+    "status": 500,
+    "description": "Missing server env",
+    "responseBody": {
+      "errorMessage": "Missing ABLY_API_KEY environment variable."
+    }
+  }
+]

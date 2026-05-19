@@ -1,0 +1,24 @@
+[
+  {
+    "route": "/api/update-profile-picture",
+    "method": "PATCH",
+    "status": 200,
+    "responseBody": {
+      "_id": "507f1f77bcf86cd799439099",
+      "email": "ada@example.com",
+      "username": "@ada",
+      "firstName": "Ada",
+      "lastName": "Lovelace",
+      "gender": "Female",
+      "pronoun": "They/Them",
+      "profilePicture": {
+        "url": "https://cdn.example/avatar.jpg",
+        "key": "avatars/u1.jpg"
+      },
+      "coverPhoto": null,
+      "photoCollection": [],
+      "publicProfileVisible": true,
+      "bio": "Mock user"
+    }
+  }
+]

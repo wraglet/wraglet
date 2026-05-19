@@ -1,0 +1,48 @@
+[
+  {
+    "route": "/api/follows",
+    "method": "GET",
+    "status": 200,
+    "description": "Current user following IDs (no userId query)",
+    "responseBody": {
+      "followingIds": ["507f1f77bcf86cd799439020"]
+    }
+  },
+  {
+    "route": "/api/follows",
+    "method": "GET",
+    "status": 401,
+    "description": "Following IDs when unauthenticated",
+    "responseBody": {
+      "followingIds": []
+    }
+  },
+  {
+    "route": "/api/follows",
+    "method": "GET",
+    "status": 200,
+    "query": "userId=507f1f77bcf86cd799439099",
+    "description": "Follower counts for profile",
+    "responseBody": {
+      "followersCount": 42,
+      "followingCount": 18,
+      "isFollowing": true
+    }
+  },
+  {
+    "route": "/api/follows",
+    "method": "POST",
+    "status": 200,
+    "responseBody": {
+      "success": true
+    }
+  },
+  {
+    "route": "/api/follows",
+    "method": "DELETE",
+    "status": 200,
+    "responseBody": {
+      "success": true
+    }
+  }
+]

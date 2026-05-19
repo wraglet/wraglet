@@ -28,8 +28,15 @@ Suggested scripts once tooling is installed:
 - `yarn test:func` / `yarn test:e2e` — Playwright (functional / E2E)
 - `yarn test:e2e:ui` — Playwright UI mode
 - `yarn validate` — `yarn format:check`, `yarn lint`, `yarn test`, `yarn test:func`, and `yarn build` (matches Husky `pre-commit`)
+- `npx tsc --noEmit` — full-project TypeScript check without emitting files (fast feedback; `next build` also typechecks)
 - `yarn seed:e2e` — upsert the Playwright E2E user in MongoDB **only when** `E2E_SEED_ENABLED=true` (or `1`) is set alongside `E2E_TEST_USER_PASSWORD` and `MONGODB_URI` (see Playwright notes below). **Not** invoked by `next build`, `next start`, or normal deploys.
 - `yarn format` / `yarn format:check` — Prettier
+
+## Linting (ESLint + Sonar)
+
+`yarn lint` runs **ESLint 9** with Next.js, **eslint-plugin-sonarjs** (Sonar rule subset in CI), and **eslint-plugin-unicorn** on `src/contracts/**` and `src/test/mock-rest/**` for `prefer-export-from` (Sonar **S7763**).
+
+The **SonarQube** extension in the IDE uses the full Sonar analyzer (broader than ESLint). Overlap is intentional: ESLint catches the same classes of issues on commit (`yarn validate`); Sonar in the editor can still flag additional rules. SonarJS rules are **errors** on contracts/mock-rest and **warnings** elsewhere until legacy UI code is cleaned up.
 
 ## Layout and naming
 
@@ -49,6 +56,8 @@ Suggested scripts once tooling is installed:
 - **Auth:** session / `auth()` from NextAuth where routes depend on it.
 - **Ably:** clients, channels, and hooks at module boundaries.
 - **Database:** `@/lib/db` and Mongoose models — avoid real Mongo in unit tests unless using a dedicated test DB strategy.
+- **HTTP (optional):** [MSW](https://mswjs.io/) Node server is started in **`vitest.setup.ts`** (`mswServer` from `@/test/msw/nodeServer`). It uses **`onUnhandledRequest: 'bypass'`** so existing tests are unchanged; opt in per test with `mswServer.use(http.get(...))`. Smoke test: `src/test/msw/mswSmoke.test.ts`.
+- **API shapes:** Zod modules under **`src/contracts/`** and the human index **[`docs/API_CONTRACTS.md`](./API_CONTRACTS.md)**.
 
 ## Playwright notes
 
@@ -68,8 +77,10 @@ For new behavior or bugfixes: write a failing test → implement the minimum to 
 
 ## References
 
+- [API contracts (JSON shapes)](./API_CONTRACTS.md)
 - [Next.js: Testing](https://nextjs.org/docs/app/guides/testing)
 - [Next.js: Vitest](https://nextjs.org/docs/app/guides/testing/vitest)
 - [Vitest](https://vitest.dev/)
+- [MSW](https://mswjs.io/)
 - [Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
 - [Playwright](https://playwright.dev/)

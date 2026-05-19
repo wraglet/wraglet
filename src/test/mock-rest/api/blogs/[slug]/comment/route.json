@@ -1,0 +1,23 @@
+[
+  {
+    "route": "/api/blogs/:slug/comment",
+    "method": "POST",
+    "status": 200,
+    "description": "Add blog comment",
+    "responseBody": {
+      "_id": "507f1f77bcf86cd7994390aa",
+      "content": "Nice post!",
+      "author": {
+        "_id": "507f1f77bcf86cd799439099",
+        "firstName": "Ada",
+        "lastName": "Lovelace",
+        "username": "@ada",
+        "gender": "Female",
+        "pronoun": "They/Them",
+        "profilePicture": null
+      },
+      "blog": "507f1f77bcf86cd799439014",
+      "createdAt": "2026-03-09T14:00:00.000Z"
+    }
+  }
+]

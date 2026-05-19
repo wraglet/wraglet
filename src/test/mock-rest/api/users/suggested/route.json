@@ -1,0 +1,29 @@
+[
+  {
+    "route": "/api/users/suggested",
+    "method": "GET",
+    "status": 200,
+    "responseBody": {
+      "success": true,
+      "users": [
+        {
+          "_id": "507f1f77bcf86cd799439023",
+          "firstName": "Katherine",
+          "lastName": "Johnson",
+          "username": "@kat",
+          "profilePicture": null,
+          "gender": "Female",
+          "followerCount": 64
+        }
+      ]
+    }
+  },
+  {
+    "route": "/api/users/suggested",
+    "method": "GET",
+    "status": 401,
+    "responseBody": {
+      "error": "Unauthorized"
+    }
+  }
+]
