@@ -1,14 +1,38 @@
 // For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
 
 import nextVitals from 'eslint-config-next/core-web-vitals'
+import sonarjs from 'eslint-plugin-sonarjs'
 import storybook from 'eslint-plugin-storybook'
+import unicorn from 'eslint-plugin-unicorn'
 import unusedImports from 'eslint-plugin-unused-imports'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
   ...nextVitals,
-  // Optional: import nextTs from 'eslint-config-next/typescript' and spread ...nextTs after nextVitals
-  // when you want the full Next 16 + TS preset (stricter typescript-eslint across the repo).
+  // SonarJS in ESLint (subset of SonarQube IDE rules). Full `recommended` is ~60+ errors on legacy UI code;
+  // enable high-signal rules as warn first, then tighten per directory.
+  {
+    plugins: { sonarjs },
+    rules: {
+      'sonarjs/no-dead-store': 'warn',
+      'sonarjs/no-ignored-exceptions': 'warn',
+      'sonarjs/no-nested-conditional': 'warn',
+      'sonarjs/no-nested-template-literals': 'warn',
+      'sonarjs/no-unused-vars': 'warn',
+      // Covered by eslint-plugin-unused-imports
+      'sonarjs/unused-import': 'off'
+    }
+  },
+  // Sonar S7763 (`export…from`) + stricter hygiene on API contracts and mock fixtures
+  {
+    files: ['src/contracts/**/*.ts', 'src/test/mock-rest/**/*.ts'],
+    plugins: { sonarjs, unicorn },
+    rules: {
+      'sonarjs/no-nested-template-literals': 'error',
+      'sonarjs/unused-import': 'error',
+      'unicorn/prefer-export-from': 'error'
+    }
+  },
   globalIgnores([
     '.next/**',
     'out/**',
@@ -38,6 +62,20 @@ export default defineConfig([
   },
   {
     files: ['src/**/index.tsx', 'src/**/index.ts'],
+    rules: {
+      'no-restricted-imports': 'off'
+    }
+  },
+  // Colocated Vitest: `./route` and sibling imports are intentional.
+  {
+    files: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    rules: {
+      'no-restricted-imports': 'off'
+    }
+  },
+  // Mock REST catalog: internal relative imports between sibling modules.
+  {
+    files: ['src/test/mock-rest/**/*.ts'],
     rules: {
       'no-restricted-imports': 'off'
     }

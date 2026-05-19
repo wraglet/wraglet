@@ -49,9 +49,8 @@ const preview: Preview = {
     },
 
     a11y: {
-      // 'todo' - show a11y violations in the test UI only
-      // 'error' - fail CI on a11y violations
-      // 'off' - skip a11y checks entirely
+      // Storybook addon-a11y: violations surface in the UI only (not failing the build).
+      // Alternatives: 'error' (fail CI) or 'off' (disable checks).
       test: 'todo'
     }
   },
