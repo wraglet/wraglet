@@ -21,7 +21,7 @@ describe('postAuthorCard', () => {
   it('getPostAuthorId resolves string or object id', () => {
     expect(getPostAuthorId('raw-id')).toBe('raw-id')
     expect(getPostAuthorId(authorObject as IPost['author'])).toBe('a1')
-    expect(getPostAuthorId(undefined as unknown as IPost['author'])).toBe(null)
+    expect(getPostAuthorId(undefined)).toBe(null)
   })
 
   it('getIsPostAuthor compares ids as strings', () => {

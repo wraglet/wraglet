@@ -1,7 +1,10 @@
 import { profileHrefFromUsername } from '@/lib/profileHref'
 import type { IPost } from '@/models/Post'
 
-export const getPostAuthorId = (author: IPost['author']): string | null => {
+/** Author on a post may be a populated user, a raw ObjectId string from JSON, or legacy string id. */
+type PostAuthorInput = IPost['author'] | string | null | undefined
+
+export const getPostAuthorId = (author: PostAuthorInput): string | null => {
   if (typeof author === 'string' && author) {
     return author
   }
@@ -24,7 +27,7 @@ export const getIsPostAuthor = (
 }
 
 export const getAuthorProfileHref = (
-  author: IPost['author']
+  author: PostAuthorInput
 ): string | null => {
   if (
     author &&
@@ -37,7 +40,7 @@ export const getAuthorProfileHref = (
   return null
 }
 
-export const getAuthorDisplayName = (author: IPost['author']): string => {
+export const getAuthorDisplayName = (author: PostAuthorInput): string => {
   if (author && typeof author === 'object') {
     return (
       [author.firstName, author.lastName].filter(Boolean).join(' ') ||

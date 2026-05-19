@@ -103,7 +103,10 @@ const SignUp: FC = () => {
 
   const mutation = useMutation({
     mutationFn: async (data: SignUpFormData) => {
-      const { email, password, agreeToTerms: _agreeToTerms, ...rest } = data
+      const { email, password, agreeToTerms, ...rest } = data
+      if (!agreeToTerms) {
+        throw new Error('You must agree to the terms')
+      }
       const formData = {
         ...rest,
         email: email.toLowerCase(),

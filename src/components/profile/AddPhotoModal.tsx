@@ -21,15 +21,15 @@ import { toast } from 'react-hot-toast'
 import CrossWhite from '@/components/shared/CrossWhite'
 
 interface AddPhotoModalProps {
-  isOpen: boolean
-  onClose: () => void
-  existingPhotos: Array<{
+  readonly isOpen: boolean
+  readonly onClose: () => void
+  readonly existingPhotos: Array<{
     url: string
     key: string
     type: 'post' | 'avatar'
     createdAt: string
   }>
-  onUpdatePhotos: (photos: any[]) => void
+  readonly onUpdatePhotos: (photos: any[]) => void
 }
 
 export default function AddPhotoModal({
@@ -37,7 +37,7 @@ export default function AddPhotoModal({
   onClose,
   existingPhotos,
   onUpdatePhotos
-}: AddPhotoModalProps) {
+}: Readonly<AddPhotoModalProps>) {
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [selectedTab, setSelectedTab] = useState(0)
@@ -233,11 +233,13 @@ export default function AddPhotoModal({
                     <TabPanel>
                       <div className="grid grid-cols-3 gap-4">
                         {existingPhotos.map((photo) => (
-                          <div
+                          <button
                             key={photo.url}
+                            type="button"
                             className={cn(
-                              'relative aspect-square cursor-pointer overflow-hidden rounded-lg',
+                              'relative aspect-square cursor-pointer overflow-hidden rounded-lg border-0 p-0',
                               'transition hover:ring-2 hover:ring-sky-500',
+                              'focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none',
                               selectedPhotos.includes(photo.url) &&
                                 'ring-2 ring-sky-500'
                             )}
@@ -250,7 +252,7 @@ export default function AddPhotoModal({
                               sizes="(max-width: 768px) 33vw, 200px"
                               className="object-cover"
                             />
-                          </div>
+                          </button>
                         ))}
                       </div>
                       <div className="mt-4 flex justify-end">

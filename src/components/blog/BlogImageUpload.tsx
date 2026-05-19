@@ -25,7 +25,6 @@ interface BlogImageUploadProps {
   className?: string
   showPreview?: boolean
   acceptedTypes?: string[]
-  uploadType?: 'cover' | 'content'
 }
 
 const BlogImageUpload = ({
@@ -34,10 +33,8 @@ const BlogImageUpload = ({
   placeholder = 'Click to upload, drag & drop, or paste an image...',
   className = '',
   showPreview = true,
-  acceptedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-  uploadType = 'content'
+  acceptedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 }: BlogImageUploadProps) => {
-  const [isUploading, setIsUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [imgError, setImgError] = useState(false)
@@ -87,7 +84,7 @@ const BlogImageUpload = ({
       'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp']
     },
     maxFiles: 1,
-    disabled: isUploading,
+    disabled: false,
     onDragEnter: () => setDragActive(true),
     onDragLeave: () => setDragActive(false)
   })
@@ -97,9 +94,8 @@ const BlogImageUpload = ({
     async (e: ClipboardEvent) => {
       const items = e.clipboardData?.items
       if (!items) return
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i]
-        if (item.type.indexOf('image') !== -1) {
+      for (const item of items) {
+        if (item.type.includes('image')) {
           e.preventDefault()
           const file = item.getAsFile()
           if (file) {
@@ -120,9 +116,7 @@ const BlogImageUpload = ({
   }, [handlePaste])
 
   const handleClick = () => {
-    if (!isUploading) {
-      fileInputRef.current?.click()
-    }
+    fileInputRef.current?.click()
   }
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,12 +124,6 @@ const BlogImageUpload = ({
     if (files.length > 0) {
       handleFileUpload(files)
     }
-  }
-
-  const handleRemove = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    onChange(undefined)
-    setImgError(false)
   }
 
   useEffect(() => {
@@ -172,10 +160,9 @@ const BlogImageUpload = ({
               <button
                 type="button"
                 onClick={handleClick}
-                disabled={isUploading}
-                className="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+                className="text-xs text-blue-600 hover:text-blue-800"
               >
-                {isUploading ? 'Uploading...' : 'Replace image'}
+                Replace image
               </button>
             </div>
           </div>
@@ -188,20 +175,20 @@ const BlogImageUpload = ({
         </div>
       )}
       {!value && !imgError && (
-        <div
+        <button
+          type="button"
           {...getRootProps()}
-          className={`relative cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+          className={`relative w-full cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
             isDragActive || dragActive
               ? 'border-blue-500 bg-blue-50'
               : 'border-neutral-300 bg-gray-50 hover:border-neutral-400'
-          } ${isUploading ? 'cursor-not-allowed opacity-50' : ''} `}
-          onClick={handleClick}
+          } `}
         >
           <input
             {...getInputProps()}
             ref={fileInputRef}
             onChange={handleFileInputChange}
-            disabled={isUploading}
+            disabled={false}
           />
           <div className="flex flex-col items-center gap-3">
             <div className="flex gap-2">
@@ -218,7 +205,7 @@ const BlogImageUpload = ({
               </p>
             </div>
           </div>
-        </div>
+        </button>
       )}
     </div>
   )

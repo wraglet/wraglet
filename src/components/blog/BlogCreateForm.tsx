@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useState, type ReactNode } from 'react'
+import { useState, type ReactNode, type SubmitEvent } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import {
@@ -61,6 +61,8 @@ const BLOCK_CONTROL_BUTTON_CLASS =
   'rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600'
 const BLOCK_REMOVE_BUTTON_CLASS =
   'rounded p-1.5 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600'
+
+type ImageUploadValue = string | File | undefined
 
 type ContentBlock = {
   id: string
@@ -141,13 +143,13 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
     summary.trim() &&
     contentBlocks.some((block) => {
       // Text blocks need content
-      if (block.type === 'text') return block.content && block.content.trim()
+      if (block.type === 'text') return Boolean(block.content?.trim())
       // Image blocks need URL (content can be empty)
-      if (block.type === 'image') return block.metadata?.url
+      if (block.type === 'image') return Boolean(block.metadata?.url)
       // Code blocks need content
-      if (block.type === 'code') return block.content && block.content.trim()
+      if (block.type === 'code') return Boolean(block.content?.trim())
       // Video blocks need URL (content can be empty)
-      if (block.type === 'video') return block.metadata?.url
+      if (block.type === 'video') return Boolean(block.metadata?.url)
       return false
     }) &&
     !isOverTitleLimit &&
@@ -199,7 +201,7 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
   }
 
   // Handler for selecting a cover image file
-  const handleCoverFileSelect = (fileOrUrl: string | File | undefined) => {
+  const handleCoverFileSelect = (fileOrUrl: ImageUploadValue) => {
     if (fileOrUrl && typeof fileOrUrl === 'object' && 'name' in fileOrUrl) {
       setPendingCoverFile(fileOrUrl)
       setShowCoverCrop(true)
@@ -219,7 +221,7 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
 
   // Handler for selecting an image for a block
   const handleBlockImageChange =
-    (blockId: string) => (fileOrUrl: string | File | undefined) => {
+    (blockId: string) => (fileOrUrl: ImageUploadValue) => {
       if (fileOrUrl && typeof fileOrUrl === 'object' && 'name' in fileOrUrl) {
         setPendingBlockFile(fileOrUrl)
         setPendingBlockId(blockId)
@@ -255,8 +257,7 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
   }
 
   // Submit handler
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
+  const submitBlog = async () => {
     if (!canSubmit) return
 
     setIsLoading(true)
@@ -264,7 +265,7 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
       // 1. Upload cover image if it's a File
       let coverImageUrl: string | undefined = undefined
       if (
-        typeof window !== 'undefined' &&
+        globalThis.window !== undefined &&
         coverImage &&
         typeof coverImage === 'object' &&
         'name' in coverImage
@@ -314,15 +315,13 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
         status,
         contentBlocks: updatedBlocks.filter((block) => {
           // Include text blocks with content
-          if (block.type === 'text')
-            return block.content && block.content.trim()
+          if (block.type === 'text') return Boolean(block.content?.trim())
           // Include image blocks with URL (content can be empty)
-          if (block.type === 'image') return block.metadata?.url
+          if (block.type === 'image') return Boolean(block.metadata?.url)
           // Include code blocks with content
-          if (block.type === 'code')
-            return block.content && block.content.trim()
+          if (block.type === 'code') return Boolean(block.content?.trim())
           // Include video blocks with URL (content can be empty)
-          if (block.type === 'video') return block.metadata?.url
+          if (block.type === 'video') return Boolean(block.metadata?.url)
           return false
         })
       }
@@ -349,6 +348,11 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    submitBlog().catch(() => {})
   }
 
   // Character counter color helper
@@ -388,9 +392,9 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
         <div className="flex w-full shrink-0 sm:w-auto sm:justify-end">
           <Button
             type="button"
-            onClick={() =>
-              handleSubmit({ preventDefault: () => {} } as FormEvent)
-            }
+            onClick={() => {
+              submitBlog().catch(() => {})
+            }}
             disabled={!canSubmit || isLoading}
             className={`w-full sm:w-auto ${TOP_BAR_BUTTON_CLASS} ${
               status === 'published'
@@ -409,10 +413,14 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="blog-create-title"
+                className="mb-2 block text-sm font-medium text-gray-700"
+              >
                 Title <span className="text-red-500">*</span>
               </label>
               <Input
+                id="blog-create-title"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -440,10 +448,14 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
             {/* Summary and Category Row */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
               <div className="lg:col-span-3">
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="blog-create-summary"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   Summary <span className="text-red-500">*</span>
                 </label>
                 <textarea
+                  id="blog-create-summary"
                   value={summary}
                   onChange={(e) => setSummary(e.target.value)}
                   className={`h-24 w-full resize-none rounded-lg border px-4 py-3 text-sm transition-colors focus:ring-2 focus:outline-none ${
@@ -468,10 +480,14 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="blog-create-category"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   Category
                 </label>
                 <select
+                  id="blog-create-category"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className={TEXT_INPUT_CLASS}
@@ -488,10 +504,14 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
             {/* Tags and Status Row */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               <div className="lg:col-span-2">
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="blog-create-tags"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   Tags
                 </label>
                 <Input
+                  id="blog-create-tags"
                   type="text"
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
@@ -504,10 +524,14 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="blog-create-status"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   Status
                 </label>
                 <select
+                  id="blog-create-status"
                   value={status}
                   onChange={(e) =>
                     setStatus(e.target.value as 'draft' | 'published')
@@ -522,15 +546,14 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
 
             {/* Cover Image */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
+              <p className="mb-2 block text-sm font-medium text-gray-700">
                 Cover Image
-              </label>
+              </p>
               <BlogImageUpload
                 value={coverImage}
                 onChange={handleCoverFileSelect}
                 placeholder="Upload your blog cover image..."
                 className="w-full"
-                uploadType="cover"
               />
               <ImageUploadCropModal
                 show={showCoverCrop}
@@ -1005,10 +1028,14 @@ const ContentBlockEditor = ({
         {block.type === 'code' && (
           <div className="space-y-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor={`blog-block-${block.id}-language`}
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Language
               </label>
               <input
+                id={`blog-block-${block.id}-language`}
                 type="text"
                 value={block.metadata?.language || ''}
                 onChange={(e) =>
@@ -1021,10 +1048,14 @@ const ContentBlockEditor = ({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor={`blog-block-${block.id}-code`}
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Code
               </label>
               <textarea
+                id={`blog-block-${block.id}-code`}
                 value={block.content}
                 onChange={(e) => onUpdate({ content: e.target.value })}
                 className="w-full rounded border border-neutral-200 bg-gray-900 p-3 font-mono text-sm leading-relaxed text-gray-100"
@@ -1033,10 +1064,14 @@ const ContentBlockEditor = ({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor={`blog-block-${block.id}-code-caption`}
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Caption (optional)
               </label>
               <input
+                id={`blog-block-${block.id}-code-caption`}
                 type="text"
                 value={block.metadata?.caption || ''}
                 onChange={(e) =>
@@ -1054,22 +1089,25 @@ const ContentBlockEditor = ({
         {block.type === 'image' && (
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-xs font-medium text-gray-700">
+              <p className="mb-2 block text-xs font-medium text-gray-700">
                 Image
-              </label>
+              </p>
               <BlogImageUpload
                 value={block.metadata?.url}
                 onChange={onImageChange(block.id)}
                 placeholder="Upload an image for your blog..."
                 className="w-full"
-                uploadType="content"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor={`blog-block-${block.id}-alt`}
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Alt Text
               </label>
               <input
+                id={`blog-block-${block.id}-alt`}
                 type="text"
                 value={block.metadata?.alt || ''}
                 onChange={(e) =>
@@ -1082,10 +1120,14 @@ const ContentBlockEditor = ({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor={`blog-block-${block.id}-image-caption`}
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Caption (optional)
               </label>
               <input
+                id={`blog-block-${block.id}-image-caption`}
                 type="text"
                 value={block.metadata?.caption || ''}
                 onChange={(e) =>
@@ -1103,10 +1145,14 @@ const ContentBlockEditor = ({
         {block.type === 'video' && (
           <div className="space-y-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor={`blog-block-${block.id}-video-url`}
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Video URL
               </label>
               <input
+                id={`blog-block-${block.id}-video-url`}
                 type="url"
                 value={block.metadata?.url || ''}
                 onChange={(e) =>
@@ -1119,10 +1165,14 @@ const ContentBlockEditor = ({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor={`blog-block-${block.id}-video-caption`}
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Caption (optional)
               </label>
               <input
+                id={`blog-block-${block.id}-video-caption`}
                 type="text"
                 value={block.metadata?.caption || ''}
                 onChange={(e) =>

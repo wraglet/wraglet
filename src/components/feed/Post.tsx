@@ -1,6 +1,7 @@
 'use client'
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { SubmitEvent } from 'react'
 import dynamic from 'next/dynamic'
 import { usePostAuthorCard } from '@/lib/hooks/usePostAuthorCard'
 import { IComment } from '@/models/Comment'
@@ -93,9 +94,7 @@ const Post = ({ post: initialPost }: PostProps) => {
     try {
       const existingReaction = post.reactions.find(
         (reaction) =>
-          reaction.userId &&
-          reaction.userId._id === user._id &&
-          reaction.type === type
+          reaction.userId?._id === user._id && reaction.type === type
       )
 
       if (existingReaction) {
@@ -155,12 +154,10 @@ const Post = ({ post: initialPost }: PostProps) => {
 
   const userReaction = useMemo(() => {
     if (!user) return undefined
-    return post.reactions?.find(
-      (reaction) => reaction.userId && reaction.userId._id === user._id
-    )
+    return post.reactions?.find((reaction) => reaction.userId?._id === user._id)
   }, [user, post.reactions])
 
-  const handleCommentSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleCommentSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!comment.trim()) return
 

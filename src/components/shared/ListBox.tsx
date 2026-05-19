@@ -1,4 +1,5 @@
 import { FC, InputHTMLAttributes } from 'react'
+import { cn } from '@/lib/utils'
 import {
   Listbox,
   ListboxButton,
@@ -54,34 +55,39 @@ const ListBox: FC<ListBoxProps> = ({
             anchor={{ to: 'bottom start', gap: '0.25rem', padding: '0.5rem' }}
             className="z-[100] max-h-60 max-w-[calc(100vw-1rem)] overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-hidden sm:text-sm"
           >
-            {options.map((option, i) => (
-              <ListboxOption
-                key={i}
-                className={({ focus }) =>
-                  `relative cursor-default py-2 pr-4 pl-10 select-none ${
-                    focus ? 'bg-amber-100 text-amber-900' : 'text-gray-900'
-                  }`
-                }
-                value={typeof option === 'object' ? option.name : option}
-              >
-                {({ selected }) => (
-                  <>
-                    <span
-                      className={`block truncate ${
-                        selected ? 'font-medium' : 'font-normal'
-                      }`}
-                    >
-                      {typeof option === 'object' ? option.name : option}
-                    </span>
-                    {selected ? (
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
-                        <HiCheck className="h-5 w-5" aria-hidden="true" />
+            {options.map((option) => {
+              const optionKey = typeof option === 'object' ? option.val : option
+              return (
+                <ListboxOption
+                  key={optionKey}
+                  className={({ focus }) =>
+                    [
+                      'relative cursor-default py-2 pr-4 pl-10 select-none',
+                      focus ? 'bg-amber-100 text-amber-900' : 'text-gray-900'
+                    ].join(' ')
+                  }
+                  value={typeof option === 'object' ? option.name : option}
+                >
+                  {({ selected: isOptionSelected }) => (
+                    <>
+                      <span
+                        className={cn(
+                          'block truncate',
+                          isOptionSelected ? 'font-medium' : 'font-normal'
+                        )}
+                      >
+                        {typeof option === 'object' ? option.name : option}
                       </span>
-                    ) : null}
-                  </>
-                )}
-              </ListboxOption>
-            ))}
+                      {isOptionSelected ? (
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
+                          <HiCheck className="h-5 w-5" aria-hidden="true" />
+                        </span>
+                      ) : null}
+                    </>
+                  )}
+                </ListboxOption>
+              )
+            })}
           </ListboxOptions>
         </div>
       </Listbox>

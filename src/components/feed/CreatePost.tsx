@@ -1,9 +1,8 @@
 'use client'
 
-import { ChangeEvent, FormEvent, useReducer } from 'react'
+import { useReducer } from 'react'
+import type { ChangeEvent, SubmitEvent } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
-import type { Gender } from '@/interfaces'
 import { profileHrefFromUsername } from '@/lib/profileHref'
 import useBlogModalStore from '@/store/blogModal'
 import useUserStore from '@/store/user'
@@ -11,13 +10,13 @@ import { PhotoIcon } from '@heroicons/react/24/outline'
 import { BsSend } from 'react-icons/bs'
 
 import UploadPostImage from '@/components/feed/UploadPostImage'
-import Avatar from '@/components/shared/Avatar'
 import Button from '@/components/shared/Button'
+import CurrentUserAvatar from '@/components/shared/CurrentUserAvatar'
 
 const MAX_POST_CHARACTERS = 280
 
 type Props = {
-  submitPost: (e: FormEvent) => Promise<void>
+  submitPost: (e: SubmitEvent<HTMLFormElement>) => Promise<void>
   isLoading: boolean
   setText: (e: ChangeEvent<HTMLTextAreaElement>) => void
   setPostImage: (postImage: string) => void
@@ -81,30 +80,11 @@ const CreatePost = ({
       <div className="rounded-xl border border-sky-200/90 bg-gradient-to-br from-sky-50 via-white to-violet-50/80 p-2.5 shadow-sm ring-1 ring-sky-100/60 sm:p-4">
         <div className="flex w-full items-start gap-2">
           <div className="relative shrink-0 pt-0.5">
-            {user && user.gender ? (
-              currentUserProfileHref ? (
-                <Link
-                  href={currentUserProfileHref}
-                  className="block rounded-full ring-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-[#0EA5E9]/40"
-                >
-                  <Avatar
-                    gender={user.gender as Gender}
-                    alt={`${user.firstName}'s photo`}
-                    src={user.profilePicture?.url || null}
-                    size="h-10 w-10"
-                  />
-                </Link>
-              ) : (
-                <Avatar
-                  gender={user.gender as Gender}
-                  alt={`${user.firstName}'s photo`}
-                  src={user.profilePicture?.url || null}
-                  size="h-10 w-10"
-                />
-              )
-            ) : (
-              <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200" />
-            )}
+            <CurrentUserAvatar
+              user={user}
+              profileHref={currentUserProfileHref}
+              size="h-10 w-10"
+            />
           </div>
 
           <form

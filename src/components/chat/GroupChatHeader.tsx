@@ -1,4 +1,5 @@
 import type { Gender } from '@/interfaces'
+import { getStackedAvatarPositionClass } from '@/utils/displayFormat'
 
 import Avatar from '@/components/shared/Avatar'
 
@@ -38,13 +39,7 @@ const CollageAvatar = ({ users }: { users: User[] }) => {
       {avatars.map((user, i) => (
         <div
           key={user._id}
-          className={`absolute rounded-full border-2 border-white bg-white ${
-            i === 0
-              ? 'top-0 left-0 z-30'
-              : i === 1
-                ? 'top-0 left-4 z-20'
-                : 'top-4 left-2 z-10'
-          }`}
+          className={`absolute rounded-full border-2 border-white bg-white ${getStackedAvatarPositionClass(i, 'sm')}`}
           style={{ width: 32, height: 32 }}
         >
           <Avatar

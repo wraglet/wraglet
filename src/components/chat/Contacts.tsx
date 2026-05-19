@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import useUserStore from '@/store/user'
+import { getStackedAvatarPositionClass } from '@/utils/displayFormat'
 import { ChannelProvider, useChannel } from 'ably/react'
 
 import Avatar from '@/components/shared/Avatar'
@@ -20,13 +21,7 @@ const CollageAvatar = ({ users }: { users: any[] }) => {
       {avatars.map((user, i) => (
         <div
           key={user._id}
-          className={`absolute rounded-full border-2 border-white bg-white ${
-            i === 0
-              ? 'top-0 left-0 z-30'
-              : i === 1
-                ? 'top-0 left-5 z-20'
-                : 'top-5 left-2 z-10'
-          }`}
+          className={`absolute rounded-full border-2 border-white bg-white ${getStackedAvatarPositionClass(i)}`}
           style={{ width: 28, height: 28 }}
         >
           <Avatar

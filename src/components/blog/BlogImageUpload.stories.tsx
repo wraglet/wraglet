@@ -14,7 +14,6 @@ const meta = {
   args: {
     value: undefined,
     onChange: fn(),
-    uploadType: 'cover',
     showPreview: true,
     placeholder: 'Upload a cover image for your blog...'
   },
@@ -41,7 +40,6 @@ export const WithPreview: Story = {
 
 export const ContentImage: Story = {
   args: {
-    uploadType: 'content',
     placeholder: 'Add an inline image to this content block...'
   }
 }

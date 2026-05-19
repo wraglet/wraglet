@@ -1,6 +1,7 @@
 'use client'
 
-import { FormEvent, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { SubmitEvent } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import type { PublicUser } from '@/interfaces'
@@ -35,7 +36,7 @@ interface BlogInteractionsProps {
 interface CommentItemProps {
   comment: IBlogComment
   currentUserId?: string
-  onDelete: (commentId: string) => void
+  onDelete: (commentId: string) => Promise<void>
 }
 
 const CommentItem = ({
@@ -242,7 +243,7 @@ const BlogInteractions = ({
     }
   }
 
-  const handleComment = async (e: FormEvent) => {
+  const handleComment = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     if (!currentUser) {
@@ -257,6 +258,51 @@ const BlogInteractions = ({
 
   const handleShare = () => {
     setShowShareModal(true)
+  }
+
+  const renderCommentsList = () => {
+    if (isLoadingComments) {
+      return (
+        <div className="space-y-3">
+          {(['a', 'b', 'c'] as const).map((skeletonKey) => (
+            <div
+              key={`comment-skeleton-${skeletonKey}`}
+              className="flex animate-pulse space-x-3"
+            >
+              <div className="h-8 w-8 rounded-full bg-gray-200" />
+              <div className="flex-1">
+                <div className="mb-2 h-3 w-1/4 rounded bg-gray-200" />
+                <div className="h-3 w-3/4 rounded bg-gray-200" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )
+    }
+
+    if (comments.length > 0) {
+      return (
+        <div className="divide-y divide-gray-200">
+          {comments.map((comment: IBlogComment, index: number) => (
+            <CommentItem
+              key={comment._id || `comment-${index}`}
+              comment={comment}
+              currentUserId={currentUser?._id}
+              onDelete={handleDeleteComment}
+            />
+          ))}
+          <div ref={commentsEndRef} />
+        </div>
+      )
+    }
+
+    return (
+      <div className="py-4 text-center">
+        <p className="text-xs text-gray-500">
+          No comments yet. Be the first to comment!
+        </p>
+      </div>
+    )
   }
 
   return (
@@ -335,40 +381,7 @@ const BlogInteractions = ({
           )}
 
           {/* Comments List */}
-          <div className="space-y-1">
-            {isLoadingComments ? (
-              <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="flex animate-pulse space-x-3">
-                    <div className="h-8 w-8 rounded-full bg-gray-200"></div>
-                    <div className="flex-1">
-                      <div className="mb-2 h-3 w-1/4 rounded bg-gray-200"></div>
-                      <div className="h-3 w-3/4 rounded bg-gray-200"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : comments.length > 0 ? (
-              <div className="divide-y divide-gray-200">
-                {comments.map((comment: IBlogComment, index: number) => (
-                  <CommentItem
-                    key={comment._id || `comment-${index}`}
-                    comment={comment}
-                    currentUserId={currentUser?._id}
-                    onDelete={handleDeleteComment}
-                  />
-                ))}
-                {/* Scroll anchor for auto-scroll to bottom */}
-                <div ref={commentsEndRef} />
-              </div>
-            ) : (
-              <div className="py-4 text-center">
-                <p className="text-xs text-gray-500">
-                  No comments yet. Be the first to comment!
-                </p>
-              </div>
-            )}
-          </div>
+          <div className="space-y-1">{renderCommentsList()}</div>
         </div>
       )}
 

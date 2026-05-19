@@ -70,7 +70,7 @@ const ImageUploadCropModal: FC<ImageUploadCropModalProps> = ({
         }
         const reader = new FileReader()
         reader.onload = () => {
-          const img = new window.Image()
+          const img = new globalThis.Image()
           img.onload = () => {
             if (img.width < minWidth || img.height < minHeight) {
               setImageTooSmall(true)
@@ -105,7 +105,7 @@ const ImageUploadCropModal: FC<ImageUploadCropModalProps> = ({
       }
       const reader = new FileReader()
       reader.onload = () => {
-        const img = new window.Image()
+        const img = new globalThis.Image()
         img.onload = () => {
           if (img.width < minWidth || img.height < minHeight) {
             setImageTooSmall(true)
@@ -136,7 +136,7 @@ const ImageUploadCropModal: FC<ImageUploadCropModalProps> = ({
       onCrop(croppedImage, e)
       close()
     } catch (err) {
-      // handle error
+      console.error('Image crop failed:', err)
     } finally {
       setLoading(false)
     }

@@ -51,23 +51,29 @@ const PostReactionControl = ({
 
   return (
     <div className="group relative">
-      <button
-        type="button"
-        ref={refs.setReference}
-        className="flex items-center gap-1 rounded-full border border-solid border-gray-400 px-2 py-0.5"
-        onClick={handleReactionClick}
-      >
+      <div className="flex items-center gap-1">
         {userReaction ? (
-          <ReactionIcon
-            type={userReaction.type}
-            onClick={async () => {
-              await onRemoveReaction()
+          <button
+            type="button"
+            className="flex items-center rounded-full border border-solid border-gray-400 px-2 py-0.5"
+            aria-label={`Remove ${userReaction.type} reaction`}
+            onClick={() => {
+              onRemoveReaction()
             }}
-          />
-        ) : (
-          <FaRegHeart className="cursor-pointer text-xs text-gray-600" />
-        )}
-      </button>
+          >
+            <ReactionIcon type={userReaction.type} />
+          </button>
+        ) : null}
+        <button
+          type="button"
+          ref={refs.setReference}
+          className="flex items-center rounded-full border border-solid border-gray-400 px-2 py-0.5"
+          aria-label={userReaction ? 'Change reaction' : 'Add reaction'}
+          onClick={handleReactionClick}
+        >
+          <FaRegHeart className="text-xs text-gray-600" />
+        </button>
+      </div>
 
       {showEmojis && (
         <div

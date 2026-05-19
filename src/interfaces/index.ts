@@ -4,6 +4,12 @@ export type Gender = 'Female' | 'Male' | 'Others' | 'Prefer not to say'
 // Pronoun type for consistency across the application
 export type Pronoun = 'She/Her' | 'He/Him' | 'They/Them' | 'Prefer not to say'
 
+/**
+ * Legacy UI-oriented post shape in this file.
+ *
+ * @deprecated Prefer {@link IPost} from `@/models/Post` as the domain source of truth.
+ * Derive view-specific types with `Pick` / `Omit` as needed.
+ */
 export interface PostInterface {
   _id: string
   content: {
@@ -45,6 +51,12 @@ export interface PostReactionInterface {
   updatedAt: Date
 }
 
+/**
+ * Full user record including `hashedPassword` — appropriate for server-only code paths.
+ *
+ * @deprecated For database documents use {@link IUser} / {@link IUserDocument} from `@/models/User`.
+ * For client-safe session/API user data use {@link PublicUser}.
+ */
 export interface UserInterface {
   _id: string
   firstName: string
@@ -145,6 +157,13 @@ export interface PublicUser {
   followingIds?: string[]
   createdAt?: string | Date
   updatedAt?: string | Date
+}
+
+/** User card in discover / right nav (no password; optional discovery flags). */
+export type DiscoverUser = PublicUser & {
+  isTrending?: boolean
+  isRecentActive?: boolean
+  isNew?: boolean
 }
 
 export interface TrendingTopic {

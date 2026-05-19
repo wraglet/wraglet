@@ -1,9 +1,11 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { useState } from 'react'
+import type { SubmitEvent } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { IBlog } from '@/models/Blog'
+import { getBlogUpdateButtonLabel } from '@/utils/displayFormat'
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -63,6 +65,8 @@ const BLOCK_CONTROL_BUTTON_CLASS =
 const BLOCK_REMOVE_BUTTON_CLASS =
   'rounded p-1.5 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600'
 
+type ImageUploadValue = string | File | undefined
+
 type ContentBlock = {
   id: string
   type: 'text' | 'code' | 'image' | 'video'
@@ -97,7 +101,7 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
     blog.status as 'draft' | 'published'
   )
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>(
-    blog.contentBlocks && blog.contentBlocks.length > 0
+    (blog.contentBlocks?.length ?? 0) > 0
       ? blog.contentBlocks.map((block) => ({
           id: block.id,
           type: block.type,
@@ -128,10 +132,12 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
     title.trim() &&
     summary.trim() &&
     contentBlocks.some((block) => {
-      if (block.type === 'text' || block.type === 'code')
-        return block.content && block.content.trim()
-      if (block.type === 'image' || block.type === 'video')
-        return block.metadata?.url
+      if (block.type === 'text' || block.type === 'code') {
+        return Boolean(block.content?.trim())
+      }
+      if (block.type === 'image' || block.type === 'video') {
+        return Boolean(block.metadata?.url)
+      }
       return false
     }) &&
     !isOverTitleLimit &&
@@ -182,7 +188,7 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
   }
 
   // Handler for selecting a cover image file
-  const handleCoverFileSelect = (fileOrUrl: string | File | undefined) => {
+  const handleCoverFileSelect = (fileOrUrl: ImageUploadValue) => {
     if (fileOrUrl && typeof fileOrUrl === 'object' && 'name' in fileOrUrl) {
       setPendingCoverFile(fileOrUrl)
       setShowCoverCrop(true)
@@ -238,35 +244,18 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
   }
 
   // Submit handler
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
+  const submitBlog = async () => {
     if (!canSubmit) return
 
     setIsLoading(true)
     try {
       // 1. Upload cover image if it's a base64 string (new/cropped image)
       let coverImageUrl: string | undefined = coverImage
-      if (coverImage && coverImage.startsWith('data:image/')) {
+      if (coverImage?.startsWith('data:image/')) {
         coverImageUrl = coverImage // Keep base64 for API to handle
       }
 
-      // 2. Upload image blocks if any
-      const updatedBlocks = await Promise.all(
-        contentBlocks.map(async (block) => {
-          if (block.type === 'image' && block.metadata?.url) {
-            // If it's a base64 string, keep it for API to handle
-            if (
-              typeof block.metadata.url === 'string' &&
-              block.metadata.url.startsWith('data:image/')
-            ) {
-              return block
-            }
-            // If it's already a URL, keep it as is
-            return block
-          }
-          return block
-        })
-      )
+      const updatedBlocks = contentBlocks
 
       const blogData = {
         title: title.trim(),
@@ -279,10 +268,12 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
         coverImageUrl: coverImageUrl || undefined,
         status,
         contentBlocks: updatedBlocks.filter((block) => {
-          if (block.type === 'text' || block.type === 'code')
-            return block.content && block.content.trim()
-          if (block.type === 'image' || block.type === 'video')
-            return block.metadata?.url
+          if (block.type === 'text' || block.type === 'code') {
+            return Boolean(block.content?.trim())
+          }
+          if (block.type === 'image' || block.type === 'video') {
+            return Boolean(block.metadata?.url)
+          }
           return false
         })
       }
@@ -309,6 +300,11 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
     }
   }
 
+  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    submitBlog().catch(() => {})
+  }
+
   // Character counter color helper
   const getCharacterCounterColor = (current: number, max: number) => {
     const percentage = (current / max) * 100
@@ -325,9 +321,9 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
         <div className="flex items-center gap-3">
           <Button
             type="button"
-            onClick={() =>
-              handleSubmit({ preventDefault: () => {} } as FormEvent)
-            }
+            onClick={() => {
+              submitBlog().catch(() => {})
+            }}
             disabled={!canSubmit || isLoading}
             className={`${TOP_BAR_BUTTON_CLASS} ${
               status === 'published'
@@ -335,11 +331,7 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
                 : 'bg-gray-600 text-white hover:bg-gray-700 disabled:bg-gray-300'
             }`}
           >
-            {isLoading
-              ? 'Updating...'
-              : status === 'published'
-                ? 'Update & Publish'
-                : 'Update Draft'}
+            {getBlogUpdateButtonLabel(isLoading, status)}
           </Button>
         </div>
       </div>
@@ -350,10 +342,14 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="blog-edit-title"
+                className="mb-2 block text-sm font-medium text-gray-700"
+              >
                 Title <span className="text-red-500">*</span>
               </label>
               <Input
+                id="blog-edit-title"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -381,10 +377,14 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
             {/* Summary and Category Row */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
               <div className="lg:col-span-3">
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="blog-edit-summary"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   Summary <span className="text-red-500">*</span>
                 </label>
                 <textarea
+                  id="blog-edit-summary"
                   value={summary}
                   onChange={(e) => setSummary(e.target.value)}
                   className={`h-24 w-full resize-none rounded-lg border px-4 py-3 text-sm transition-colors focus:ring-2 focus:outline-none ${
@@ -409,10 +409,14 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="blog-edit-category"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   Category
                 </label>
                 <select
+                  id="blog-edit-category"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className={TEXT_INPUT_CLASS}
@@ -429,10 +433,14 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
             {/* Tags and Status Row */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               <div className="lg:col-span-2">
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="blog-edit-tags"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   Tags
                 </label>
                 <Input
+                  id="blog-edit-tags"
                   type="text"
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
@@ -445,10 +453,14 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="blog-edit-status"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   Status
                 </label>
                 <select
+                  id="blog-edit-status"
                   value={status}
                   onChange={(e) =>
                     setStatus(e.target.value as 'draft' | 'published')
@@ -463,15 +475,14 @@ const BlogEditForm = ({ blog, onSuccess }: BlogEditFormProps) => {
 
             {/* Cover Image */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
+              <p className="mb-2 block text-sm font-medium text-gray-700">
                 Cover Image
-              </label>
+              </p>
               <BlogImageUpload
                 value={coverImage}
                 onChange={handleCoverFileSelect}
                 placeholder="Upload your blog cover image..."
                 className="w-full"
-                uploadType="cover"
               />
               <ImageUploadCropModal
                 show={showCoverCrop}
@@ -631,9 +642,7 @@ interface ContentBlockEditorProps {
   onRemove: () => void
   onMoveUp?: () => void
   onMoveDown?: () => void
-  onImageChange: (
-    blockId: string
-  ) => (fileOrUrl: string | File | undefined) => void
+  onImageChange: (blockId: string) => (fileOrUrl: ImageUploadValue) => void
 }
 
 const ContentBlockEditor = ({
@@ -911,10 +920,14 @@ const ContentBlockEditor = ({
         {block.type === 'code' && (
           <div className="space-y-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor={`blog-block-${block.id}-language`}
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Language
               </label>
               <input
+                id={`blog-block-${block.id}-language`}
                 type="text"
                 value={block.metadata?.language || ''}
                 onChange={(e) =>
@@ -927,10 +940,14 @@ const ContentBlockEditor = ({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor={`blog-block-${block.id}-code`}
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Code
               </label>
               <textarea
+                id={`blog-block-${block.id}-code`}
                 value={block.content}
                 onChange={(e) => onUpdate({ content: e.target.value })}
                 className="w-full rounded border border-neutral-200 bg-gray-900 p-3 font-mono text-sm leading-relaxed text-gray-100"
@@ -939,10 +956,14 @@ const ContentBlockEditor = ({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor={`blog-block-${block.id}-code-caption`}
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Caption (optional)
               </label>
               <input
+                id={`blog-block-${block.id}-code-caption`}
                 type="text"
                 value={block.metadata?.caption || ''}
                 onChange={(e) =>
@@ -960,22 +981,25 @@ const ContentBlockEditor = ({
         {block.type === 'image' && (
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-xs font-medium text-gray-700">
+              <p className="mb-2 block text-xs font-medium text-gray-700">
                 Image
-              </label>
+              </p>
               <BlogImageUpload
                 value={block.metadata?.url}
                 onChange={onImageChange(block.id)}
                 placeholder="Upload an image for your blog..."
                 className="w-full"
-                uploadType="content"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor={`blog-block-${block.id}-alt`}
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Alt Text
               </label>
               <input
+                id={`blog-block-${block.id}-alt`}
                 type="text"
                 value={block.metadata?.alt || ''}
                 onChange={(e) =>
@@ -988,10 +1012,14 @@ const ContentBlockEditor = ({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor={`blog-block-${block.id}-image-caption`}
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Caption (optional)
               </label>
               <input
+                id={`blog-block-${block.id}-image-caption`}
                 type="text"
                 value={block.metadata?.caption || ''}
                 onChange={(e) =>
@@ -1009,10 +1037,14 @@ const ContentBlockEditor = ({
         {block.type === 'video' && (
           <div className="space-y-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor={`blog-block-${block.id}-video-url`}
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Video URL
               </label>
               <input
+                id={`blog-block-${block.id}-video-url`}
                 type="url"
                 value={block.metadata?.url || ''}
                 onChange={(e) =>
@@ -1025,10 +1057,14 @@ const ContentBlockEditor = ({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor={`blog-block-${block.id}-video-caption`}
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Caption (optional)
               </label>
               <input
+                id={`blog-block-${block.id}-video-caption`}
                 type="text"
                 value={block.metadata?.caption || ''}
                 onChange={(e) =>

@@ -1,14 +1,15 @@
 'use client'
 
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { UserInterface } from '@/interfaces'
+import type { DiscoverUser } from '@/interfaces'
 import { useFollow } from '@/lib/hooks/useFollow'
 import {
   profileHrefFromUsername,
   usernameToDisplayHandle
 } from '@/lib/profileHref'
+import { getFollowButtonLabel } from '@/utils/displayFormat'
 import { useQuery } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { FaHashtag } from 'react-icons/fa'
@@ -17,23 +18,14 @@ import Avatar from '@/components/shared/Avatar'
 import Button from '@/components/shared/Button'
 
 // User suggestion card with real-time follow state
-const UserSuggestion = ({
-  user,
-  onFollowChange
-}: {
-  user: UserInterface & {
-    isTrending?: boolean
-    isRecentActive?: boolean
-    isNew?: boolean
-  }
-  onFollowChange?: (userId: string, isFollowing: boolean) => void
-}) => {
-  const { isFollowing, follow, loading } = useFollow(user._id)
+const UserSuggestion = ({ user }: { user: DiscoverUser }) => {
+  const { isFollowing, follow, unfollow, loading } = useFollow(user._id)
 
-  const handleFollow = async () => {
-    const result = await follow(undefined)
-    if (onFollowChange && result !== undefined) {
-      onFollowChange(user._id, result)
+  const handleFollow = () => {
+    if (isFollowing) {
+      unfollow()
+    } else {
+      follow()
     }
   }
 
@@ -99,7 +91,7 @@ const UserSuggestion = ({
         onClick={handleFollow}
         disabled={loading}
       >
-        {isFollowing ? 'Following' : loading ? 'Following...' : 'Follow'}
+        {getFollowButtonLabel(isFollowing, loading)}
       </Button>
     </div>
   )
@@ -144,7 +136,7 @@ const TrendingPostPreview = ({ post }: { post: any }) => {
     }
 
     // If content is an object with text property, return the text
-    if (typeof post.content === 'object' && post.content.text) {
+    if (typeof post.content === 'object' && post.content?.text) {
       return post.content.text
     }
 
@@ -211,7 +203,7 @@ const TrendingPostPreview = ({ post }: { post: any }) => {
 // Activity item
 const ActivityItem = ({ activity }: { activity: any }) => {
   // Ensure we have valid activity data
-  if (!activity || !activity.user) {
+  if (!activity?.user) {
     return null
   }
 
@@ -271,7 +263,7 @@ const ActivityItem = ({ activity }: { activity: any }) => {
 }
 
 // Main RightNav component (simplified - no Ably for now)
-const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
+const RightNav = ({ otherUsers }: { otherUsers: DiscoverUser[] }) => {
   const { data: trendingTopics, isLoading: topicsLoading } = useQuery({
     queryKey: ['trendingTopics'],
     queryFn: async () => {
@@ -311,23 +303,111 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
   })
 
   const handleTopicClick = useCallback((tag: string) => {
-    window.location.href = `/?topic=${encodeURIComponent(tag)}`
+    globalThis.location.href = `/?topic=${encodeURIComponent(tag)}`
   }, [])
 
-  // Debug: Check for duplicates in otherUsers
-  useEffect(() => {
-    if (otherUsers && otherUsers.length > 0) {
-      const userIds = otherUsers.map((user) => user._id)
-      const uniqueIds = new Set(userIds)
-      if (userIds.length !== uniqueIds.size) {
-        console.warn(
-          'Duplicate users found in otherUsers:',
-          userIds.filter((id, index) => userIds.indexOf(id) !== index)
-        )
-        console.warn('otherUsers:', otherUsers)
-      }
+  const renderTrendingTopics = () => {
+    if (topicsLoading) {
+      return (
+        <div className="space-y-1.5">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={`topic-loading-${i}`}
+              className="h-8 animate-pulse rounded-md bg-gray-100"
+            />
+          ))}
+        </div>
+      )
     }
-  }, [otherUsers])
+
+    if (!(trendingTopics || []).length) {
+      return (
+        <p className="py-2 text-center text-xs text-gray-500">
+          No trending topics
+        </p>
+      )
+    }
+
+    return (trendingTopics || [])
+      .slice(0, 5)
+      .map((topic: { tag: string; count: number }, index: number) => (
+        <TrendingTopic
+          key={`rightnav-topic-${topic.tag}-${index}`}
+          topic={topic}
+          onClick={handleTopicClick}
+        />
+      ))
+  }
+
+  const renderTrendingPosts = () => {
+    if (trendingPostsLoading) {
+      return (
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={`trending-loading-${i}`} className="flex gap-2">
+              <div className="size-10 shrink-0 animate-pulse rounded bg-gray-100" />
+              <div className="min-w-0 flex-1 space-y-1.5 py-0.5">
+                <div className="h-3 w-full animate-pulse rounded bg-gray-100" />
+                <div className="h-2.5 w-20 animate-pulse rounded bg-gray-100" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )
+    }
+
+    if (!(trendingPosts || []).length) {
+      return (
+        <p className="py-2 text-center text-xs text-gray-500">
+          No trending posts
+        </p>
+      )
+    }
+
+    return (trendingPosts || [])
+      .slice(0, 3)
+      .map((post: { _id: string }) => (
+        <TrendingPostPreview
+          key={`rightnav-trending-${post._id}`}
+          post={post}
+        />
+      ))
+  }
+
+  const renderActivities = () => {
+    if (activitiesLoading) {
+      return (
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={`activity-loading-${i}`} className="flex gap-2">
+              <div className="size-7 shrink-0 animate-pulse rounded-full bg-gray-100" />
+              <div className="min-w-0 flex-1 space-y-1.5 py-0.5">
+                <div className="h-3 w-full animate-pulse rounded bg-gray-100" />
+                <div className="h-2.5 w-16 animate-pulse rounded bg-gray-100" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )
+    }
+
+    if (!(activities || []).length) {
+      return (
+        <p className="py-2 text-center text-xs text-gray-500">
+          No recent activity
+        </p>
+      )
+    }
+
+    return (activities || [])
+      .slice(0, 5)
+      .map((activity: { _id?: string; id?: string }, index: number) => (
+        <ActivityItem
+          key={`rightnav-activity-${activity._id || activity.id || index}`}
+          activity={activity}
+        />
+      ))
+  }
 
   return (
     <aside className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-200 hidden h-full w-[260px] flex-shrink-0 overflow-y-auto lg:block xl:w-[288px]">
@@ -365,32 +445,7 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
           <h2 className="mb-2 text-xs font-bold text-gray-900">
             Trending Topics
           </h2>
-          <div className="flex flex-col gap-0.5">
-            {topicsLoading ? (
-              <div className="space-y-1.5">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={`topic-loading-${i}`}
-                    className="h-8 animate-pulse rounded-md bg-gray-100"
-                  ></div>
-                ))}
-              </div>
-            ) : trendingTopics.length > 0 ? (
-              (trendingTopics || [])
-                .slice(0, 5)
-                .map((topic: any, index: number) => (
-                  <TrendingTopic
-                    key={`rightnav-topic-${topic.tag}-${index}`}
-                    topic={topic}
-                    onClick={handleTopicClick}
-                  />
-                ))
-            ) : (
-              <p className="py-2 text-center text-xs text-gray-500">
-                No trending topics
-              </p>
-            )}
-          </div>
+          <div className="flex flex-col gap-0.5">{renderTrendingTopics()}</div>
         </div>
 
         {/* Trending Posts Preview */}
@@ -398,34 +453,7 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
           <h2 className="mb-2 text-xs font-bold text-gray-900">
             Trending Posts
           </h2>
-          <div className="flex flex-col gap-0.5">
-            {trendingPostsLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={`trending-loading-${i}`} className="flex gap-2">
-                    <div className="size-10 shrink-0 animate-pulse rounded bg-gray-100" />
-                    <div className="min-w-0 flex-1 space-y-1.5 py-0.5">
-                      <div className="h-3 w-full animate-pulse rounded bg-gray-100" />
-                      <div className="h-2.5 w-20 animate-pulse rounded bg-gray-100" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : trendingPosts.length > 0 ? (
-              (trendingPosts || [])
-                .slice(0, 3)
-                .map((post: any) => (
-                  <TrendingPostPreview
-                    key={`rightnav-trending-${post._id}`}
-                    post={post}
-                  />
-                ))
-            ) : (
-              <p className="py-2 text-center text-xs text-gray-500">
-                No trending posts
-              </p>
-            )}
-          </div>
+          <div className="flex flex-col gap-0.5">{renderTrendingPosts()}</div>
         </div>
 
         {/* Activity Feed */}
@@ -433,34 +461,7 @@ const RightNav = ({ otherUsers }: { otherUsers: UserInterface[] }) => {
           <h2 className="mb-2 text-xs font-bold text-gray-900">
             Recent Activity
           </h2>
-          <div className="flex flex-col gap-0.5">
-            {activitiesLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={`activity-loading-${i}`} className="flex gap-2">
-                    <div className="size-7 shrink-0 animate-pulse rounded-full bg-gray-100" />
-                    <div className="min-w-0 flex-1 space-y-1.5 py-0.5">
-                      <div className="h-3 w-full animate-pulse rounded bg-gray-100" />
-                      <div className="h-2.5 w-16 animate-pulse rounded bg-gray-100" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : activities.length > 0 ? (
-              (activities || [])
-                .slice(0, 5)
-                .map((activity: any, index: number) => (
-                  <ActivityItem
-                    key={`rightnav-activity-${activity._id || activity.id || index}`}
-                    activity={activity}
-                  />
-                ))
-            ) : (
-              <p className="py-2 text-center text-xs text-gray-500">
-                No recent activity
-              </p>
-            )}
-          </div>
+          <div className="flex flex-col gap-0.5">{renderActivities()}</div>
         </div>
       </div>
     </aside>

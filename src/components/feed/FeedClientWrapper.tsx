@@ -1,13 +1,7 @@
 'use client'
 
-import {
-  FormEvent,
-  Fragment,
-  useEffect,
-  useMemo,
-  useReducer,
-  useState
-} from 'react'
+import { Fragment, useEffect, useMemo, useReducer, useState } from 'react'
+import type { SubmitEvent } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -98,7 +92,7 @@ const FeedClientWrapper = () => {
   })
 
   // Post submit handler (calls API, resets state, real-time handles feed update)
-  const submitPost = async (e: FormEvent) => {
+  const submitPost = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     dispatchState({ isLoading: true })
     try {
