@@ -1,0 +1,20 @@
+[
+  {
+    "route": "/api/users/topics-trending",
+    "method": "GET",
+    "status": 200,
+    "responseBody": {
+      "success": true,
+      "topics": [
+        {
+          "tag": "tech",
+          "count": 24
+        },
+        {
+          "tag": "design",
+          "count": 12
+        }
+      ]
+    }
+  }
+]

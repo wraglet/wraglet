@@ -1,0 +1,53 @@
+[
+  {
+    "route": "/api/users",
+    "method": "GET",
+    "status": 200,
+    "responseBody": {
+      "success": true,
+      "users": [
+        {
+          "_id": "507f1f77bcf86cd799439021",
+          "firstName": "Grace",
+          "lastName": "Hopper",
+          "username": "@grace",
+          "profilePicture": null,
+          "gender": "Female"
+        }
+      ]
+    }
+  },
+  {
+    "route": "/api/users",
+    "method": "PATCH",
+    "status": 200,
+    "responseBody": {
+      "success": true,
+      "user": {
+        "_id": "507f1f77bcf86cd799439099",
+        "email": "ada@example.com",
+        "username": "@ada",
+        "firstName": "Ada",
+        "lastName": "Lovelace",
+        "gender": "Female",
+        "pronoun": "They/Them",
+        "profilePicture": {
+          "url": "https://cdn.example/avatar.jpg",
+          "key": "avatars/u1.jpg"
+        },
+        "coverPhoto": null,
+        "photoCollection": [],
+        "publicProfileVisible": true,
+        "bio": "Mock user"
+      }
+    }
+  },
+  {
+    "route": "/api/users",
+    "method": "GET",
+    "status": 401,
+    "responseBody": {
+      "error": "Unauthorized"
+    }
+  }
+]

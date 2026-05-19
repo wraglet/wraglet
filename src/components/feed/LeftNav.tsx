@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import type { Gender } from '@/interfaces'
 import { useIsClient } from '@/lib/hooks/useIsClient'
 import useUserStore from '@/store/user'
+import { getNavItemRadiusClass } from '@/utils/displayFormat'
 
 import Avatar from '@/components/shared/Avatar'
 import {
@@ -45,7 +46,7 @@ const LeftSideNav = () => {
             className="group flex h-12 items-center rounded-lg border border-neutral-200 bg-white px-3 transition hover:bg-gray-400"
           >
             <div className="flex items-center space-x-3">
-              {user && user.gender ? (
+              {user?.gender ? (
                 <Avatar
                   gender={user.gender as Gender}
                   className="group-hover:border-white"
@@ -71,9 +72,7 @@ const LeftSideNav = () => {
                 <button
                   key={item.key}
                   onClick={() => handleTabClick(item.key)}
-                  className={`group h-12 w-full transition ${
-                    isFirst ? 'rounded-t-lg' : isLast ? 'rounded-b-lg' : ''
-                  } ${
+                  className={`group h-12 w-full transition ${getNavItemRadiusClass(isFirst, isLast)} ${
                     isActive
                       ? 'bg-blue-500 text-white'
                       : 'bg-white hover:bg-gray-400'

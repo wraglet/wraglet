@@ -28,6 +28,26 @@ interface ChangelogEntry {
 
 const changelogData: ChangelogEntry[] = [
   {
+    date: '2026-05-19',
+    version: '0.9.3',
+    title: 'API contracts, mock REST catalog, and test hardening',
+    description:
+      'Zod response contracts and static mock fixtures for App Router APIs, MSW-backed Vitest coverage, route handler tests, and Sonar-driven UI fixes for blog forms and reaction controls',
+    features: [
+      'Zod contracts under src/contracts for feed, blogs, shares, users, messages, notifications, search, and related API shapes',
+      'Mock REST catalog (route.json per handler) with MSW adapters for Vitest and Storybook; coverage enforced for 33 of 34 API routes',
+      'Vitest route tests for major /api endpoints; catalogContracts and routeCoverage guard fixture drift',
+      'docs/API_CONTRACTS.md index aligned with populate snippets and contract modules',
+      'API handlers aligned with contracts (trending/suggested users, activities, conversations, messages, notifications, register, media uploads)',
+      'Blog create/edit forms: SubmitEvent, accessible labels, optional chaining, and async submit without void operator',
+      'Feed and blog reaction controls: native buttons, keyboard-safe remove/toggle, optional chaining on reaction authors',
+      'Shared displayFormat helpers, CurrentUserAvatar, DiscoverUser typing, and post/share preview utilities',
+      'ESLint SonarJS rules in CI; 337 Vitest tests passing with MSW global setup'
+    ],
+    type: 'minor',
+    icon: <Code className="h-6 w-6" />
+  },
+  {
     date: '2026-05-04',
     version: '0.9.2',
     title: 'UI polish, mobile layouts, and Storybook aligned with production',

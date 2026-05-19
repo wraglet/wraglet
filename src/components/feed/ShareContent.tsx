@@ -8,6 +8,7 @@ import {
 } from '@/lib/profileHref'
 import { IPost } from '@/models/Post'
 import { IShare } from '@/models/Share'
+import { buildShareAsPost } from '@/utils/buildShareAsPost'
 import { ChannelProvider } from 'ably/react'
 import { formatDistanceToNow } from 'date-fns'
 import { HiDotsHorizontal } from 'react-icons/hi'
@@ -43,26 +44,7 @@ const ShareContent = ({ share }: ShareContentProps) => {
   const originalAuthorHref = profileHrefFromUsername(
     share.originalPost.author.username
   )
-  // Transform share to look like a post for interactions
-  const shareAsPost = {
-    ...share,
-    _id: share._id,
-    content: share.originalPost.content,
-    author: share.originalPost.author,
-    audience: share.originalPost.audience,
-    // Use share's own reactions and comments, not original post's
-    reactions: share.reactions || [],
-    comments: share.comments || [],
-    votes: (share.votes || []).map((vote) => ({
-      ...vote,
-      createdAt: vote.createdAt || new Date(),
-      updatedAt: vote.updatedAt || new Date()
-    })),
-    createdAt: share.createdAt || share.originalPost.createdAt,
-    updatedAt: share.updatedAt || share.originalPost.updatedAt,
-    // Add originalPost property to identify this as a share
-    originalPost: share.originalPost
-  }
+  const shareAsPost = buildShareAsPost(share)
 
   return (
     <>

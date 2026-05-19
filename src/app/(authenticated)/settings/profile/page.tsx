@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { UserInterface } from '@/interfaces'
+import type { Gender } from '@/interfaces'
 import useUserStore from '@/store/user'
+import type { User } from '@/store/user'
+import { formatDisplayUsername } from '@/utils/displayFormat'
 import { CheckIcon, PencilIcon, UserIcon } from '@heroicons/react/24/outline'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -54,15 +56,14 @@ const ProfileSettings = () => {
   // Update form when user data is available
   useEffect(() => {
     if (user) {
-      const typedUser = user as unknown as UserInterface
       form.reset({
-        firstName: typedUser.firstName || '',
-        lastName: typedUser.lastName || '',
-        bio: typedUser.bio || '',
-        gender: (typedUser.gender as 'Male' | 'Female' | 'Others') || 'Male',
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        bio: user.bio || '',
+        gender: (user.gender as 'Male' | 'Female' | 'Others') || 'Male',
         pronoun:
-          (typedUser.pronoun as '' | 'She/Her' | 'He/Him' | 'They/Them') || '',
-        publicProfileVisible: typedUser.publicProfileVisible ?? true
+          (user.pronoun as '' | 'She/Her' | 'He/Him' | 'They/Them') || '',
+        publicProfileVisible: user.publicProfileVisible ?? true
       })
     }
   }, [user, form])
@@ -110,7 +111,7 @@ const ProfileSettings = () => {
     )
   }
 
-  const typedUser = user as unknown as UserInterface
+  const profileUser: User = user
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-4">
@@ -146,9 +147,9 @@ const ProfileSettings = () => {
           <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
             <div className="relative shrink-0">
               <Avatar
-                src={typedUser.profilePicture?.url || null}
-                gender={typedUser.gender}
-                alt={`${typedUser.firstName}'s Profile`}
+                src={profileUser.profilePicture?.url || null}
+                gender={profileUser.gender as Gender}
+                alt={`${profileUser.firstName}'s Profile`}
                 className="h-12 w-12 ring-2 ring-sky-100 sm:h-14 sm:w-14"
               />
               <div className="absolute -right-1 -bottom-1 rounded-full bg-[#0EA5E9] p-1 sm:p-1.5">
@@ -158,19 +159,15 @@ const ProfileSettings = () => {
             <div className="min-w-0 flex-1 overflow-hidden">
               <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
                 <span className="line-clamp-2 break-words sm:line-clamp-1">
-                  {typedUser.firstName} {typedUser.lastName}
+                  {profileUser.firstName} {profileUser.lastName}
                 </span>
               </h2>
               <p className="truncate text-xs text-gray-500 sm:text-sm">
-                {typedUser.username
-                  ? typedUser.username.startsWith('@')
-                    ? typedUser.username
-                    : `@${typedUser.username}`
-                  : ''}
+                {formatDisplayUsername(profileUser.username)}
               </p>
-              {typedUser.bio && (
+              {profileUser.bio && (
                 <p className="mt-1 line-clamp-2 text-xs text-gray-600 italic">
-                  &ldquo;{typedUser.bio}&rdquo;
+                  &ldquo;{profileUser.bio}&rdquo;
                 </p>
               )}
             </div>

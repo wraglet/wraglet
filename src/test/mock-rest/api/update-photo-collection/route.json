@@ -1,0 +1,32 @@
+[
+  {
+    "route": "/api/update-photo-collection",
+    "method": "PATCH",
+    "status": 200,
+    "description": "action: update — replace collection",
+    "responseBody": {
+      "_id": "507f1f77bcf86cd799439099",
+      "email": "ada@example.com",
+      "username": "@ada",
+      "firstName": "Ada",
+      "lastName": "Lovelace",
+      "gender": "Female",
+      "pronoun": "They/Them",
+      "profilePicture": {
+        "url": "https://cdn.example/avatar.jpg",
+        "key": "avatars/u1.jpg"
+      },
+      "coverPhoto": null,
+      "photoCollection": [
+        {
+          "url": "https://cdn.example/photos/1.jpg",
+          "key": "photos/1.jpg",
+          "type": "post",
+          "createdAt": "2026-03-01T00:00:00.000Z"
+        }
+      ],
+      "publicProfileVisible": true,
+      "bio": "Mock user"
+    }
+  }
+]

@@ -4,6 +4,7 @@ import { Fragment, useState } from 'react'
 import type { Gender } from '@/interfaces'
 import type { IPost } from '@/models/Post'
 import useUserStore from '@/store/user'
+import { isNavigatorShareCancelled } from '@/utils/displayFormat'
 import {
   Dialog,
   DialogPanel,
@@ -136,7 +137,7 @@ const ShareModalWithAbly = ({
   }
 
   const handleExternalShare = async (platform: string) => {
-    const postUrl = `${window.location.origin}/post/${post._id}`
+    const postUrl = `${globalThis.location.origin}/post/${post._id}`
     const shareText = `Check out this post by ${post.author.firstName} ${post.author.lastName} on Wraglet!`
 
     switch (platform) {
@@ -145,6 +146,7 @@ const ShareModalWithAbly = ({
           await navigator.clipboard.writeText(postUrl)
           toast.success('Link copied to clipboard!')
         } catch (error) {
+          console.error('Failed to copy post link:', error)
           toast.error('Failed to copy link')
         }
         break
@@ -157,24 +159,27 @@ const ShareModalWithAbly = ({
               url: postUrl
             })
           } catch (error) {
-            // User cancelled or error occurred
+            if (!isNavigatorShareCancelled(error)) {
+              console.error('Native share failed:', error)
+              toast.error('Failed to share')
+            }
           }
         }
         break
       case 'twitter':
-        window.open(
+        globalThis.open(
           `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(postUrl)}`,
           '_blank'
         )
         break
       case 'facebook':
-        window.open(
+        globalThis.open(
           `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`,
           '_blank'
         )
         break
       case 'whatsapp':
-        window.open(
+        globalThis.open(
           `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + postUrl)}`,
           '_blank'
         )

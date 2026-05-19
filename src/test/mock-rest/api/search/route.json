@@ -1,0 +1,36 @@
+[
+  {
+    "route": "/api/search",
+    "method": "GET",
+    "status": 200,
+    "query": "q=ada",
+    "responseBody": {
+      "success": true,
+      "results": [
+        {
+          "_id": "507f1f77bcf86cd799439099",
+          "type": "user",
+          "title": "Ada Lovelace",
+          "subtitle": "@ada",
+          "gender": "Female",
+          "url": "/@ada",
+          "relevanceScore": 0.95
+        }
+      ],
+      "totalCount": 1,
+      "query": "ada"
+    }
+  },
+  {
+    "route": "/api/search",
+    "method": "GET",
+    "status": 500,
+    "description": "Search failure envelope",
+    "responseBody": {
+      "success": false,
+      "results": [],
+      "totalCount": 0,
+      "query": ""
+    }
+  }
+]

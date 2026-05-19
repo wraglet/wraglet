@@ -1,8 +1,7 @@
 'use client'
 
-import { FormEvent, useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
-import type { Gender } from '@/interfaces'
+import { useEffect, useRef, useState } from 'react'
+import type { SubmitEvent } from 'react'
 import { profileHrefFromUsername } from '@/lib/profileHref'
 import { IPost } from '@/models/Post'
 import useUserStore from '@/store/user'
@@ -25,8 +24,8 @@ import { FaRegComment, FaRegHeart } from 'react-icons/fa6'
 import { LuArrowBigDown, LuArrowBigUp } from 'react-icons/lu'
 
 import CommentComponent from '@/components/feed/Comment'
-import Avatar from '@/components/shared/Avatar'
 import Button from '@/components/shared/Button'
+import CurrentUserAvatar from '@/components/shared/CurrentUserAvatar'
 import Input from '@/components/shared/Input'
 import ReactionIcon from '@/components/shared/ReactionIcon'
 
@@ -160,17 +159,8 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
     }
   ]
 
-  const [height, setHeight] = useState<string>('0px')
   const content = useRef<HTMLDivElement | null>(null)
   const [reactionGroups, setReactionGroups] = useState<ReactionGroup[]>([])
-
-  useEffect(() => {
-    if (showCommentInput && content.current) {
-      setHeight(`${content.current.scrollHeight}px`)
-    } else {
-      setHeight('0px')
-    }
-  }, [showCommentInput, post.comments])
 
   useEffect(() => {
     if (!post.reactions) return
@@ -189,7 +179,7 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
       groups[reaction.type].count++
 
       // Add user to the group if they reacted - add null safety checks
-      if (user && reaction.userId && reaction.userId._id === user._id) {
+      if (reaction.userId?._id === user?._id) {
         const userData = reaction.userId as User
         groups[reaction.type].users.push(userData)
       }
@@ -200,7 +190,6 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
 
   const toggleComment = () => {
     setShowCommentInput((prev) => !prev)
-    setHeight(showCommentInput ? `${content.current?.scrollHeight}px` : '0px')
   }
 
   const handleReactionClick = () => {
@@ -214,9 +203,7 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
       // Check if user has already reacted with this type
       const existingReaction = post.reactions.find(
         (reaction) =>
-          reaction.userId &&
-          reaction.userId._id === user._id &&
-          reaction.type === type
+          reaction.userId?._id === user._id && reaction.type === type
       )
 
       if (existingReaction) {
@@ -241,12 +228,10 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
         const updatedPost = response.data as IPost
         setPost((prev) => mergePostClientUpdate(prev, updatedPost))
 
-        if (channel && channel.publish) {
-          await channel.publish({
-            name: 'reaction',
-            data: updatedPost
-          })
-        }
+        await channel?.publish?.({
+          name: 'reaction',
+          data: updatedPost
+        })
       }
     } catch (error) {
       console.error('Error updating reaction:', error)
@@ -271,12 +256,10 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
       const updatedPost = response.data as IPost
       setPost((prev) => mergePostClientUpdate(prev, updatedPost))
 
-      if (channel && channel.publish) {
-        await channel.publish({
-          name: 'reaction',
-          data: updatedPost
-        })
-      }
+      await channel?.publish?.({
+        name: 'reaction',
+        data: updatedPost
+      })
     } catch (error) {
       console.error('Error removing reaction:', error)
       toast.error('Failed to remove reaction')
@@ -318,7 +301,7 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
     }
   }
 
-  const handleCommentSubmit = async (e: FormEvent) => {
+  const handleCommentSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!comment.trim()) return
 
@@ -340,9 +323,7 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
       setShowCommentInput(true)
 
       // Publish to Ably channel. The useChannel hook will handle adding it to the state.
-      if (channel && channel.publish) {
-        await channel.publish('comment', newComment)
-      }
+      await channel?.publish?.('comment', newComment)
     } catch (error) {
       console.error('Error posting comment:', error)
       toast.error('Failed to post comment')
@@ -385,11 +366,9 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
     ) || {}
 
   // Get user's reaction if any
-  const userReaction =
-    user &&
-    post.reactions?.find(
-      (reaction) => reaction.userId && reaction.userId._id === user._id
-    )
+  const userReaction = post.reactions?.find(
+    (reaction) => reaction.userId?._id === user?._id
+  )
 
   const currentUserProfileHref = user?.username
     ? profileHrefFromUsername(user.username)
@@ -446,21 +425,28 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
       <div className="border-t border-solid border-[#E7ECF0] px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="group relative">
-            <div
-              ref={refs.setReference}
-              role="button"
-              tabIndex={0}
-              className="flex items-center gap-1 rounded-full border border-solid border-gray-400 px-2 py-0.5"
-              onClick={handleReactionClick}
-            >
+            <div className="flex items-center gap-1">
               {userReaction ? (
-                <ReactionIcon
-                  type={userReaction.type}
-                  onClick={() => removeReaction()}
-                />
-              ) : (
-                <FaRegHeart className="cursor-pointer text-xs text-gray-600" />
-              )}
+                <button
+                  type="button"
+                  className="flex items-center rounded-full border border-solid border-gray-400 px-2 py-0.5"
+                  aria-label={`Remove ${userReaction.type} reaction`}
+                  onClick={() => {
+                    removeReaction().catch(() => {})
+                  }}
+                >
+                  <ReactionIcon type={userReaction.type} />
+                </button>
+              ) : null}
+              <button
+                type="button"
+                ref={refs.setReference}
+                className="flex items-center rounded-full border border-solid border-gray-400 px-2 py-0.5"
+                aria-label={userReaction ? 'Change reaction' : 'Add reaction'}
+                onClick={handleReactionClick}
+              >
+                <FaRegHeart className="text-xs text-gray-600" />
+              </button>
             </div>
 
             {showEmojis && (
@@ -566,28 +552,12 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
           onSubmit={handleCommentSubmit}
           className="flex items-center gap-2 border-t border-solid border-[#E7ECF0] pt-4"
         >
-          {user && user.gender ? (
-            currentUserProfileHref ? (
-              <Link
-                href={currentUserProfileHref}
-                className="shrink-0 rounded-full ring-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-[#0EA5E9]/40"
-              >
-                <Avatar
-                  gender={user.gender as Gender}
-                  size="h-6 w-6"
-                  src={user.profilePicture?.url || null}
-                />
-              </Link>
-            ) : (
-              <Avatar
-                gender={user.gender as Gender}
-                size="h-6 w-6"
-                src={user.profilePicture?.url || null}
-              />
-            )
-          ) : (
-            <div className="h-6 w-6 animate-pulse rounded-full bg-gray-200" />
-          )}
+          <CurrentUserAvatar
+            user={user}
+            profileHref={currentUserProfileHref}
+            size="h-6 w-6"
+            linkClassName="shrink-0 rounded-full ring-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-[#0EA5E9]/40"
+          />
           <div className="flex-1">
             <Input
               type="text"

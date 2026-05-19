@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { UserInterface } from '@/interfaces'
+import type { DiscoverUser } from '@/interfaces'
 
 import MobileDiscoverDrawer from '@/components/feed/MobileDiscoverDrawer'
 import MobileDiscoverFAB from '@/components/feed/MobileDiscoverFAB'
 
 interface MobileResponsiveWrapperProps {
-  otherUsers: UserInterface[]
+  otherUsers: DiscoverUser[]
 }
 
 const MobileResponsiveWrapper = ({

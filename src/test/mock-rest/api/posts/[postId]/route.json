@@ -1,0 +1,28 @@
+[
+  {
+    "route": "/api/posts/:postId",
+    "method": "GET",
+    "status": 200,
+    "responseBody": {
+      "_id": "507f1f77bcf86cd799439011",
+      "content": {
+        "text": "Single post"
+      },
+      "audience": "public",
+      "author": {
+        "_id": "507f1f77bcf86cd799439099",
+        "firstName": "Ada",
+        "lastName": "Lovelace",
+        "username": "@ada",
+        "gender": "Female",
+        "pronoun": "They/Them",
+        "profilePicture": null,
+        "coverPhoto": null
+      },
+      "comments": [],
+      "reactions": [],
+      "votes": [],
+      "createdAt": "2026-03-01T00:00:00.000Z"
+    }
+  }
+]

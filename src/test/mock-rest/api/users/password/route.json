@@ -1,0 +1,19 @@
+[
+  {
+    "route": "/api/users/password",
+    "method": "PATCH",
+    "status": 200,
+    "responseBody": {
+      "success": true
+    }
+  },
+  {
+    "route": "/api/users/password",
+    "method": "PATCH",
+    "status": 400,
+    "description": "Validation error",
+    "responseBody": {
+      "error": "Current password is incorrect"
+    }
+  }
+]

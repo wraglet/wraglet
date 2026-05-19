@@ -1,0 +1,20 @@
+[
+  {
+    "route": "/api/users/people-you-may-know",
+    "method": "GET",
+    "status": 200,
+    "responseBody": {
+      "success": true,
+      "users": [
+        {
+          "_id": "507f1f77bcf86cd799439022",
+          "firstName": "Alan",
+          "lastName": "Turing",
+          "username": "@alan",
+          "profilePicture": null,
+          "gender": "Male"
+        }
+      ]
+    }
+  }
+]

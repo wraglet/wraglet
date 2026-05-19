@@ -17,7 +17,7 @@ export const GET = async (request: Request) => {
     }
 
     const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const limit = Number.parseInt(searchParams.get('limit') || '20', 10)
     const cursor = searchParams.get('cursor')
     const unreadOnly = searchParams.get('unreadOnly') === 'true'
 
@@ -39,14 +39,12 @@ export const GET = async (request: Request) => {
 
     const hasMore = notifications.length > limit
     const notificationsToReturn = hasMore
-      ? notifications.slice(0, -1)
+      ? notifications.slice(0, limit)
       : notifications
-    const nextCursor =
-      hasMore && notificationsToReturn.length > 0
-        ? notificationsToReturn[
-            notificationsToReturn.length - 1
-          ].createdAt.toISOString()
-        : null
+    const lastNotification = hasMore ? notifications.at(limit - 1) : undefined
+    const nextCursor = lastNotification
+      ? lastNotification.createdAt.toISOString()
+      : null
 
     // Get unread count
     const unreadCount = await Notification.countDocuments({

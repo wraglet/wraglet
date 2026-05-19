@@ -1,0 +1,22 @@
+[
+  {
+    "route": "/api/posts/:postId/comment",
+    "method": "POST",
+    "status": 200,
+    "responseBody": {
+      "_id": "507f1f77bcf86cd7994390aa",
+      "content": "Nice post!",
+      "author": {
+        "_id": "507f1f77bcf86cd799439099",
+        "firstName": "Ada",
+        "lastName": "Lovelace",
+        "username": "@ada",
+        "gender": "Female",
+        "pronoun": "They/Them",
+        "profilePicture": null
+      },
+      "post": "507f1f77bcf86cd799439011",
+      "createdAt": "2026-03-09T14:00:00.000Z"
+    }
+  }
+]

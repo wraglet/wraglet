@@ -1,0 +1,29 @@
+[
+  {
+    "route": "/api/users/trending",
+    "method": "GET",
+    "status": 200,
+    "responseBody": {
+      "success": true,
+      "users": [
+        {
+          "_id": "507f1f77bcf86cd799439020",
+          "firstName": "Trending",
+          "lastName": "User",
+          "username": "@trend",
+          "profilePicture": null,
+          "gender": "Female",
+          "followerCount": 128
+        }
+      ]
+    }
+  },
+  {
+    "route": "/api/users/trending",
+    "method": "GET",
+    "status": 401,
+    "responseBody": {
+      "error": "Unauthorized"
+    }
+  }
+]

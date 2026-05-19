@@ -10,7 +10,7 @@ import {
 
 type Props = {
   type: string
-  onClick: () => Promise<void>
+  onClick?: () => void | Promise<void>
 }
 
 const ReactionIcon = ({ type, onClick }: Props) => {
@@ -27,8 +27,17 @@ const ReactionIcon = ({ type, onClick }: Props) => {
 
   return (
     <SelectedIcon
-      className="cursor-pointer text-xs text-pink-600"
-      onClick={onClick}
+      className={`text-xs text-pink-600 ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={
+        onClick
+          ? () => {
+              const result = onClick()
+              if (result instanceof Promise) {
+                result.catch(() => {})
+              }
+            }
+          : undefined
+      }
     />
   )
 }

@@ -1,32 +1,27 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import client from '@/lib/db'
+import { getTrendingUsersWithFollowerCounts } from '@/lib/users/getTrendingUsersWithFollowerCounts'
 import User from '@/models/User'
 import { Types } from 'mongoose'
 
-export const GET = async (req: Request) => {
+export const GET = async (_req: Request) => {
   try {
     await client()
     const currentUser = await getCurrentUser()
     if (!currentUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    // Fetch trending users from the new API endpoint
-    const baseUrl = process.env.NEXTAUTH_URL
-    let trendingUsers: any[] = []
+    let trendingUsers: Awaited<
+      ReturnType<typeof getTrendingUsersWithFollowerCounts>
+    > = []
     try {
-      const trendingRes = await fetch(`${baseUrl}/api/users/trending`, {
-        headers: req.headers
-      })
-      if (trendingRes.ok) {
-        const trendingData = await trendingRes.json()
-        trendingUsers = trendingData.users || []
-      }
-    } catch (err) {
+      trendingUsers = await getTrendingUsersWithFollowerCounts(currentUser._id)
+    } catch {
       trendingUsers = []
     }
     // Random users (excluding current and trending)
-    const trendingIds = trendingUsers.map((u: any) => String(u._id))
+    const trendingIds = trendingUsers.map((u) => String(u._id))
     const randomUsers = await User.aggregate([
       {
         $match: {
@@ -51,7 +46,7 @@ export const GET = async (req: Request) => {
     ])
     // Filter out current user from trendingUsers as well
     const filteredTrending = trendingUsers.filter(
-      (u: any) => String(u._id) !== String(currentUser._id)
+      (u) => String(u._id) !== String(currentUser._id)
     )
     // Combine and shuffle
     const combined = [...filteredTrending, ...randomUsers]

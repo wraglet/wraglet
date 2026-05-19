@@ -4,6 +4,7 @@ import { Fragment, useState } from 'react'
 import type { BlogShareFeedPayload, Gender } from '@/interfaces'
 import { IBlog } from '@/models/Blog'
 import useUserStore from '@/store/user'
+import { isNavigatorShareCancelled } from '@/utils/displayFormat'
 import {
   Dialog,
   DialogPanel,
@@ -98,7 +99,7 @@ const BlogShareModal = ({
 
     setIsSharing(true)
     try {
-      const blogUrl = `${window.location.origin}/blog/${blog.slug}`
+      const blogUrl = `${globalThis.location.origin}/blog/${blog.slug}`
       const authorName =
         blog.author?.firstName && blog.author?.lastName
           ? `${blog.author.firstName} ${blog.author.lastName}`
@@ -152,7 +153,7 @@ const BlogShareModal = ({
   }
 
   const handleExternalShare = async (platform: string) => {
-    const blogUrl = `${window.location.origin}/blog/${blog.slug}`
+    const blogUrl = `${globalThis.location.origin}/blog/${blog.slug}`
     const shareText = `Check out "${blog.title}" by ${blog.author.firstName} ${blog.author.lastName} on Wraglet! ${blog.summary || ''}`
 
     switch (platform) {
@@ -161,6 +162,7 @@ const BlogShareModal = ({
           await navigator.clipboard.writeText(blogUrl)
           toast.success('Blog link copied to clipboard!')
         } catch (error) {
+          console.error('Failed to copy blog link:', error)
           toast.error('Failed to copy link')
         }
         break
@@ -173,24 +175,27 @@ const BlogShareModal = ({
               url: blogUrl
             })
           } catch (error) {
-            // User cancelled or error occurred
+            if (!isNavigatorShareCancelled(error)) {
+              console.error('Native share failed:', error)
+              toast.error('Failed to share')
+            }
           }
         }
         break
       case 'twitter':
-        window.open(
+        globalThis.open(
           `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(blogUrl)}`,
           '_blank'
         )
         break
       case 'facebook':
-        window.open(
+        globalThis.open(
           `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(blogUrl)}`,
           '_blank'
         )
         break
       case 'whatsapp':
-        window.open(
+        globalThis.open(
           `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + blogUrl)}`,
           '_blank'
         )

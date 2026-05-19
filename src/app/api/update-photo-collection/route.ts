@@ -85,11 +85,11 @@ export const PATCH = async (request: Request) => {
         })
       }
 
-      const updatedUser = await User.findByIdAndUpdate(
+      await User.findByIdAndUpdate(
         currentUser._id,
         { $push: { photoCollection: newPhoto } },
         { new: true }
-      ).select('-hashedPassword')
+      )
 
       revalidatePath(`/${currentUser.username}`)
       return NextResponse.json(newPhoto)

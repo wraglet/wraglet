@@ -38,6 +38,7 @@ export const GET = async (request: Request) => {
     }
     return NextResponse.json({ followersCount, followingCount, isFollowing })
   } catch (error) {
+    console.error('GET /api/follows error:', error)
     return NextResponse.json(
       { followersCount: 0, followingCount: 0, isFollowing: false },
       { status: 500 }
@@ -92,6 +93,7 @@ export const POST = async (request: Request) => {
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    console.error('POST /api/follows error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to follow user' },
       { status: 500 }
@@ -121,6 +123,7 @@ export const DELETE = async (request: Request) => {
     })
     return NextResponse.json({ success: true })
   } catch (error) {
+    console.error('DELETE /api/follows error:', error)
     return NextResponse.json(
       { success: false, error: 'Failed to unfollow user' },
       { status: 500 }

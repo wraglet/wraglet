@@ -54,11 +54,9 @@ const BlogReactionControls = ({
   const reactionCount = blog.reactions?.length ?? 0
   const displayCount = reactionCount > 0 ? reactionCount : (blog.likes ?? 0)
 
-  const userReaction =
-    currentUser &&
-    blog.reactions?.find(
-      (reaction) => reaction.userId && reaction.userId._id === currentUser._id
-    )
+  const userReaction = blog.reactions?.find(
+    (reaction) => reaction.userId?._id === currentUser?._id
+  )
 
   const removeReaction = async () => {
     if (!currentUser) return
@@ -82,11 +80,9 @@ const BlogReactionControls = ({
       return
     }
     try {
-      const existing =
-        currentUser &&
-        blog.reactions?.find(
-          (r) => r.userId && r.userId._id === currentUser._id && r.type === type
-        )
+      const existing = blog.reactions?.find(
+        (r) => r.userId?._id === currentUser._id && r.type === type
+      )
 
       if (existing) {
         await removeReaction()
@@ -108,39 +104,46 @@ const BlogReactionControls = ({
     }
   }
 
+  const handleToggleEmojis = () => {
+    if (!currentUser) {
+      toast.error('Please log in to react to this blog')
+      return
+    }
+    setShowEmojis((open) => !open)
+  }
+
+  const disabledClass = currentUser ? '' : 'cursor-not-allowed opacity-50'
+
   return (
     <div className="group relative">
-      <div
-        ref={refs.setReference}
-        role="button"
-        tabIndex={0}
-        onClick={() => {
-          if (!currentUser) {
-            toast.error('Please log in to react to this blog')
-            return
-          }
-          setShowEmojis(!showEmojis)
-        }}
-        className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-colors ${
-          userReaction
-            ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100'
-            : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
-        } ${!currentUser ? 'cursor-not-allowed opacity-50' : ''}`}
-      >
+      <div className={`flex items-center gap-1 ${disabledClass}`}>
         {userReaction ? (
-          <span
-            role="presentation"
-            onClick={(e) => {
-              e.stopPropagation()
-              void removeReaction()
+          <button
+            type="button"
+            className="flex items-center rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-red-600 hover:bg-red-100"
+            aria-label={`Remove ${userReaction.type} reaction`}
+            onClick={() => {
+              removeReaction().catch(() => {})
             }}
           >
-            <ReactionIcon type={userReaction.type} onClick={async () => {}} />
-          </span>
-        ) : (
-          <FaRegHeart className="h-3.5 w-3.5" />
-        )}
-        <span className="font-medium">{displayCount}</span>
+            <ReactionIcon type={userReaction.type} />
+          </button>
+        ) : null}
+        <button
+          type="button"
+          ref={refs.setReference}
+          disabled={!currentUser}
+          onClick={handleToggleEmojis}
+          className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-colors ${
+            userReaction
+              ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100'
+              : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
+          }`}
+          aria-label={userReaction ? 'Change reaction' : 'Add reaction'}
+        >
+          {userReaction ? null : <FaRegHeart className="h-3.5 w-3.5" />}
+          <span className="font-medium">{displayCount}</span>
+        </button>
       </div>
 
       {showEmojis && currentUser && (
@@ -160,7 +163,7 @@ const BlogReactionControls = ({
               type="button"
               className="cursor-pointer transition-transform hover:scale-125"
               onClick={() => {
-                void applyReaction(name)
+                applyReaction(name).catch(() => {})
                 setShowEmojis(false)
               }}
             >

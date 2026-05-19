@@ -1,0 +1,67 @@
+[
+  {
+    "route": "/api/blogs",
+    "method": "GET",
+    "status": 200,
+    "query": "limit=10",
+    "responseBody": {
+      "blogs": [
+        {
+          "_id": "507f1f77bcf86cd799439014",
+          "title": "Sample blog",
+          "slug": "sample-blog",
+          "summary": "Short summary",
+          "status": "published",
+          "category": "Technology",
+          "author": {
+            "_id": "507f1f77bcf86cd799439099",
+            "firstName": "Ada",
+            "lastName": "Lovelace",
+            "username": "@ada",
+            "gender": "Female",
+            "pronoun": "They/Them",
+            "profilePicture": null
+          },
+          "createdAt": "2026-02-15T10:00:00.000Z"
+        }
+      ],
+      "nextCursor": null,
+      "hasMore": false
+    }
+  },
+  {
+    "route": "/api/blogs",
+    "method": "POST",
+    "status": 201,
+    "description": "Create blog (published or draft)",
+    "responseBody": {
+      "_id": "507f1f77bcf86cd799439014",
+      "title": "Sample blog",
+      "slug": "sample-blog",
+      "summary": "Short summary",
+      "status": "published",
+      "category": "Technology",
+      "views": 42,
+      "author": {
+        "_id": "507f1f77bcf86cd799439099",
+        "firstName": "Ada",
+        "lastName": "Lovelace",
+        "username": "@ada",
+        "gender": "Female",
+        "pronoun": "They/Them",
+        "profilePicture": null
+      },
+      "reactions": [],
+      "comments": [],
+      "contentBlocks": [
+        {
+          "id": "block-1",
+          "type": "text",
+          "content": "Hello",
+          "order": 0
+        }
+      ],
+      "createdAt": "2026-02-15T10:00:00.000Z"
+    }
+  }
+]

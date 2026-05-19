@@ -15,7 +15,7 @@ describe('buildPostReactionGroups', () => {
       [
         {
           type: 'like',
-          userId: { _id: 'u1', firstName: 'A' }
+          userId: { _id: 'u1' }
         },
         {
           type: 'like',

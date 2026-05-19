@@ -1,0 +1,22 @@
+[
+  {
+    "route": "/api/admin/notifications",
+    "method": "POST",
+    "status": 200,
+    "description": "Broadcast admin or system notifications",
+    "responseBody": {
+      "success": true,
+      "count": 12,
+      "message": "Sent 12 notifications"
+    }
+  },
+  {
+    "route": "/api/admin/notifications",
+    "method": "POST",
+    "status": 400,
+    "description": "Missing type/title/message",
+    "responseBody": {
+      "error": "Type, title, and message are required"
+    }
+  }
+]

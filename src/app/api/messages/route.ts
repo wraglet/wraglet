@@ -1,5 +1,3 @@
-'use server'
-
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import { getAblyInstance } from '@/lib/ably'

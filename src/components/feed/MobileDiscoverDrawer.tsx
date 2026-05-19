@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import type { UserInterface } from '@/interfaces'
+import type { DiscoverUser } from '@/interfaces'
 import { IoClose } from 'react-icons/io5'
 
 import MobileDiscoverUserSuggestion from '@/components/feed/MobileDiscoverUserSuggestion'
@@ -9,7 +9,7 @@ import MobileDiscoverUserSuggestion from '@/components/feed/MobileDiscoverUserSu
 interface MobileDiscoverDrawerProps {
   isOpen: boolean
   onClose: () => void
-  otherUsers: UserInterface[]
+  otherUsers: DiscoverUser[]
 }
 
 const MobileDiscoverDrawer = ({

@@ -177,6 +177,64 @@ const UploadPostImage: FC<Props> = ({
     close()
   }
 
+  const renderImagePreviewSection = () => {
+    if (isCropping) {
+      return (
+        <div className="relative h-64 w-full">
+          <Cropper
+            image={trimmedImage}
+            crop={crop}
+            zoom={zoom}
+            rotation={rotation}
+            aspect={16 / 9}
+            cropShape={'rect'}
+            showGrid={true}
+            onCropChange={setCrop}
+            onZoomChange={setZoom}
+            onRotationChange={setRotation}
+            onCropComplete={onCropComplete}
+          />
+        </div>
+      )
+    }
+
+    if (hasImage) {
+      return (
+        <div className="block h-64 w-full overflow-hidden rounded-lg border border-sky-100 bg-neutral-50 shadow-sm">
+          <Suspense fallback={<Skeleton className="h-full w-full bg-white" />}>
+            <Image
+              src={trimmedImage}
+              alt="Post image preview"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              width={800}
+              height={450}
+              className="h-full max-h-64 w-full object-contain object-center"
+              unoptimized={
+                trimmedImage.startsWith('data:') ||
+                trimmedImage.startsWith('blob:')
+              }
+            />
+          </Suspense>
+        </div>
+      )
+    }
+
+    return (
+      <div
+        className="flex h-56 w-full flex-col items-center justify-center rounded-lg border border-dashed border-sky-200/80 bg-sky-50/40 px-4 text-center"
+        aria-hidden
+      >
+        <PhotoIcon className="mb-2 h-12 w-12 text-sky-400" />
+        <p className="text-sm font-medium text-gray-700">
+          No image selected yet
+        </p>
+        <p className="mt-1 text-xs text-gray-500">
+          Add a photo below to preview it here
+        </p>
+      </div>
+    )
+  }
+
   return (
     <Transition appear show={show} as={Fragment}>
       <Dialog
@@ -224,57 +282,7 @@ const UploadPostImage: FC<Props> = ({
                   Choose an image to include to your post
                 </p>
               </div>
-              {!isCropping ? (
-                hasImage ? (
-                  <div className="block h-64 w-full overflow-hidden rounded-lg border border-sky-100 bg-neutral-50 shadow-sm">
-                    <Suspense
-                      fallback={<Skeleton className="h-full w-full bg-white" />}
-                    >
-                      <Image
-                        src={trimmedImage}
-                        alt="Post image preview"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        width={800}
-                        height={450}
-                        className="h-full max-h-64 w-full object-contain object-center"
-                        unoptimized={
-                          trimmedImage.startsWith('data:') ||
-                          trimmedImage.startsWith('blob:')
-                        }
-                      />
-                    </Suspense>
-                  </div>
-                ) : (
-                  <div
-                    className="flex h-56 w-full flex-col items-center justify-center rounded-lg border border-dashed border-sky-200/80 bg-sky-50/40 px-4 text-center"
-                    aria-hidden
-                  >
-                    <PhotoIcon className="mb-2 h-12 w-12 text-sky-400" />
-                    <p className="text-sm font-medium text-gray-700">
-                      No image selected yet
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500">
-                      Add a photo below to preview it here
-                    </p>
-                  </div>
-                )
-              ) : (
-                <div className="relative h-64 w-full">
-                  <Cropper
-                    image={trimmedImage}
-                    crop={crop}
-                    zoom={zoom}
-                    rotation={rotation}
-                    aspect={16 / 9}
-                    cropShape={'rect'}
-                    showGrid={true}
-                    onCropChange={setCrop}
-                    onZoomChange={setZoom}
-                    onRotationChange={setRotation}
-                    onCropComplete={onCropComplete}
-                  />
-                </div>
-              )}
+              {renderImagePreviewSection()}
 
               {!isCropping ? (
                 <button

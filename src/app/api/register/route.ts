@@ -53,7 +53,17 @@ export const POST = async (request: Request) => {
     return NextResponse.json(user)
   } catch (error: unknown) {
     console.error('REGISTRATION ERROR: ', error)
-    // Log detailed error information
+    if (
+      error !== null &&
+      typeof error === 'object' &&
+      'code' in error &&
+      (error as { code?: number }).code === 11000
+    ) {
+      return NextResponse.json(
+        { error: 'An account with this email already exists' },
+        { status: 409 }
+      )
+    }
     console.error(
       'Some error happened while accessing POST at /api/register at route.ts: ',
       error

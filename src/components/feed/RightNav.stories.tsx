@@ -1,12 +1,16 @@
 import { useEffect } from 'react'
 import { appShellPageWashClassName } from '@/lib/uiChrome'
 import { cn } from '@/lib/utils'
+import {
+  buildRightNavActivitiesPayload,
+  buildRightNavPostsPayload,
+  buildRightNavTopicsTrendingPayload,
+  jsonStoryResponse,
+  rightNavStoryDiscoverUsers,
+  rightNavStoryFetchPaths
+} from '@/test/rightNavStoryFetchMocks'
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
-import {
-  STORYBOOK_USERNAME,
-  storybookDiscoverPeopleShort
-} from '@/data/storybookUsers'
 import RightNav from '@/components/feed/RightNav'
 
 const resolveFetchUrl = (input: Parameters<typeof fetch>[0]): string => {
@@ -16,7 +20,7 @@ const resolveFetchUrl = (input: Parameters<typeof fetch>[0]): string => {
   return ''
 }
 
-const demoUsers = storybookDiscoverPeopleShort
+const demoUsers = rightNavStoryDiscoverUsers
 
 /** Matches `feed/page.tsx`: sidebar is `hidden` below `lg`; show it in Storybook for all viewports. */
 const forceVisibleAside = String.raw`
@@ -42,77 +46,19 @@ const meta = {
         globalThis.fetch = async (input) => {
           const url = resolveFetchUrl(input)
 
-          if (url.includes('/api/users/topics-trending')) {
-            return new Response(
-              JSON.stringify({
-                topics: [
-                  { tag: 'storybook', count: 24 },
-                  { tag: 'design-system', count: 18 }
-                ]
-              }),
-              { status: 200 }
-            )
+          if (url.includes(rightNavStoryFetchPaths.topicsTrending)) {
+            return jsonStoryResponse(buildRightNavTopicsTrendingPayload())
           }
 
-          if (url.includes('/api/posts')) {
-            return new Response(
-              JSON.stringify({
-                posts: [
-                  {
-                    _id: 'post-1',
-                    content: {
-                      text: 'A quick update from the design system feed.'
-                    },
-                    images: [],
-                    author: {
-                      firstName: 'Ari',
-                      lastName: 'Stone',
-                      username: STORYBOOK_USERNAME.NONBINARY_PEER
-                    },
-                    createdAt: new Date().toISOString()
-                  },
-                  {
-                    _id: 'post-2',
-                    content: {
-                      text: 'Second trending post — compact list spacing in Storybook.'
-                    },
-                    images: [],
-                    author: {
-                      firstName: 'Mika',
-                      lastName: 'Chen',
-                      username: STORYBOOK_USERNAME.FEMALE_PRIMARY
-                    },
-                    createdAt: new Date().toISOString()
-                  }
-                ]
-              }),
-              { status: 200 }
-            )
+          if (url.includes(rightNavStoryFetchPaths.posts)) {
+            return jsonStoryResponse(buildRightNavPostsPayload())
           }
 
-          if (url.includes('/api/activities')) {
-            return new Response(
-              JSON.stringify({
-                activities: [
-                  {
-                    _id: 'act-1',
-                    user: {
-                      firstName: 'Mika',
-                      lastName: 'Chen',
-                      username: STORYBOOK_USERNAME.FEMALE_PRIMARY,
-                      gender: 'Female',
-                      profilePicture: null
-                    },
-                    action: 'started following Ari Stone',
-                    timestamp: new Date().toISOString()
-                  }
-                ]
-              }),
-              { status: 200 }
-            )
+          if (url.includes(rightNavStoryFetchPaths.activities)) {
+            return jsonStoryResponse(buildRightNavActivitiesPayload())
           }
 
-          return new Response(JSON.stringify({}), { status: 200 })
+          return jsonStoryResponse({})
         }
 
         return () => {

@@ -1,18 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import type { UserInterface } from '@/interfaces'
+import type { DiscoverUser } from '@/interfaces'
 import { useFollow } from '@/lib/hooks/useFollow'
 import { profileHrefFromUsername } from '@/lib/profileHref'
 
 import Avatar from '@/components/shared/Avatar'
 import Button from '@/components/shared/Button'
 
-export type MobileDiscoverUserSuggestionUser = UserInterface & {
-  isTrending?: boolean
-  isRecentActive?: boolean
-  isNew?: boolean
-}
+export type MobileDiscoverUserSuggestionUser = DiscoverUser
 
 interface MobileDiscoverUserSuggestionProps {
   user: MobileDiscoverUserSuggestionUser
@@ -23,12 +19,16 @@ const MobileDiscoverUserSuggestion = ({
   user,
   onProfileNavigate
 }: MobileDiscoverUserSuggestionProps) => {
-  const { isFollowing, follow, loading } = useFollow(user._id)
+  const { isFollowing, follow, unfollow, loading } = useFollow(user._id)
   const profileHref =
     profileHrefFromUsername(user.username) ?? `/${user.username}`
 
-  const handleFollow = async () => {
-    await follow(undefined)
+  const handleFollow = () => {
+    if (isFollowing) {
+      unfollow()
+    } else {
+      follow()
+    }
   }
 
   let followLabel = 'Follow'

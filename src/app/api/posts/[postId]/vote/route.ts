@@ -30,10 +30,8 @@ export const PATCH = async (
       userId: currentUser._id
     })
 
-    let vote
     if (existingVote) {
-      // Update existing vote
-      vote = await PostVote.findByIdAndUpdate(
+      await PostVote.findByIdAndUpdate(
         existingVote._id,
         { voteType, updatedAt: new Date() },
         { new: true }
@@ -50,8 +48,7 @@ export const PATCH = async (
         }
       )
     } else {
-      // Create new vote
-      vote = new PostVote({
+      const vote = new PostVote({
         postId: postId,
         voteType,
         userId: currentUser._id,

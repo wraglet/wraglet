@@ -1,0 +1,41 @@
+[
+  {
+    "route": "/api/notifications",
+    "method": "GET",
+    "status": 200,
+    "query": "limit=20",
+    "responseBody": {
+      "notifications": [
+        {
+          "_id": "507f1f77bcf86cd7994390cc",
+          "read": false,
+          "type": "follow",
+          "title": "New follower",
+          "message": "@ada followed you",
+          "createdAt": "2026-03-09T08:00:00.000Z",
+          "sender": {
+            "_id": "507f1f77bcf86cd799439099",
+            "firstName": "Ada",
+            "lastName": "Lovelace",
+            "username": "@ada",
+            "gender": "Female",
+            "profilePicture": null
+          }
+        }
+      ],
+      "unreadCount": 1,
+      "hasMore": false,
+      "nextCursor": null
+    }
+  },
+  {
+    "route": "/api/notifications",
+    "method": "PATCH",
+    "status": 200,
+    "description": "Mark one read or mark all read",
+    "responseBody": {
+      "success": true,
+      "unreadCount": 0
+    }
+  }
+]

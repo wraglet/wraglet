@@ -50,7 +50,7 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
   }, [initialPosts])
 
   // Use Ably channel for real-time updates
-  const { publish } = useChannel('post-channel', (message) => {
+  useChannel('post-channel', (message) => {
     try {
       if (message.name === 'post') {
         // Handle new posts (deduplicate)
@@ -112,7 +112,7 @@ const FeedWithAblyContent: FC<FeedWithAblyProps> = ({
     } else {
       // Handle both old format (direct post) and new format (wrapped post)
       const postData = item.data || item
-      if (!postData || !postData._id) {
+      if (!postData?._id) {
         console.warn('Invalid post data:', postData)
         return null
       }
