@@ -8,13 +8,15 @@ import {
 } from '@/lib/profileHref'
 import { IPost } from '@/models/Post'
 import { IShare } from '@/models/Share'
+import useUserStore from '@/store/user'
 import { buildShareAsPost } from '@/utils/buildShareAsPost'
 import { ChannelProvider } from 'ably/react'
 import { formatDistanceToNow } from 'date-fns'
-import { HiDotsHorizontal } from 'react-icons/hi'
+import toast from 'react-hot-toast'
 
 import PostImages from '@/components/feed/PostImages'
 import PostInteractions from '@/components/feed/PostInteractions'
+import PostOverflowMenu from '@/components/feed/PostOverflowMenu'
 import Avatar from '@/components/shared/Avatar'
 
 const ShareModalWithAbly = dynamic(
@@ -41,10 +43,23 @@ interface ShareContentProps {
 }
 
 const ShareContent = ({ share }: ShareContentProps) => {
+  const { user } = useUserStore()
   const originalAuthorHref = profileHrefFromUsername(
     share.originalPost.author.username
   )
   const shareAsPost = buildShareAsPost(share)
+  const shareId = String(share._id)
+  const isShareAuthor = user?._id === share.sharedBy._id
+
+  const handleCopyShareLink = async () => {
+    try {
+      const shareUrl = `${globalThis.location.origin}/post/${shareId}`
+      await navigator.clipboard.writeText(shareUrl)
+      toast.success('Link copied to clipboard!')
+    } catch {
+      toast.error('Failed to copy link')
+    }
+  }
 
   return (
     <>
@@ -113,9 +128,12 @@ const ShareContent = ({ share }: ShareContentProps) => {
               </div>
             )}
           </div>
-          <button className="rounded-full p-1 hover:bg-gray-100">
-            <HiDotsHorizontal className="h-5 w-5 text-gray-500" />
-          </button>
+          <PostOverflowMenu
+            postId={shareId}
+            isAuthor={isShareAuthor}
+            onCopyLink={handleCopyShareLink}
+            viewHref={`/post/${shareId}`}
+          />
         </div>
 
         {/* Original Post Content */}
