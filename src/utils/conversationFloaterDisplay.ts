@@ -21,7 +21,8 @@ export const getConversationFloaterDisplay = (
       avatar: null as string | null,
       isGroup: false,
       users: [] as any[],
-      gender: ''
+      gender: '',
+      otherUserId: undefined as string | undefined
     }
   }
   let displayUsers = convo.participants as any[]
@@ -37,6 +38,7 @@ export const getConversationFloaterDisplay = (
     avatar: convo.isGroup ? null : participantAvatarUrl(other),
     isGroup: !!convo.isGroup,
     users: displayUsers,
-    gender: convo.isGroup ? '' : other?.gender || ''
+    gender: convo.isGroup ? '' : other?.gender || '',
+    otherUserId: convo.isGroup ? undefined : other?._id
   }
 }

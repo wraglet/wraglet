@@ -1,0 +1,20 @@
+[
+  {
+    "route": "/api/follows/mutuals",
+    "method": "GET",
+    "status": 200,
+    "description": "Mutual follow user IDs for online badge eligibility",
+    "responseBody": {
+      "mutualIds": ["507f1f77bcf86cd799439020"]
+    }
+  },
+  {
+    "route": "/api/follows/mutuals",
+    "method": "GET",
+    "status": 401,
+    "description": "Mutuals when unauthenticated",
+    "responseBody": {
+      "error": "Unauthorized"
+    }
+  }
+]

@@ -1,15 +1,21 @@
 'use client'
 
 import { useState } from 'react'
+import { cn } from '@/lib/utils'
 import useUserStore from '@/store/user'
 import { ChatRoomProvider } from '@ably/chat/react'
-import { Bars3Icon, ChevronLeftIcon } from '@heroicons/react/24/outline'
+import { ChevronLeftIcon } from '@heroicons/react/24/outline'
 import { useQuery } from '@tanstack/react-query'
 
 import type { IConversation } from '@/types/conversation'
 import ChatWindow from '@/components/chat/ChatWindow'
 import Contacts from '@/components/chat/Contacts'
 import GroupChatHeader from '@/components/chat/GroupChatHeader'
+import MessagesEmptyPane from '@/components/chat/MessagesEmptyPane'
+import {
+  getConversationHeaderParticipants,
+  getMessagesAsideClassName
+} from '@/components/chat/messagesLayout'
 import { NewChatModal } from '@/components/chat/NewChatModal'
 
 const MessagesWithAbly = () => {
@@ -21,10 +27,11 @@ const MessagesWithAbly = () => {
   const [showContactsSidebar, setShowContactsSidebar] = useState(false)
   const { user: currentUser } = useUserStore()
 
-  // Fetch conversations with useQuery
-  const { data: conversations = [], refetch: refetchConversations } = useQuery<
-    IConversation[]
-  >({
+  const {
+    data: conversations = [],
+    isLoading: isConversationsLoading,
+    refetch: refetchConversations
+  } = useQuery<IConversation[]>({
     queryKey: ['conversations'],
     queryFn: async () => {
       const res = await fetch('/api/conversations')
@@ -33,7 +40,17 @@ const MessagesWithAbly = () => {
     }
   })
 
-  // Fetch users for new chat modal
+  const hasConversations = conversations.length > 0
+  const showMobileConversationList =
+    !selectedId && hasConversations && !isConversationsLoading
+
+  const selectedConversation =
+    conversations.find((conversation) => conversation._id === selectedId) ??
+    null
+
+  const { participants: headerParticipants, isGroup } =
+    getConversationHeaderParticipants(selectedConversation, currentUser?._id)
+
   const handleOpenNewChat = async () => {
     setShowNewChat(true)
     setUsersLoading(true)
@@ -49,8 +66,7 @@ const MessagesWithAbly = () => {
     }
   }
 
-  // Handle selecting a user to chat with
-  const handleSelectUser = async (user: any) => {
+  const handleSelectUser = async (user: { _id: string }) => {
     setShowNewChat(false)
     try {
       const res = await fetch('/api/conversations', {
@@ -62,39 +78,38 @@ const MessagesWithAbly = () => {
       if (json.data?._id) {
         setSelectedId(json.data._id)
         refetchConversations()
-        setShowContactsSidebar(false) // Close sidebar on mobile when chat is selected
+        setShowContactsSidebar(false)
       }
     } catch {
       setUsersError('Failed to start chat')
     }
   }
 
-  // Handle conversation selection
   const handleSelectConversation = (conversationId: string) => {
     setSelectedId(conversationId)
-    setShowContactsSidebar(false) // Close sidebar on mobile when chat is selected
+    setShowContactsSidebar(false)
   }
 
-  // Find the selected conversation
-  const selectedConversation =
-    conversations.find((c: IConversation) => c._id === selectedId) || null
-  let headerParticipants: any[] = []
-  let isGroup = false
-  if (selectedConversation) {
-    isGroup = selectedConversation.isGroup
-    if (!isGroup && currentUser?._id) {
-      headerParticipants = selectedConversation.participants.filter(
-        (p: any) => p._id !== currentUser._id
-      )
-    } else {
-      headerParticipants = selectedConversation.participants
-    }
+  const handleBackToConversations = () => {
+    setSelectedId(null)
+    setShowContactsSidebar(false)
   }
+
+  const asideClassName = getMessagesAsideClassName({
+    showMobileConversationList,
+    showContactsSidebar,
+    selectedId
+  })
 
   return (
-    <div className="flex min-h-0 w-full grow overflow-hidden rounded-lg border bg-white">
-      {/* Mobile overlay */}
-      {showContactsSidebar && (
+    <div
+      className={cn(
+        'flex h-full min-h-0 w-full flex-1 overflow-hidden bg-white',
+        'max-lg:rounded-none max-lg:border-0',
+        'lg:rounded-lg lg:border'
+      )}
+    >
+      {showContactsSidebar && !showMobileConversationList && (
         <button
           type="button"
           aria-label="Close conversations"
@@ -103,21 +118,23 @@ const MessagesWithAbly = () => {
         />
       )}
 
-      {/* Conversation List - Desktop always visible, Mobile as drawer */}
-      <aside
-        className={` ${showContactsSidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} fixed top-0 bottom-0 left-0 z-40 w-[320px] max-w-[85vw] flex-shrink-0 overflow-y-auto border-r border-neutral-200 bg-white p-4 shadow-xl transition-transform duration-300 ease-in-out lg:relative lg:w-[320px] lg:max-w-xs lg:translate-x-0 lg:shadow-none`}
-      >
-        <div className="mt-14 mb-4 flex items-center justify-between">
+      <aside className={asideClassName}>
+        <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowContactsSidebar(false)}
-              className="rounded-full p-1 hover:bg-gray-100 lg:hidden"
-            >
-              <ChevronLeftIcon className="h-5 w-5 text-gray-600" />
-            </button>
+            {showContactsSidebar && !showMobileConversationList && (
+              <button
+                type="button"
+                onClick={() => setShowContactsSidebar(false)}
+                className="rounded-full p-1 hover:bg-gray-100 lg:hidden"
+                aria-label="Close conversations"
+              >
+                <ChevronLeftIcon className="h-5 w-5 text-gray-600" />
+              </button>
+            )}
             <span className="text-base font-semibold text-gray-900">Chats</span>
           </div>
           <button
+            type="button"
             className="rounded-full bg-sky-100 px-3 py-1.5 text-xs font-semibold text-[#0EA5E9] transition hover:bg-[#0EA5E9] hover:text-white"
             onClick={handleOpenNewChat}
           >
@@ -132,32 +149,29 @@ const MessagesWithAbly = () => {
           error={usersError}
           onSelectUser={handleSelectUser}
         />
-        <Contacts
-          conversations={conversations}
-          selectedId={selectedId}
-          setSelectedId={handleSelectConversation}
-          refetchConversations={refetchConversations}
-        />
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <Contacts
+            conversations={conversations}
+            selectedId={selectedId}
+            setSelectedId={handleSelectConversation}
+            refetchConversations={refetchConversations}
+          />
+        </div>
       </aside>
 
-      {/* Chat Window */}
-      <main className="flex min-h-0 flex-1 flex-col bg-white">
+      <main
+        className={cn(
+          'flex min-h-0 flex-1 flex-col bg-white',
+          showMobileConversationList && 'max-lg:hidden'
+        )}
+      >
         {selectedConversation ? (
           <>
-            {/* Mobile chat header with back button */}
-            <div className="relative border-b">
-              <button
-                onClick={() => setShowContactsSidebar(true)}
-                className="absolute top-1/2 left-2 z-10 -translate-y-1/2 rounded-full p-2 hover:bg-gray-100 lg:hidden"
-              >
-                <Bars3Icon className="h-5 w-5 text-gray-600" />
-              </button>
-              <GroupChatHeader
-                participants={headerParticipants}
-                isGroup={isGroup}
-              />
-            </div>
-
+            <GroupChatHeader
+              participants={headerParticipants}
+              isGroup={isGroup}
+              onBack={handleBackToConversations}
+            />
             {selectedId && (
               <div className="min-h-0 flex-1">
                 <ChatRoomProvider name={selectedId}>
@@ -167,19 +181,12 @@ const MessagesWithAbly = () => {
             )}
           </>
         ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-4 text-gray-400">
-            <button
-              onClick={() => setShowContactsSidebar(true)}
-              className="rounded-full bg-sky-100 px-4 py-2 text-sm font-semibold text-[#0EA5E9] transition hover:bg-[#0EA5E9] hover:text-white lg:hidden"
-            >
-              View Conversations
-            </button>
-            <div className="text-center">
-              <p>Select a conversation to start chatting</p>
-              <p className="mt-1 hidden text-sm lg:block">
-                Choose a conversation from the sidebar
-              </p>
-            </div>
+          <div className="flex h-full flex-col items-center justify-center gap-4 px-4 text-gray-400">
+            <MessagesEmptyPane
+              isLoading={isConversationsLoading}
+              hasConversations={hasConversations}
+              onNewChat={handleOpenNewChat}
+            />
           </div>
         )}
       </main>

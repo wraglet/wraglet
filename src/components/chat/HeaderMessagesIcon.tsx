@@ -12,6 +12,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useChannel } from 'ably/react'
 
 import Avatar from '@/components/shared/Avatar'
+import AvatarWithOnlineBadge from '@/components/shared/AvatarWithOnlineBadge'
 import { ChatIcon } from '@/components/shared/NavIcons'
 
 interface HeaderMessagesIconProps {
@@ -150,12 +151,14 @@ const HeaderMessagesIcon = ({
                   .join('')}
               </span>
             ) : (
-              <Avatar
-                src={displayUsers[0]?.profilePicture?.url}
-                gender={displayUsers[0]?.gender}
-                alt={displayUsers[0]?.firstName}
-                className="h-8 w-8"
-              />
+              <AvatarWithOnlineBadge userId={displayUsers[0]?._id}>
+                <Avatar
+                  src={displayUsers[0]?.profilePicture?.url}
+                  gender={displayUsers[0]?.gender}
+                  alt={displayUsers[0]?.firstName}
+                  className="h-8 w-8"
+                />
+              </AvatarWithOnlineBadge>
             )}
             <div className="min-w-0 flex-1">
               <div className="truncate">{conversationName}</div>

@@ -1,23 +1,22 @@
 import type { Gender } from '@/interfaces'
 import { getStackedAvatarPositionClass } from '@/utils/displayFormat'
 
+import type { IParticipant } from '@/types/conversation'
+import ChatHeaderBackButton from '@/components/chat/ChatHeaderBackButton'
 import Avatar from '@/components/shared/Avatar'
+import AvatarWithOnlineBadge from '@/components/shared/AvatarWithOnlineBadge'
 
-interface User {
-  _id: string
-  firstName: string
-  lastName: string
-  username: string
-  profilePicture?: string
-  gender: string
-}
+const defaultParticipantGender: Gender = 'Male'
 
 interface GroupChatHeaderProps {
-  participants: User[]
+  participants: IParticipant[]
   isGroup: boolean
+  onBack?: () => void
 }
 
-function getProfilePictureUrl(profilePicture: any): string | null {
+const getProfilePictureUrl = (
+  profilePicture: string | { url: string } | undefined
+): string | null => {
   if (
     profilePicture &&
     typeof profilePicture === 'object' &&
@@ -31,7 +30,7 @@ function getProfilePictureUrl(profilePicture: any): string | null {
   return null
 }
 
-const CollageAvatar = ({ users }: { users: User[] }) => {
+const CollageAvatar = ({ users }: { users: IParticipant[] }) => {
   // Show up to 3 avatars in a collage
   const avatars = users.slice(0, 3)
   return (
@@ -44,7 +43,7 @@ const CollageAvatar = ({ users }: { users: User[] }) => {
         >
           <Avatar
             src={getProfilePictureUrl(user.profilePicture)}
-            gender={user.gender as Gender}
+            gender={defaultParticipantGender}
             alt={user.firstName}
             className="h-8 w-8"
           />
@@ -59,19 +58,31 @@ const CollageAvatar = ({ users }: { users: User[] }) => {
   )
 }
 
-const GroupChatHeader = ({ participants, isGroup }: GroupChatHeaderProps) => {
+const GroupChatHeader = ({
+  participants,
+  isGroup,
+  onBack
+}: GroupChatHeaderProps) => {
+  const dmHeaderPadding = onBack ? 'px-2 py-3 lg:px-6' : 'px-6 py-3'
+  const groupHeaderPadding = onBack ? 'px-2 py-3 lg:px-4' : 'px-4 py-3'
+
   if (!isGroup && participants.length === 1) {
     const user = participants[0]
     return (
-      <div className="sticky top-0 z-10 flex items-center border-b bg-white/80 px-6 py-3 backdrop-blur">
-        <Avatar
-          src={getProfilePictureUrl(user.profilePicture)}
-          gender={user.gender as Gender}
-          alt={user.firstName}
-          className="mr-3 h-9 w-9 border-2 border-white"
-        />
-        <div className="flex flex-col justify-center">
-          <span className="leading-tight font-semibold text-gray-900">
+      <div
+        className={`sticky top-0 z-10 flex min-w-0 items-center border-b bg-white/80 backdrop-blur ${dmHeaderPadding}`}
+      >
+        {onBack ? <ChatHeaderBackButton onBack={onBack} /> : null}
+        <AvatarWithOnlineBadge userId={user._id} className="mr-3">
+          <Avatar
+            src={getProfilePictureUrl(user.profilePicture)}
+            gender={defaultParticipantGender}
+            alt={user.firstName}
+            className="h-9 w-9 shrink-0 border-2 border-white"
+          />
+        </AvatarWithOnlineBadge>
+        <div className="flex min-w-0 flex-1 flex-col justify-center">
+          <span className="truncate leading-tight font-semibold text-gray-900">
             {user.firstName} {user.lastName}
             <span className="ml-2 align-middle text-sm font-normal text-gray-500">
               {user.username}
@@ -83,9 +94,12 @@ const GroupChatHeader = ({ participants, isGroup }: GroupChatHeaderProps) => {
   }
   // Group chat: collage avatar and all names
   return (
-    <div className="sticky top-0 z-10 flex items-center gap-4 border-b bg-white/80 px-4 py-3 backdrop-blur">
+    <div
+      className={`sticky top-0 z-10 flex min-w-0 items-center gap-2 border-b bg-white/80 backdrop-blur ${groupHeaderPadding}`}
+    >
+      {onBack ? <ChatHeaderBackButton onBack={onBack} /> : null}
       <CollageAvatar users={participants} />
-      <div className="flex flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex flex-wrap gap-x-2">
           {participants.map((user) => (
             <span key={user._id} className="font-semibold text-gray-900">
