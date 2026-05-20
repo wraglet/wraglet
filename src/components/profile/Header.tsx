@@ -64,6 +64,10 @@ const ProfileHeader = ({ username }: { username: string }) => {
 
   if (isLoading || !user) return null
 
+  const bioText = user.bio?.trim() ?? ''
+  const hasBio = bioText.length > 0
+  const showBioRow = isCurrentUser || hasBio || editingBio
+
   return (
     <section className="mt-14 flex h-auto w-full flex-col items-center bg-white shadow-md lg:rounded-md xl:w-[1250px]">
       <div className="relative block h-[114px] w-full md:h-[284px] lg:h-[360px]">
@@ -136,77 +140,85 @@ const ProfileHeader = ({ username }: { username: string }) => {
             </Link>
           )}
         </div>
-        <div className="ml-[35px] pb-4 md:ml-[180px] md:pb-7 lg:ml-[242px] lg:pb-[30px]">
-          <div className="flex gap-x-4">
-            {editingBio ? (
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit((data) => updateBio(data))}
-                  className="flex items-center gap-x-2"
-                >
-                  <FormField
-                    control={form.control}
-                    name="bio"
-                    render={({ field }) => (
-                      <FormItem className="w-60">
-                        <FormControl>
-                          <input
-                            className="h-7 w-60 border-b border-slate-400 bg-transparent px-2 py-1 text-xs focus:outline-none"
-                            maxLength={300}
-                            disabled={updatingBio}
-                            {...field}
-                            autoFocus
-                            onKeyDown={(e) => {
-                              if (e.key === 'Escape') {
-                                setEditingBio(false)
-                                form.reset({ bio: user?.bio ?? '' })
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <button
-                    type="submit"
-                    className="rounded px-1 py-0.5 text-xs text-sky-600 hover:underline disabled:opacity-50"
-                    disabled={updatingBio}
+        {showBioRow && (
+          <div className="ml-[35px] pb-4 md:ml-[180px] md:pb-7 lg:ml-[242px] lg:pb-[30px]">
+            <div className="flex items-center gap-x-2">
+              {editingBio ? (
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit((data) => updateBio(data))}
+                    className="flex items-center gap-x-2"
                   >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded px-1 py-0.5 text-xs text-gray-500 hover:underline"
-                    onClick={() => {
-                      setEditingBio(false)
-                      form.reset({ bio: user?.bio ?? '' })
-                    }}
-                    disabled={updatingBio}
-                  >
-                    Cancel
-                  </button>
-                </form>
-              </Form>
-            ) : (
-              <>
-                <p className="text-xs font-medium text-slate-700 italic">
-                  &quot;{user?.bio ?? 'Set your bio here'}&quot;
-                </p>
-                {isCurrentUser && (
-                  <button
-                    type="button"
-                    aria-label="Edit bio"
-                    onClick={() => setEditingBio(true)}
-                    className="ml-1 h-6 w-6 p-1 text-slate-600 hover:text-sky-600"
-                  >
-                    <FaPencil size={10} />
-                  </button>
-                )}
-              </>
-            )}
+                    <FormField
+                      control={form.control}
+                      name="bio"
+                      render={({ field }) => (
+                        <FormItem className="w-60">
+                          <FormControl>
+                            <input
+                              className="h-7 w-60 border-b border-slate-400 bg-transparent px-2 py-1 text-xs focus:outline-none"
+                              maxLength={300}
+                              disabled={updatingBio}
+                              {...field}
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                  setEditingBio(false)
+                                  form.reset({ bio: user?.bio ?? '' })
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <button
+                      type="submit"
+                      className="rounded px-1 py-0.5 text-xs text-sky-600 hover:underline disabled:opacity-50"
+                      disabled={updatingBio}
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded px-1 py-0.5 text-xs text-gray-500 hover:underline"
+                      onClick={() => {
+                        setEditingBio(false)
+                        form.reset({ bio: user?.bio ?? '' })
+                      }}
+                      disabled={updatingBio}
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                </Form>
+              ) : (
+                <>
+                  {hasBio ? (
+                    <p className="text-xs font-medium text-slate-700 italic">
+                      &ldquo;{bioText}&rdquo;
+                    </p>
+                  ) : (
+                    <p className="text-xs text-slate-400 italic">
+                      Set your bio here
+                    </p>
+                  )}
+                  {isCurrentUser && (
+                    <button
+                      type="button"
+                      aria-label="Edit bio"
+                      onClick={() => setEditingBio(true)}
+                      className="flex h-6 w-6 shrink-0 items-center justify-center text-slate-600 hover:text-sky-600"
+                    >
+                      <FaPencil size={10} />
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   )

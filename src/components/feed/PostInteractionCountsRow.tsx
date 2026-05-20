@@ -5,6 +5,7 @@ import {
   postCardMenuSlotClass
 } from '@/components/feed/post/postCardClassNames'
 import type { ReactionGroup } from '@/components/feed/post/postCardTypes'
+import ReactionLottieBadge from '@/components/feed/post/ReactionLottieBadge'
 import PostVoteCounts from '@/components/feed/PostVoteCounts'
 
 interface PostInteractionCountsRowProps {
@@ -37,16 +38,9 @@ const PostInteractionCountsRow = ({
                 {reactionGroups.slice(0, 3).map((group, index) => (
                   <div
                     key={`${group.type}-${index}`}
-                    className="relative h-4 w-4 rounded-full bg-white ring-2 ring-white"
+                    className="relative flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-white"
                   >
-                    <lottie-player
-                      id={`reaction-display-${group.type}-${postId}`}
-                      autoplay
-                      loop
-                      mode="normal"
-                      src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/lottie/${group.type}.json`}
-                      style={{ width: '100%', height: '100%' }}
-                    />
+                    <ReactionLottieBadge type={group.type} postId={postId} />
                   </div>
                 ))}
               </div>

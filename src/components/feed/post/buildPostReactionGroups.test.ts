@@ -36,4 +36,18 @@ describe('buildPostReactionGroups', () => {
     expect(likeGroup?.users).toHaveLength(1)
     expect(likeGroup?.users[0]._id).toBe('u1')
   })
+
+  it('ignores reactions with missing or invalid type', () => {
+    const { reactionCounts, reactionGroups } = buildPostReactionGroups(
+      [
+        { type: undefined as unknown as string, userId: { _id: 'u1' } },
+        { type: 'like', userId: { _id: 'u2' } }
+      ],
+      'u2'
+    )
+
+    expect(reactionCounts).toEqual({ like: 1 })
+    expect(reactionGroups).toHaveLength(1)
+    expect(reactionGroups[0].type).toBe('like')
+  })
 })

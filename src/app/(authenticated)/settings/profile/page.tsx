@@ -16,6 +16,48 @@ import { z } from 'zod'
 import Avatar from '@/components/shared/Avatar'
 import Button from '@/components/shared/Button'
 
+import {
+  profileActionsClassName,
+  profileAvatarBadgeClassName,
+  profileAvatarBadgeIconClassName,
+  profileAvatarClassName,
+  profileAvatarWrapClassName,
+  profileBioClassName,
+  profileBioCountClassName,
+  profileBioFooterClassName,
+  profileCheckboxClassName,
+  profileDisplayNameClassName,
+  profileEditButtonClassName,
+  profileErrorClassName,
+  profileFieldGridClassName,
+  profileFormCardClassName,
+  profileFormClassName,
+  profileInputClassName,
+  profileLabelClassName,
+  profileLabelOptionalClassName,
+  profileLoadingInnerClassName,
+  profileLoadingSpinnerClassName,
+  profileLoadingTextClassName,
+  profileLoadingWrapClassName,
+  profileNameBlockClassName,
+  profileNameLineClassName,
+  profileOverviewCardClassName,
+  profileOverviewRowClassName,
+  profileOverviewUserRowClassName,
+  profilePrivacyBoxClassName,
+  profilePrivacyHintClassName,
+  profilePrivacyLabelClassName,
+  profilePrivacyRowClassName,
+  profileSaveButtonClassName,
+  profileSaveSpinnerClassName,
+  profileSelectClassName,
+  profileSettingsHeaderDescClassName,
+  profileSettingsHeaderTitleClassName,
+  profileSettingsPageClassName,
+  profileTextareaClassName,
+  profileUsernameClassName
+} from '@/app/(authenticated)/settings/profile/profileSettingsClassNames'
+
 const profileSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(50),
   lastName: z.string().min(1, 'Last name is required').max(50),
@@ -102,10 +144,10 @@ const ProfileSettings = () => {
 
   if (!user) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-sky-100 border-t-[#0EA5E9]"></div>
-          <p className="mt-3 text-sm text-gray-600">Loading profile...</p>
+      <div className={profileLoadingWrapClassName}>
+        <div className={profileLoadingInnerClassName}>
+          <div className={profileLoadingSpinnerClassName} />
+          <p className={profileLoadingTextClassName}>Loading profile...</p>
         </div>
       </div>
     )
@@ -114,25 +156,53 @@ const ProfileSettings = () => {
   const profileUser: User = user
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4">
-      {/* Header */}
+    <div className={profileSettingsPageClassName}>
       <div className="hidden lg:block">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-gray-900">
-              Profile Settings
-            </h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Manage your personal information and preferences
-            </p>
+        <h1 className={profileSettingsHeaderTitleClassName}>
+          Profile Settings
+        </h1>
+        <p className={profileSettingsHeaderDescClassName}>
+          Manage your personal information and preferences
+        </p>
+      </div>
+
+      <div className={profileOverviewCardClassName}>
+        <div className={profileOverviewRowClassName}>
+          <div className={profileOverviewUserRowClassName}>
+            <div className={profileAvatarWrapClassName}>
+              <Avatar
+                src={profileUser.profilePicture?.url || null}
+                gender={profileUser.gender as Gender}
+                alt={`${profileUser.firstName}'s Profile`}
+                className={profileAvatarClassName}
+              />
+              <div className={profileAvatarBadgeClassName}>
+                <UserIcon className={profileAvatarBadgeIconClassName} />
+              </div>
+            </div>
+            <div className={profileNameBlockClassName}>
+              <h2 className={profileDisplayNameClassName}>
+                <span className={profileNameLineClassName}>
+                  {profileUser.firstName} {profileUser.lastName}
+                </span>
+              </h2>
+              <p className={profileUsernameClassName}>
+                {formatDisplayUsername(profileUser.username)}
+              </p>
+              {profileUser.bio ? (
+                <p className={profileBioClassName}>
+                  &ldquo;{profileUser.bio}&rdquo;
+                </p>
+              ) : null}
+            </div>
           </div>
-          {!isEditing && (
+          {isEditing ? null : (
             <Button
               type="button"
               variant="default"
               size="sm"
               onClick={() => setIsEditing(true)}
-              className="gap-1.5"
+              className={profileEditButtonClassName}
             >
               <PencilIcon className="h-3.5 w-3.5" />
               Edit Profile
@@ -141,220 +211,156 @@ const ProfileSettings = () => {
         </div>
       </div>
 
-      {/* Profile Overview Card */}
-      <div className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm sm:p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
-            <div className="relative shrink-0">
-              <Avatar
-                src={profileUser.profilePicture?.url || null}
-                gender={profileUser.gender as Gender}
-                alt={`${profileUser.firstName}'s Profile`}
-                className="h-12 w-12 ring-2 ring-sky-100 sm:h-14 sm:w-14"
-              />
-              <div className="absolute -right-1 -bottom-1 rounded-full bg-[#0EA5E9] p-1 sm:p-1.5">
-                <UserIcon className="h-3 w-3 text-white sm:h-3.5 sm:w-3.5" />
-              </div>
-            </div>
-            <div className="min-w-0 flex-1 overflow-hidden">
-              <h2 className="text-sm font-semibold text-gray-900 sm:text-base">
-                <span className="line-clamp-2 break-words sm:line-clamp-1">
-                  {profileUser.firstName} {profileUser.lastName}
-                </span>
-              </h2>
-              <p className="truncate text-xs text-gray-500 sm:text-sm">
-                {formatDisplayUsername(profileUser.username)}
-              </p>
-              {profileUser.bio && (
-                <p className="mt-1 line-clamp-2 text-xs text-gray-600 italic">
-                  &ldquo;{profileUser.bio}&rdquo;
-                </p>
-              )}
-            </div>
-          </div>
-          {!isEditing && (
-            <Button
-              type="button"
-              variant="default"
-              size="sm"
-              onClick={() => setIsEditing(true)}
-              className="h-9 w-full shrink-0 gap-1.5 sm:h-8 sm:w-auto"
-            >
-              <PencilIcon className="h-3.5 w-3.5" />
-              Edit profile
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Profile Form */}
-      <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          {/* Name Fields */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className={profileFormCardClassName}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className={profileFormClassName}
+        >
+          <div className={profileFieldGridClassName}>
             <div>
-              <label
-                htmlFor="firstName"
-                className="text-xs font-semibold text-gray-700"
-              >
+              <label htmlFor="firstName" className={profileLabelClassName}>
                 First Name
               </label>
               <input
                 id="firstName"
-                {...form.register('firstName')}
                 disabled={!isEditing}
-                className="mt-1 h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm transition-colors focus:border-[#0EA5E9] focus:ring-2 focus:ring-sky-100 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500"
+                className={profileInputClassName}
                 placeholder="Enter your first name"
+                {...form.register('firstName')}
               />
-              {form.formState.errors.firstName && (
-                <p className="mt-1 text-xs text-red-600">
+              {form.formState.errors.firstName ? (
+                <p className={profileErrorClassName}>
                   {form.formState.errors.firstName.message}
                 </p>
-              )}
+              ) : null}
             </div>
 
             <div>
-              <label
-                htmlFor="lastName"
-                className="text-xs font-semibold text-gray-700"
-              >
+              <label htmlFor="lastName" className={profileLabelClassName}>
                 Last Name
               </label>
               <input
                 id="lastName"
-                {...form.register('lastName')}
                 disabled={!isEditing}
-                className="mt-1 h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm transition-colors focus:border-[#0EA5E9] focus:ring-2 focus:ring-sky-100 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500"
+                className={profileInputClassName}
                 placeholder="Enter your last name"
+                {...form.register('lastName')}
               />
-              {form.formState.errors.lastName && (
-                <p className="mt-1 text-xs text-red-600">
+              {form.formState.errors.lastName ? (
+                <p className={profileErrorClassName}>
                   {form.formState.errors.lastName.message}
                 </p>
-              )}
+              ) : null}
             </div>
           </div>
 
-          {/* Bio Field */}
           <div>
-            <label
-              htmlFor="bio"
-              className="text-xs font-semibold text-gray-700"
-            >
+            <label htmlFor="bio" className={profileLabelClassName}>
               Bio{' '}
-              <span className="ml-1 font-medium text-gray-500">(Optional)</span>
+              <span className={profileLabelOptionalClassName}>(Optional)</span>
             </label>
             <textarea
               id="bio"
-              {...form.register('bio')}
               disabled={!isEditing}
               rows={3}
-              className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm transition-colors focus:border-[#0EA5E9] focus:ring-2 focus:ring-sky-100 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500"
+              className={profileTextareaClassName}
               placeholder="Tell us about yourself..."
               maxLength={300}
+              {...form.register('bio')}
             />
-            <div className="flex justify-between">
-              {form.formState.errors.bio && (
-                <p className="mt-1 text-xs text-red-600">
+            <div className={profileBioFooterClassName}>
+              {form.formState.errors.bio ? (
+                <p className={profileErrorClassName}>
                   {form.formState.errors.bio.message}
                 </p>
-              )}
-              <span className="text-xs text-gray-500">{bioLength}/300</span>
+              ) : null}
+              <span className={profileBioCountClassName}>{bioLength}/300</span>
             </div>
           </div>
 
-          {/* Gender and Pronoun Fields */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className={profileFieldGridClassName}>
             <div>
-              <label
-                htmlFor="gender"
-                className="text-xs font-semibold text-gray-700"
-              >
+              <label htmlFor="gender" className={profileLabelClassName}>
                 Gender
               </label>
               <select
                 id="gender"
-                {...form.register('gender')}
                 disabled={!isEditing}
-                className="mt-1 h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm transition-colors focus:border-[#0EA5E9] focus:ring-2 focus:ring-sky-100 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500"
+                className={profileSelectClassName}
+                {...form.register('gender')}
               >
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
                 <option value="Others">Others</option>
               </select>
-              {form.formState.errors.gender && (
-                <p className="mt-1 text-xs text-red-600">
+              {form.formState.errors.gender ? (
+                <p className={profileErrorClassName}>
                   {form.formState.errors.gender.message}
                 </p>
-              )}
+              ) : null}
             </div>
 
             <div>
-              <label
-                htmlFor="pronoun"
-                className="text-xs font-semibold text-gray-700"
-              >
+              <label htmlFor="pronoun" className={profileLabelClassName}>
                 Pronouns{' '}
-                <span className="ml-1 font-medium text-gray-500">
+                <span className={profileLabelOptionalClassName}>
                   (Optional)
                 </span>
               </label>
               <select
                 id="pronoun"
-                {...form.register('pronoun')}
                 disabled={!isEditing}
-                className="mt-1 h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm transition-colors focus:border-[#0EA5E9] focus:ring-2 focus:ring-sky-100 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500"
+                className={profileSelectClassName}
+                {...form.register('pronoun')}
               >
                 <option value="">Select pronouns</option>
                 <option value="She/Her">She/Her</option>
                 <option value="He/Him">He/Him</option>
                 <option value="They/Them">They/Them</option>
               </select>
-              {form.formState.errors.pronoun && (
-                <p className="mt-1 text-xs text-red-600">
+              {form.formState.errors.pronoun ? (
+                <p className={profileErrorClassName}>
                   {form.formState.errors.pronoun.message}
                 </p>
-              )}
+              ) : null}
             </div>
           </div>
 
-          {/* Privacy Settings */}
-          <div className="rounded-lg border border-neutral-100 bg-gray-50 px-3 py-2.5">
-            <div className="flex items-center space-x-3">
+          <div className={profilePrivacyBoxClassName}>
+            <div className={profilePrivacyRowClassName}>
               <input
                 id="publicProfileVisible"
                 type="checkbox"
-                {...form.register('publicProfileVisible')}
                 disabled={!isEditing}
-                className="h-3.5 w-3.5 rounded border-gray-300 text-[#0EA5E9] focus:ring-[#0EA5E9] disabled:opacity-50"
+                className={profileCheckboxClassName}
+                {...form.register('publicProfileVisible')}
               />
               <div>
                 <label
                   htmlFor="publicProfileVisible"
-                  className="text-sm font-semibold text-gray-700"
+                  className={profilePrivacyLabelClassName}
                 >
                   Make profile public
                 </label>
-                <p className="text-xs text-gray-500">
+                <p className={profilePrivacyHintClassName}>
                   Allow others to view your profile and posts
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          {isEditing && (
-            <div className="flex gap-2 pt-1">
+          {isEditing ? (
+            <div className={profileActionsClassName}>
               <Button
                 type="submit"
                 variant="default"
                 size="sm"
                 disabled={updateProfileMutation.isPending}
-                className="gap-1.5"
+                className={profileSaveButtonClassName}
               >
                 {updateProfileMutation.isPending ? (
                   <>
-                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    <div className={profileSaveSpinnerClassName} />
                     Saving...
                   </>
                 ) : (
@@ -373,7 +379,7 @@ const ProfileSettings = () => {
                 Cancel
               </Button>
             </div>
-          )}
+          ) : null}
         </form>
       </div>
     </div>

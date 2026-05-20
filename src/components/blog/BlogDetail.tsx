@@ -158,7 +158,7 @@ const BlogDetail = ({ blog, currentUser }: BlogDetailProps) => {
         </span>
       </div>
 
-      <h1 className="mb-1.5 text-lg leading-snug font-bold break-words text-gray-900 md:text-xl">
+      <h1 className="mb-1.5 text-sm leading-snug font-bold break-words text-gray-900 sm:text-base">
         {blog.title}
       </h1>
 
@@ -179,7 +179,7 @@ const BlogDetail = ({ blog, currentUser }: BlogDetailProps) => {
         </div>
       )}
 
-      <div className="prose prose-sm max-w-none min-w-0 [overflow-wrap:anywhere] break-words">
+      <div className="prose prose-sm max-w-none min-w-0 break-words">
         {blog.contentBlocks && blog.contentBlocks.length > 0 ? (
           <div className="space-y-3">
             {[...blog.contentBlocks]
@@ -193,7 +193,7 @@ const BlogDetail = ({ blog, currentUser }: BlogDetailProps) => {
                         dangerouslySetInnerHTML={{
                           __html: sanitizeTipTapHtml(block.content ?? '')
                         }}
-                        className="prose-headings:text-gray-900 prose-a:text-[#0EA5E9] prose-a:break-all prose-strong:text-gray-900 prose-p:text-sm prose-p:text-gray-700 prose-li:text-sm prose-li:text-gray-700 [overflow-wrap:anywhere] break-words"
+                        className="prose-headings:text-gray-900 prose-a:text-[#0EA5E9] prose-a:break-all prose-strong:text-gray-900 prose-p:text-sm prose-p:text-gray-700 prose-li:text-sm prose-li:text-gray-700 break-words"
                       />
                     )
                   case 'image':
@@ -240,6 +240,7 @@ const BlogDetail = ({ blog, currentUser }: BlogDetailProps) => {
                               className="w-full"
                               src={block.metadata.url}
                             >
+                              <track kind="captions" label="Captions" />
                               Your browser does not support the video tag.
                             </video>
                           </div>
