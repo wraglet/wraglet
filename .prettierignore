@@ -12,3 +12,6 @@ package-lock.json
 pnpm-lock.yaml
 .vercel
 **/*.d.ts
+
+# local-only (see .gitignore)
+requirements/

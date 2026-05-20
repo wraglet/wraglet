@@ -2,12 +2,16 @@
 
 import { Suspense } from 'react'
 import { usePathname } from 'next/navigation'
-import { appShellPageWashClassName } from '@/lib/uiChrome'
+import {
+  appShellPageWashClassName,
+  isAuthenticatedCenteredScrollPath
+} from '@/lib/uiChrome'
 import { cn } from '@/lib/utils'
 import type { IUser } from '@/models/User'
 import { AblyProvider } from '@/providers/AblyProvider'
 
 import ChatFloaterServer from '@/components/chat/ChatFloaterServer'
+import OnlinePresenceSync from '@/components/chat/OnlinePresenceSync'
 import Header from '@/components/layout/Header'
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
 
@@ -19,16 +23,25 @@ interface Props {
 const AuthenticatedLayoutClientWrapper = ({ currentUser, children }: Props) => {
   const pathname = usePathname()
   const isMessagesRoute = pathname.startsWith('/messages')
+  const isFeedRoute = pathname === '/feed' || pathname.startsWith('/feed/')
+  const isCenteredScrollRoute = isAuthenticatedCenteredScrollPath(pathname)
+
+  const shellLayoutClassName = (() => {
+    if (isMessagesRoute || isFeedRoute || isCenteredScrollRoute) {
+      return 'h-dvh max-h-dvh overflow-hidden'
+    }
+    return 'min-h-screen overflow-hidden pb-[calc(4rem+env(safe-area-inset-bottom,0px))] lg:pb-0'
+  })()
 
   return (
     <AblyProvider>
+      <OnlinePresenceSync />
       <div
         className={cn(
-          'relative flex flex-col items-center overflow-hidden',
+          'relative flex flex-col items-center',
+          'overflow-hidden',
           appShellPageWashClassName,
-          isMessagesRoute
-            ? 'h-screen'
-            : 'min-h-screen pb-[calc(4rem+env(safe-area-inset-bottom,0px))] lg:pb-0'
+          shellLayoutClassName
         )}
       >
         <Header currentUser={currentUser || null} />

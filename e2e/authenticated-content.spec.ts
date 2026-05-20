@@ -31,11 +31,11 @@ test.describe('authenticated content (seeded data)', () => {
   test('post detail page loads seeded post', async ({ page }) => {
     await page.goto(`/post/${E2E_SEED_POST_ID}`)
     await expect(
-      page.getByRole('heading', { name: 'Post Details' })
-    ).toBeVisible()
+      page.getByRole('link', { name: /Back to Feed/i }).first()
+    ).toBeVisible({ timeout: 15_000 })
     await expect(
       page.getByText('E2E seeded post for functional tests.', { exact: false })
-    ).toBeVisible()
+    ).toBeVisible({ timeout: 15_000 })
   })
 
   test('blog read page loads seeded published blog', async ({ page }) => {

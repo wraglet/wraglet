@@ -3,7 +3,23 @@
 import { useMemo } from 'react'
 import Link from 'next/link'
 import type { Gender } from '@/interfaces'
-import { INotification } from '@/models/Notification'
+import { getNotificationLink } from '@/lib/notificationLinks'
+import {
+  centeredListPageBodyTextClassName,
+  centeredListPageBodyTextUnreadClassName,
+  centeredListPageCardClassName,
+  centeredListPageCardHeaderClassName,
+  centeredListPageEmptyBodyClassName,
+  centeredListPageEmptyIconClassName,
+  centeredListPageEmptyStateClassName,
+  centeredListPageEmptyTitleClassName,
+  centeredListPageFooterClassName,
+  centeredListPageListItemClassName,
+  centeredListPageMetaClassName,
+  centeredListPageTitleClassName
+} from '@/lib/uiChrome'
+import { cn } from '@/lib/utils'
+import type { INotification } from '@/models/Notification'
 import { BellIcon as HeroBellIcon } from '@heroicons/react/24/outline'
 import {
   useInfiniteQuery,
@@ -13,8 +29,47 @@ import {
 import { formatDistanceToNow } from 'date-fns'
 
 import { DEFAULT_GENDER } from '@/data/constants'
+import CenteredListPageShell from '@/components/layout/CenteredListPageShell'
 import Avatar from '@/components/shared/Avatar'
 import Button from '@/components/shared/Button'
+
+const getNotificationIcon = (type: string) => {
+  switch (type) {
+    case 'follow':
+      return '👥'
+    case 'comment':
+      return '💬'
+    case 'reaction':
+      return '❤️'
+    case 'new_post':
+      return '📝'
+    case 'new_blog':
+      return '📰'
+    case 'share':
+      return '🔄'
+    case 'admin':
+      return '⚠️'
+    case 'system':
+      return 'ℹ️'
+    default:
+      return '🔔'
+  }
+}
+
+const getNotificationRowClassName = (isRead: boolean) =>
+  cn(centeredListPageListItemClassName, isRead ? undefined : 'bg-blue-50/50')
+
+const getNotificationMessageClassName = (isRead: boolean) =>
+  isRead
+    ? centeredListPageBodyTextClassName
+    : centeredListPageBodyTextUnreadClassName
+
+const invalidateNotificationQueries = (
+  queryClient: ReturnType<typeof useQueryClient>
+) => {
+  queryClient.invalidateQueries({ queryKey: ['notifications'] })
+  queryClient.invalidateQueries({ queryKey: ['header-notifications'] })
+}
 
 const NotificationsPage = () => {
   const queryClient = useQueryClient()
@@ -29,7 +84,7 @@ const NotificationsPage = () => {
   } = useInfiniteQuery({
     queryKey: ['notifications'],
     queryFn: async ({ pageParam = null }) => {
-      const url = new URL('/api/notifications', window.location.origin)
+      const url = new URL('/api/notifications', globalThis.location.origin)
       url.searchParams.set('limit', '20')
       if (pageParam) {
         url.searchParams.set('cursor', pageParam)
@@ -59,8 +114,7 @@ const NotificationsPage = () => {
       return res.json()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] })
-      queryClient.invalidateQueries({ queryKey: ['header-notifications'] })
+      invalidateNotificationQueries(queryClient)
     }
   })
 
@@ -75,135 +129,61 @@ const NotificationsPage = () => {
       return res.json()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] })
-      queryClient.invalidateQueries({ queryKey: ['header-notifications'] })
+      invalidateNotificationQueries(queryClient)
     }
   })
 
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'follow':
-        return '👥'
-      case 'comment':
-        return '💬'
-      case 'reaction':
-        return '❤️'
-      case 'new_post':
-        return '📝'
-      case 'new_blog':
-        return '📰'
-      case 'share':
-        return '🔄'
-      case 'admin':
-        return '⚠️'
-      case 'system':
-        return 'ℹ️'
-      default:
-        return '🔔'
-    }
-  }
-
-  const getNotificationLink = (notification: INotification) => {
-    switch (notification.type) {
-      case 'follow':
-        // Redirect to the follower's profile
-        return `/${notification.sender?.username || ''}`
-
-      case 'comment':
-        // Redirect to the specific post
-        if (notification.data?.postId) {
-          return `/post/${notification.data.postId}`
-        }
-        return '/feed'
-
-      case 'reaction':
-        if (notification.data?.slug && !notification.data?.postId) {
-          return `/blog/${notification.data.slug}`
-        }
-        if (notification.data?.postId) {
-          return `/post/${notification.data.postId}`
-        }
-        return '/feed'
-
-      case 'new_post':
-      case 'share':
-        // Redirect to the specific post (for both new posts and shares)
-        if (notification.data?.postId) {
-          return `/post/${notification.data.postId}`
-        }
-        return '/feed'
-
-      case 'new_blog':
-        if (notification.data?.slug) {
-          return `/blog/${notification.data.slug}`
-        }
-        return '/feed'
-
-      case 'admin':
-      case 'system':
-        // Keep admin/system notifications at feed for now
-        return '/feed'
-
-      default:
-        return '/feed'
-    }
-  }
-
   const handleNotificationClick = (notification: INotification) => {
-    if (!notification.read) {
-      markAsReadMutation.mutate(notification._id)
-    }
+    if (notification.read) return
+    markAsReadMutation.mutate(notification._id)
   }
 
-  const unreadCount = allNotifications.filter((n) => !n.read).length
+  const unreadCount = allNotifications.filter((n) => n.read === false).length
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
-            <p className="text-gray-500">Loading notifications...</p>
-          </div>
+      <CenteredListPageShell>
+        <div className={centeredListPageEmptyStateClassName}>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-sky-600" />
+          <p className={centeredListPageEmptyBodyClassName}>
+            Loading notifications...
+          </p>
         </div>
-      </div>
+      </CenteredListPageShell>
     )
   }
 
   if (isError) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <HeroBellIcon className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-            <h3 className="mb-2 text-lg font-medium text-gray-900">
-              Unable to load notifications
-            </h3>
-            <p className="text-gray-500">Please try refreshing the page.</p>
-          </div>
+      <CenteredListPageShell>
+        <div className={centeredListPageEmptyStateClassName}>
+          <HeroBellIcon className={centeredListPageEmptyIconClassName} />
+          <h3 className={centeredListPageEmptyTitleClassName}>
+            Unable to load notifications
+          </h3>
+          <p className={centeredListPageEmptyBodyClassName}>
+            Please try refreshing the page.
+          </p>
         </div>
-      </div>
+      </CenteredListPageShell>
     )
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-        {/* Header */}
-        <div className="border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <HeroBellIcon className="h-6 w-6 text-gray-500" />
-              <h1 className="text-xl font-semibold text-gray-900">
-                Notifications
-              </h1>
-              {unreadCount > 0 && (
+    <CenteredListPageShell>
+      <div className={centeredListPageCardClassName}>
+        <div className={centeredListPageCardHeaderClassName}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <HeroBellIcon className="h-5 w-5 shrink-0 text-gray-500" />
+              <h1 className={centeredListPageTitleClassName}>Notifications</h1>
+              {unreadCount > 0 ? (
                 <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
                   {unreadCount} unread
                 </span>
-              )}
+              ) : null}
             </div>
-            {unreadCount > 0 && (
+            {unreadCount > 0 ? (
               <Button
                 variant="outline"
                 size="sm"
@@ -212,23 +192,20 @@ const NotificationsPage = () => {
               >
                 Mark all as read
               </Button>
-            )}
+            ) : null}
           </div>
         </div>
 
-        {/* Notifications List */}
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-neutral-200">
           {allNotifications.length === 0 ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <HeroBellIcon className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-                <h3 className="mb-2 text-lg font-medium text-gray-900">
-                  No notifications yet
-                </h3>
-                <p className="text-gray-500">
-                  When you get notifications, they&apos;ll show up here.
-                </p>
-              </div>
+            <div className={centeredListPageEmptyStateClassName}>
+              <HeroBellIcon className={centeredListPageEmptyIconClassName} />
+              <h3 className={centeredListPageEmptyTitleClassName}>
+                No notifications yet
+              </h3>
+              <p className={centeredListPageEmptyBodyClassName}>
+                When you get notifications, they&apos;ll show up here.
+              </p>
             </div>
           ) : (
             allNotifications.map((notification) => (
@@ -236,49 +213,52 @@ const NotificationsPage = () => {
                 <Link
                   href={getNotificationLink(notification)}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`flex items-start gap-4 px-6 py-4 transition-colors hover:bg-gray-50 ${
-                    !notification.read ? 'bg-blue-50/50' : ''
-                  }`}
+                  className={getNotificationRowClassName(notification.read)}
                 >
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     {notification.sender ? (
                       <Avatar
                         gender={
-                          (notification.sender.gender as Gender) ||
+                          (notification.sender.gender as Gender | undefined) ??
                           DEFAULT_GENDER
                         }
                         src={notification.sender.profilePicture?.url || null}
                         alt={notification.sender.firstName}
-                        className="h-12 w-12"
+                        className="h-9 w-9"
                       />
                     ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-xl">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-base">
                         {getNotificationIcon(notification.type)}
                       </div>
                     )}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <p
-                          className={`text-sm ${!notification.read ? 'font-medium text-gray-900' : 'text-gray-700'}`}
+                          className={getNotificationMessageClassName(
+                            notification.read
+                          )}
                         >
                           {notification.message}
                         </p>
-                        <p className="mt-1 text-xs text-gray-500">
-                          {formatDistanceToNow(
-                            new Date(notification.createdAt!),
-                            {
-                              addSuffix: true
-                            }
-                          )}
-                        </p>
+                        {notification.createdAt ? (
+                          <p className={centeredListPageMetaClassName}>
+                            {formatDistanceToNow(
+                              new Date(notification.createdAt),
+                              { addSuffix: true }
+                            )}
+                          </p>
+                        ) : null}
                       </div>
 
-                      {!notification.read && (
-                        <div className="ml-4 h-2 w-2 rounded-full bg-blue-500" />
-                      )}
+                      {notification.read === false ? (
+                        <div
+                          className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500"
+                          aria-hidden
+                        />
+                      ) : null}
                     </div>
                   </div>
                 </Link>
@@ -287,9 +267,8 @@ const NotificationsPage = () => {
           )}
         </div>
 
-        {/* Load More */}
-        {hasNextPage && (
-          <div className="border-t border-gray-200 px-6 py-4">
+        {hasNextPage ? (
+          <div className={centeredListPageFooterClassName}>
             <Button
               variant="outline"
               className="w-full"
@@ -299,9 +278,9 @@ const NotificationsPage = () => {
               {isFetchingNextPage ? 'Loading...' : 'Load more notifications'}
             </Button>
           </div>
-        )}
+        ) : null}
       </div>
-    </div>
+    </CenteredListPageShell>
   )
 }
 

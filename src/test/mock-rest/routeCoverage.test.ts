@@ -31,10 +31,10 @@ const routeModuleToMockPath = (routeModule: string) => {
 describe('mock-rest route coverage', () => {
   it('every API route module has route.json except NextAuth catch-all', () => {
     const routeModules = collectRouteFiles(apiRoot)
-    expect(routeModules).toHaveLength(34)
+    expect(routeModules).toHaveLength(35)
 
     const withoutAuth = routeModules.filter((m) => m !== 'auth/[...nextauth]')
-    expect(withoutAuth).toHaveLength(33)
+    expect(withoutAuth).toHaveLength(34)
 
     for (const modulePath of withoutAuth) {
       const mockPath = routeModuleToMockPath(modulePath)

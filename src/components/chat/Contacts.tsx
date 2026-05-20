@@ -4,6 +4,7 @@ import { getStackedAvatarPositionClass } from '@/utils/displayFormat'
 import { ChannelProvider, useChannel } from 'ably/react'
 
 import Avatar from '@/components/shared/Avatar'
+import AvatarWithOnlineBadge from '@/components/shared/AvatarWithOnlineBadge'
 
 interface Conversation {
   _id: string
@@ -100,7 +101,7 @@ const Contacts = ({
   }, [conversations])
 
   return (
-    <aside className="max-w-xs flex-shrink-0 overflow-y-auto bg-white">
+    <div className="w-full">
       {localConvos.length === 0 ? (
         <div className="text-gray-400">No conversations</div>
       ) : (
@@ -133,12 +134,14 @@ const Contacts = ({
                   {c.isGroup ? (
                     <CollageAvatar users={displayUsers} />
                   ) : (
-                    <Avatar
-                      src={displayUsers[0]?.profilePicture?.url}
-                      gender={displayUsers[0]?.gender}
-                      alt={displayUsers[0]?.firstName}
-                      className="h-10 w-10"
-                    />
+                    <AvatarWithOnlineBadge userId={displayUsers[0]?._id}>
+                      <Avatar
+                        src={displayUsers[0]?.profilePicture?.url}
+                        gender={displayUsers[0]?.gender}
+                        alt={displayUsers[0]?.firstName}
+                        className="h-10 w-10"
+                      />
+                    </AvatarWithOnlineBadge>
                   )}
                   <div className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate font-semibold text-gray-900">
@@ -178,7 +181,7 @@ const Contacts = ({
           })}
         </ul>
       )}
-    </aside>
+    </div>
   )
 }
 

@@ -3,13 +3,28 @@
 import { useCallback, useState } from 'react'
 import Image from 'next/image'
 import getUserByUsername from '@/actions/getUserByUsername'
+import { photoCollectionItemSchema } from '@/contracts/shared'
+import { authenticatedSectionHeadingClassName } from '@/lib/uiChrome'
 import useUserStore from '@/store/user'
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { FaPlus } from 'react-icons/fa6'
+import type { z } from 'zod'
 
 import AddPhotoModal from '@/components/profile/AddPhotoModal'
+import {
+  photoCollectionAddButtonClassName,
+  photoCollectionAddButtonInnerClassName,
+  photoCollectionAddIconClassName,
+  photoCollectionAddLabelClassName,
+  photoCollectionCountClassName,
+  photoCollectionGridClassName,
+  photoCollectionHeaderRowClassName,
+  photoCollectionImageClassName,
+  photoCollectionRootClassName,
+  photoCollectionTileClassName
+} from '@/components/profile/photoCollectionClassNames'
 
 interface PhotoData {
   url: string
@@ -30,6 +45,8 @@ interface PhotoForServer {
   createdAt: string
 }
 
+type PhotoCollectionItem = z.infer<typeof photoCollectionItemSchema>
+
 interface PhotoCollectionProps {
   username: string
 }
@@ -49,47 +66,43 @@ const PhotoCollection = ({ username }: PhotoCollectionProps) => {
 
   const { photoCollection = [] } = userData || {}
   const photos = photoCollection
-    .filter((photo: PhotoData) => photo && photo.url)
+    .filter((photo: PhotoData) => Boolean(photo.url))
     .map((photo: PhotoData) => ({
       url: photo.url,
       key: `${photo.type}-${photo.url}`,
       type: photo.type,
-      createdAt: photo.createdAt?.toString() || new Date().toISOString()
+      createdAt: photo.createdAt?.toString() ?? new Date().toISOString()
     }))
 
-  // Get existing photos including profile picture
   const existingPhotos: Photo[] = []
   if (userData) {
-    // Add photoCollection photos
-    photoCollection?.forEach((photo: PhotoData) => {
-      if (photo && photo.url) {
+    photoCollection.forEach((photo: PhotoData) => {
+      if (photo.url) {
         existingPhotos.push({
           url: photo.url,
           key: `${photo.type}-${photo.url}`,
           type: photo.type,
-          createdAt: photo.createdAt?.toString() || new Date().toISOString()
+          createdAt: photo.createdAt?.toString() ?? new Date().toISOString()
         })
       }
     })
 
-    // Add profile picture if it exists
     if (userData.profilePicture?.url) {
       existingPhotos.push({
         url: userData.profilePicture.url,
         key: `profile-${userData.profilePicture.url}`,
         type: 'avatar' as const,
-        createdAt: userData.updatedAt?.toString() || new Date().toISOString()
+        createdAt: userData.updatedAt?.toString() ?? new Date().toISOString()
       })
     }
   }
 
-  const handleUpdatePhotos = async (newPhotos: Photo[]) => {
+  const handleUpdatePhotos = async (newPhotos: PhotoCollectionItem[]) => {
     try {
-      // Combine existing photos with new photos
       const allPhotos = [...photos, ...newPhotos].map((photo) => ({
         url: photo.url,
         type: photo.type,
-        createdAt: photo.createdAt?.toString() || new Date().toISOString()
+        createdAt: photo.createdAt?.toString() ?? new Date().toISOString()
       }))
 
       const response = await axios.patch('/api/update-photo-collection', {
@@ -113,51 +126,50 @@ const PhotoCollection = ({ username }: PhotoCollectionProps) => {
     }
   }
 
-  console.log('photos: ', photos)
+  const showAddTile =
+    Boolean(userData?.isCurrentUser) && photos.length < maxPhotos
 
   return (
-    <div className="flex h-full w-full flex-col gap-y-4 p-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">
+    <div className={photoCollectionRootClassName}>
+      <div className={photoCollectionHeaderRowClassName}>
+        <h2 className={authenticatedSectionHeadingClassName}>
           Photo Collection
         </h2>
-        <span className="text-sm font-medium text-gray-500">
+        <span className={photoCollectionCountClassName}>
           {photos.length}/{maxPhotos} photos
         </span>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        {photos.map((photo: Photo) => (
-          <div
-            key={photo.key}
-            className="group relative aspect-square w-full overflow-hidden rounded-lg"
-          >
+      <div className={photoCollectionGridClassName}>
+        {photos.map((photo: Photo, photoIndex: number) => (
+          <div key={photo.key} className={photoCollectionTileClassName}>
             <Image
               src={photo.url}
-              alt={`Collection photo`}
-              fill
+              alt="Collection photo"
+              fill={true}
               sizes="(max-width: 768px) 33vw, (max-width: 1200px) 25vw, 20vw"
-              className="object-cover transition-transform duration-300 group-hover:scale-110"
-              priority
+              className={photoCollectionImageClassName}
+              priority={photoIndex === 0}
             />
           </div>
         ))}
-        {userData?.isCurrentUser && photos.length < maxPhotos && (
+        {showAddTile ? (
           <button
+            type="button"
             onClick={() => setShowAddPhoto(true)}
-            className="group relative aspect-square w-full rounded-lg border-2 border-dashed border-sky-300 bg-sky-50 transition-colors duration-300 hover:border-sky-400 hover:bg-sky-100"
+            className={photoCollectionAddButtonClassName}
           >
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-y-2">
-              <FaPlus className="text-2xl text-sky-400 transition-colors duration-300 group-hover:text-sky-500" />
-              <span className="text-xs font-medium text-sky-600">
+            <div className={photoCollectionAddButtonInnerClassName}>
+              <FaPlus className={photoCollectionAddIconClassName} />
+              <span className={photoCollectionAddLabelClassName}>
                 Add Photo
               </span>
             </div>
           </button>
-        )}
+        ) : null}
       </div>
 
-      {userData?.isCurrentUser && (
+      {userData?.isCurrentUser ? (
         <AddPhotoModal
           isOpen={showAddPhoto}
           onClose={() => setShowAddPhoto(false)}
@@ -166,7 +178,7 @@ const PhotoCollection = ({ username }: PhotoCollectionProps) => {
             (photo: Photo) => !photos.some((p: Photo) => p.url === photo.url)
           )}
         />
-      )}
+      ) : null}
     </div>
   )
 }

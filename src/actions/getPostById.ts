@@ -9,7 +9,7 @@ import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 const getPostById = async (id: string) => {
   try {
     await client()
-    await initModels()
+    initModels()
 
     // First try to find it as a regular post
     let post = await Post.findById(id)
@@ -27,8 +27,11 @@ const getPostById = async (id: string) => {
           }
         },
         {
-          path: 'reactions.userId',
-          select: 'firstName lastName username profilePicture'
+          path: 'reactions',
+          populate: {
+            path: 'userId',
+            select: 'firstName lastName username profilePicture gender'
+          }
         }
       ])
       .lean()

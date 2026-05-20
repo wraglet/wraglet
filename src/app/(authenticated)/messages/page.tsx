@@ -1,10 +1,21 @@
 'use client'
 
+import {
+  mobileFullHeightPanelClassName,
+  mobileMainBottomInsetClassName
+} from '@/lib/uiChrome'
+import { cn } from '@/lib/utils'
+
 import MessagesAbly from '@/components/chat/MessagesAbly'
 
 const MessagesPage = () => {
   return (
-    <main className="fixed top-[56px] right-0 bottom-16 left-0 flex flex-col items-stretch bg-transparent p-0 lg:bottom-0">
+    <main
+      className={cn(
+        mobileFullHeightPanelClassName,
+        mobileMainBottomInsetClassName
+      )}
+    >
       <MessagesAbly />
     </main>
   )

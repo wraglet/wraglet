@@ -14,11 +14,13 @@ import ChatFloaterBadgeButton from '@/components/chat/ChatFloaterBadgeButton'
 import ChatFloaterIncomingListener from '@/components/chat/ChatFloaterIncomingListener'
 import ChatFloaterRecentPanel from '@/components/chat/ChatFloaterRecentPanel'
 import ChatWindow from '@/components/chat/ChatWindow'
+import MinimizedFloaterStack from '@/components/chat/MinimizedFloaterStack'
 import { NewChatModal } from '@/components/chat/NewChatModal'
 import Avatar from '@/components/shared/Avatar'
+import AvatarWithOnlineBadge from '@/components/shared/AvatarWithOnlineBadge'
 
 const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
-  const { openChats, closeChat, openChat, minimizedChats, minimizeChat } =
+  const { openChats, openChat, closeChat, minimizedChats, minimizeChat } =
     useChatFloaterStore()
   const queryClient = useQueryClient()
   const { user: currentUser } = useUserStore()
@@ -63,6 +65,9 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
       if (json.data?._id) {
         openChat(json.data._id)
         setShowChatHeads(false)
+        void queryClient.invalidateQueries({
+          queryKey: ['conversations', currentUser?._id]
+        })
       }
     } catch {
       setUsersError('Failed to start chat')
@@ -72,6 +77,15 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
   const handleOpenConversationFromPanel = (conversationId: string) => {
     openChat(conversationId)
     setShowChatHeads(false)
+  }
+
+  const minimizedIds = new Set(
+    minimizedChats.map((chat) => chat.conversationId)
+  )
+
+  const handleMinimizeToDock = (conversationId: string) => {
+    minimizeChat(conversationId)
+    setShowChatHeads(true)
   }
 
   return (
@@ -85,10 +99,16 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
           <div
             className={`fixed right-3 z-50 flex flex-col items-end gap-2 sm:right-5 ${mobileFabStackBottomClassName} lg:right-6 lg:bottom-6`}
           >
+            <MinimizedFloaterStack
+              conversations={conversations}
+              minimizedChats={minimizedChats}
+              currentUserId={currentUser?._id}
+              onOpenConversation={handleOpenConversationFromPanel}
+            />
             {showChatHeads && (
               <ChatFloaterRecentPanel
                 conversations={conversations}
-                minimizedChats={minimizedChats}
+                minimizedIds={minimizedIds}
                 currentUserId={currentUser?._id}
                 onOpenConversation={handleOpenConversationFromPanel}
                 onAddChat={handleOpenNewChat}
@@ -125,12 +145,14 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
                         .join('')}
                     </div>
                   ) : (
-                    <Avatar
-                      gender={info.gender}
-                      src={info.avatar}
-                      alt={info.name}
-                      className="h-8 w-8"
-                    />
+                    <AvatarWithOnlineBadge userId={info.otherUserId}>
+                      <Avatar
+                        gender={info.gender}
+                        src={info.avatar}
+                        alt={info.name}
+                        className="h-8 w-8"
+                      />
+                    </AvatarWithOnlineBadge>
                   )}
                   <span className="max-w-[120px] truncate font-semibold text-gray-900">
                     {info.name}
@@ -140,15 +162,17 @@ const ChatFloater = ({ conversations }: { conversations: IConversation[] }) => {
                   <button
                     type="button"
                     className="px-1 text-gray-500 hover:text-yellow-500"
-                    title="Minimize"
-                    onClick={() => minimizeChat(chat.conversationId)}
+                    title="Minimize to chat dock"
+                    aria-label="Minimize to chat dock"
+                    onClick={() => handleMinimizeToDock(chat.conversationId)}
                   >
                     _
                   </button>
                   <button
                     type="button"
                     className="px-1 text-gray-500 hover:text-red-500"
-                    title="Close"
+                    title="Close chat"
+                    aria-label="Close chat"
                     onClick={() => closeChat(chat.conversationId)}
                   >
                     ×

@@ -22,7 +22,7 @@ const meta = {
   },
   args: {
     conversations: demoConversations,
-    minimizedChats: [{ conversationId: 'conversation-2' }],
+    minimizedIds: new Set(['conversation-2']),
     currentUserId: 'user-current',
     onOpenConversation: fn(),
     onAddChat: fn()
@@ -39,6 +39,6 @@ export const RecentThreads: Story = {}
 export const Empty: Story = {
   args: {
     conversations: [],
-    minimizedChats: []
+    minimizedIds: new Set()
   }
 }

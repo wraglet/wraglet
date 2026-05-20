@@ -1,8 +1,15 @@
 import { Suspense } from 'react'
 import getDiscoverUsers from '@/actions/getDiscoverUsers'
+import {
+  feedMainLayoutClassName,
+  feedScrollContentPaddingBottomClassName,
+  mobileMainBottomInsetClassName
+} from '@/lib/uiChrome'
+import { cn } from '@/lib/utils'
 
 import FeedNewChatModalWrapper from '@/components/chat/FeedNewChatModalWrapper'
 import FeedClientWrapper from '@/components/feed/FeedClientWrapper'
+import FeedScrollFallback from '@/components/feed/FeedScrollFallback'
 import LeftNav from '@/components/feed/LeftNav'
 import MobileResponsiveWrapper from '@/components/feed/MobileResponsiveWrapper'
 import RightNav from '@/components/feed/RightNav'
@@ -47,11 +54,18 @@ const FeedPage = async () => {
 
   return (
     <>
-      <main className="fixed top-[56px] right-0 left-0 z-0 mx-auto flex w-full max-w-7xl items-start px-3 max-lg:bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] sm:px-4 lg:bottom-0">
+      <main
+        className={cn(feedMainLayoutClassName, mobileMainBottomInsetClassName)}
+      >
         <LeftNav />
-        <div className="mx-auto flex min-h-0 flex-1 self-stretch px-0 sm:px-4 md:px-8">
-          <div className="h-full min-h-0 w-full overflow-y-auto pb-[max(10rem,calc(5.5rem+env(safe-area-inset-bottom,0px)))] lg:pb-4">
-            <Suspense fallback={<Loading />}>
+        <div className="mx-auto flex min-h-0 min-w-0 flex-1 flex-col px-0 sm:px-4 md:px-8">
+          <div
+            className={cn(
+              'min-h-0 flex-1 overflow-y-auto overscroll-y-contain',
+              feedScrollContentPaddingBottomClassName
+            )}
+          >
+            <Suspense fallback={<FeedScrollFallback />}>
               <FeedClientWrapper />
             </Suspense>
           </div>

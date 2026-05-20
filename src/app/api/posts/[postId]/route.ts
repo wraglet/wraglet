@@ -6,12 +6,12 @@ import Post from '@/models/Post'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
 
 export const GET = async (
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ postId: string }> }
 ) => {
   try {
-    await client()
-    await initModels()
+    await Promise.resolve(client())
+    initModels()
 
     const currentUser = await getCurrentUser()
     if (!currentUser) {
@@ -35,8 +35,11 @@ export const GET = async (
           }
         },
         {
-          path: 'reactions.userId',
-          select: 'firstName lastName username profilePicture gender'
+          path: 'reactions',
+          populate: {
+            path: 'userId',
+            select: 'firstName lastName username profilePicture gender'
+          }
         }
       ])
       .lean()

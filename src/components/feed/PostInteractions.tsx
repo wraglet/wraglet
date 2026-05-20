@@ -24,6 +24,8 @@ import { FaRegComment, FaRegHeart } from 'react-icons/fa6'
 import { LuArrowBigDown, LuArrowBigUp } from 'react-icons/lu'
 
 import CommentComponent from '@/components/feed/Comment'
+import { buildPostReactionGroups } from '@/components/feed/post/buildPostReactionGroups'
+import ReactionLottieBadge from '@/components/feed/post/ReactionLottieBadge'
 import Button from '@/components/shared/Button'
 import CurrentUserAvatar from '@/components/shared/CurrentUserAvatar'
 import Input from '@/components/shared/Input'
@@ -41,22 +43,6 @@ const COMMENT_INPUT_CLASS =
 
 interface PostInteractionsProps {
   post: IPost
-}
-
-interface User {
-  _id: string
-  firstName: string
-  lastName: string
-  username: string
-  profilePicture?: {
-    url: string
-  }
-}
-
-interface ReactionGroup {
-  type: string
-  count: number
-  users: User[]
 }
 
 type PostCommentDoc = Exclude<
@@ -160,33 +146,11 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
   ]
 
   const content = useRef<HTMLDivElement | null>(null)
-  const [reactionGroups, setReactionGroups] = useState<ReactionGroup[]>([])
 
-  useEffect(() => {
-    if (!post.reactions) return
-
-    const groups: Record<string, ReactionGroup> = {}
-
-    // Initialize groups
-    post.reactions.forEach((reaction) => {
-      if (!groups[reaction.type]) {
-        groups[reaction.type] = {
-          type: reaction.type,
-          count: 0,
-          users: []
-        }
-      }
-      groups[reaction.type].count++
-
-      // Add user to the group if they reacted - add null safety checks
-      if (reaction.userId?._id === user?._id) {
-        const userData = reaction.userId as User
-        groups[reaction.type].users.push(userData)
-      }
-    })
-
-    setReactionGroups(Object.values(groups))
-  }, [post.reactions, user])
+  const { reactionCounts, reactionGroups } = buildPostReactionGroups(
+    post.reactions,
+    user?._id
+  )
 
   const toggleComment = () => {
     setShowCommentInput((prev) => !prev)
@@ -355,16 +319,6 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
     </span>
   )
 
-  // Get reaction counts by type
-  const reactionCounts =
-    post.reactions?.reduce(
-      (acc, reaction) => {
-        acc[reaction.type] = (acc[reaction.type] || 0) + 1
-        return acc
-      },
-      {} as Record<string, number>
-    ) || {}
-
   // Get user's reaction if any
   const userReaction = post.reactions?.find(
     (reaction) => reaction.userId?._id === user?._id
@@ -385,16 +339,11 @@ const PostInteractions = ({ post: initialPost }: PostInteractionsProps) => {
                 {reactionGroups.slice(0, 3).map((group, index) => (
                   <div
                     key={`${group.type}-${index}`}
-                    className="relative h-4 w-4 rounded-full bg-white ring-2 ring-white"
+                    className="relative flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-white"
                   >
-                    {/* @ts-ignore */}
-                    <lottie-player
-                      id={`reaction-display-${group.type}-${post._id}`}
-                      autoplay
-                      loop
-                      mode="normal"
-                      src={`${process.env.NEXT_PUBLIC_R2_FILES_URL}/lottie/${group.type}.json`}
-                      style={{ width: '100%', height: '100%' }}
+                    <ReactionLottieBadge
+                      type={group.type}
+                      postId={String(post._id)}
                     />
                   </div>
                 ))}

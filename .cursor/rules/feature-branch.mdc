@@ -1,0 +1,27 @@
+---
+description: Feature branch completion — concise commits and PRs (no co-authors)
+alwaysApply: false
+---
+
+# Feature branch workflow
+
+When the user is **finishing a feature branch**, **organizing commits**, or **opening a PR**, follow the rules below. Full templates live locally in `requirements/FEATURE_BRANCH.md` (never committed).
+
+## Commits
+
+- Sync the index with the latest edits before committing (`git add` after final edits).
+- Use concise Conventional Commits: `type(scope): imperative summary` (≤72 chars, lowercase subject).
+- Split by **intent** (feat / fix / refactor / docs / test / chore), not one blob per repo.
+- **Never** add `Co-authored-by` or AI attribution trailers unless the user explicitly requests them.
+- **Never** commit anything under `requirements/` (`.gitignore` + `.git/info/exclude`).
+
+## Pull requests
+
+- **Title:** one line, same style as a good commit subject.
+- **Body:** 2–4 summary bullets + test plan checklist; stay brief.
+- Draft PR text in `requirements/PR_DESCRIPTION.md` locally; paste into GitHub manually.
+
+## Local docs (not in git)
+
+- `requirements/FEATURE_BRANCH.md` — commit and PR checklist
+- `requirements/FOLLOW_UP.md` — engineering follow-ups

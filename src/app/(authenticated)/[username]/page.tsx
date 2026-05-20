@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import getPostsByUsername from '@/actions/getPostsByUsername'
+import { authenticatedProfileMainClassName } from '@/lib/uiChrome'
 import useBlogModalStore from '@/store/blogModal'
 import {
   Dialog,
@@ -65,7 +66,7 @@ const ProfilePage = ({ params }: ProfilePageProps) => {
 
   return (
     <>
-      <main className="relative flex min-h-screen w-full flex-col items-center gap-y-4 overflow-hidden pb-[max(5rem,calc(4rem+env(safe-area-inset-bottom,0px)))] sm:gap-y-5 lg:gap-y-6 lg:pb-6">
+      <main className={authenticatedProfileMainClassName}>
         <Header username={username} />
         <ProfilePostsClientWrapper
           initialPosts={initialPosts}
