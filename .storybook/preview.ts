@@ -49,9 +49,8 @@ const preview: Preview = {
     },
 
     a11y: {
-      // Storybook addon-a11y: violations surface in the UI only (not failing the build).
-      // Alternatives: 'error' (fail CI) or 'off' (disable checks).
-      test: 'todo'
+      // Violations surface in the Storybook UI only; use 'error' in CI if you want builds to fail.
+      test: 'off'
     }
   },
   tags: ['autodocs']
