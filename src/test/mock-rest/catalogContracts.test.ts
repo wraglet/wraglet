@@ -36,7 +36,7 @@ import {
   postsFeedSuccessSchema,
   postsFeedUnauthorizedSchema
 } from '@/contracts/postsFeed'
-import { registerCreatedUserSchema } from '@/contracts/register'
+import { registerSuccessSchema } from '@/contracts/register'
 import { searchResponseSchema } from '@/contracts/search'
 import { apiErrorBodySchema } from '@/contracts/shared'
 import {
@@ -125,7 +125,7 @@ const schemaFor = (
     'PATCH /api/update-cover-photo 200': updateCoverSuccessSchema,
     'PATCH /api/update-photo-collection 200': updatePhotoCollectionUserSchema,
     'PATCH /api/update-profile-picture 200': updateProfileSuccessSchema,
-    'POST /api/register 200': registerCreatedUserSchema,
+    'POST /api/register 200': registerSuccessSchema,
     'GET /api/users 200': usersListSuccessSchema,
     'GET /api/users/trending 200': usersTrendingSuccessSchema,
     'GET /api/users/trending 401': usersUnauthorizedSchema,

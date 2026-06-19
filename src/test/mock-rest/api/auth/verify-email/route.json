@@ -1,0 +1,9 @@
+[
+  {
+    "route": "/api/auth/verify-email",
+    "method": "GET",
+    "status": 302,
+    "description": "Redirect after successful verification",
+    "responseBody": null
+  }
+]

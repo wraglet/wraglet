@@ -1,0 +1,32 @@
+[
+  {
+    "route": "/api/auth/credentials-check",
+    "method": "POST",
+    "status": 200,
+    "description": "Valid credentials, verified user",
+    "responseBody": {
+      "ok": true,
+      "email": "user@example.com"
+    }
+  },
+  {
+    "route": "/api/auth/credentials-check",
+    "method": "POST",
+    "status": 200,
+    "description": "Valid password but email not verified",
+    "responseBody": {
+      "ok": false,
+      "needsVerification": true,
+      "email": "user@example.com"
+    }
+  },
+  {
+    "route": "/api/auth/credentials-check",
+    "method": "POST",
+    "status": 200,
+    "description": "Invalid credentials",
+    "responseBody": {
+      "ok": false
+    }
+  }
+]

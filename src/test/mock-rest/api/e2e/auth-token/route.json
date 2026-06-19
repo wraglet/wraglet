@@ -1,0 +1,29 @@
+[
+  {
+    "route": "/api/e2e/auth-token",
+    "method": "GET",
+    "status": 404,
+    "description": "Disabled outside E2E token capture mode",
+    "responseBody": {
+      "error": "Not found"
+    }
+  },
+  {
+    "route": "/api/e2e/auth-token",
+    "method": "GET",
+    "status": 400,
+    "description": "Missing email or kind query params",
+    "responseBody": {
+      "error": "Missing email or kind"
+    }
+  },
+  {
+    "route": "/api/e2e/auth-token",
+    "method": "GET",
+    "status": 200,
+    "description": "Captured verify/reset token for E2E",
+    "responseBody": {
+      "token": "example-e2e-auth-token"
+    }
+  }
+]

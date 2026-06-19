@@ -18,7 +18,8 @@ test('login submit is disabled until email and password are filled', async ({
 
 test('Forgot Password control is reachable', async ({ page }) => {
   await page.goto('/')
-  await expect(
-    page.getByRole('button', { name: 'Forgot Password?' })
-  ).toBeVisible()
+  const forgotLink = page.getByRole('link', { name: 'Forgot Password?' })
+  await expect(forgotLink).toBeVisible()
+  await forgotLink.click()
+  await expect(page).toHaveURL('/forgot-password')
 })
