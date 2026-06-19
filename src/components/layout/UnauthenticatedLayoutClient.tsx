@@ -10,13 +10,18 @@ const UnauthenticatedLayoutClient = ({
   children
 }: UnauthenticatedLayoutClientProps) => {
   const pathname = usePathname()
-  const isLoginPage = pathname === '/'
-  const isRegisterPage = pathname === '/register'
+  const isCompactAuthPage =
+    pathname === '/' ||
+    pathname === '/register' ||
+    pathname === '/forgot-password' ||
+    pathname === '/reset-password' ||
+    pathname === '/verify-email'
+  const useFitHeight = isCompactAuthPage && pathname !== '/register'
 
   return (
     <div
-      className={`animate-fade-in-up relative mx-2 flex ${isLoginPage ? 'min-h-fit' : 'h-full'} max-h-[calc(100vh-200px)] w-full overflow-hidden rounded-3xl bg-white/80 shadow-2xl ${
-        isRegisterPage || isLoginPage ? 'max-w-md' : 'max-w-3xl'
+      className={`animate-fade-in-up relative mx-2 flex ${useFitHeight ? 'min-h-fit' : 'h-full'} max-h-[calc(100vh-200px)] w-full overflow-hidden rounded-3xl bg-white/80 shadow-2xl ${
+        isCompactAuthPage ? 'max-w-md' : 'max-w-3xl'
       }`}
     >
       {/* Thematic blue left border */}
