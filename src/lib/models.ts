@@ -6,11 +6,13 @@ import Blog from '@/models/Blog'
 import BlogComment from '@/models/BlogComment'
 import Comment from '@/models/Comment'
 import Conversation from '@/models/Conversation'
+import E2EAuthToken from '@/models/E2EAuthToken'
 import Follow from '@/models/Follow'
 import Message from '@/models/Message'
 import Post from '@/models/Post'
 import PostReaction from '@/models/PostReaction'
 import PostVote from '@/models/PostVote'
+import RateLimit from '@/models/RateLimit'
 import Share from '@/models/Share'
 import User from '@/models/User'
 import mongoose from 'mongoose'
@@ -26,6 +28,8 @@ export {
   Post,
   PostReaction,
   PostVote,
+  RateLimit,
+  E2EAuthToken,
   Share,
   User
 }
@@ -40,6 +44,8 @@ export const initModels = () => {
     Post: !!mongoose.models.Post,
     PostReaction: !!mongoose.models.PostReaction,
     PostVote: !!mongoose.models.PostVote,
+    RateLimit: !!mongoose.models.RateLimit,
+    E2EAuthToken: !!mongoose.models.E2EAuthToken,
     User: !!mongoose.models.User,
     Message: !!mongoose.models.Message,
     Conversation: !!mongoose.models.Conversation,
