@@ -72,6 +72,19 @@ describe('getMessagesAsideClassName', () => {
     expect(className).toContain('max-lg:hidden')
   })
 
+  it('scopes drawer positioning to mobile only', () => {
+    const className = getMessagesAsideClassName({
+      showMobileConversationList: false,
+      showContactsSidebar: false,
+      selectedId: 'c1'
+    })
+
+    expect(className).toContain('max-lg:fixed')
+    expect(className).toContain('max-lg:top-14')
+    expect(className.split(/\s+/)).not.toContain('fixed')
+    expect(className.split(/\s+/)).not.toContain('top-14')
+  })
+
   it('shows drawer when sidebar is open on mobile', () => {
     const className = getMessagesAsideClassName({
       showMobileConversationList: false,

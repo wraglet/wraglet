@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type SubmitEvent } from 'react'
 import type { Gender } from '@/interfaces'
 import useUserStore, { User } from '@/store/user'
 import { type ChatMessageEvent, type Message } from '@ably/chat'
@@ -16,7 +16,7 @@ const ChatWindow = ({ conversationId }: { conversationId: string }) => {
   const { user: currentUser } = useUserStore()
   const [messageInput, setMessageInput] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
 
   const { room } = useRoom()
   const isRoomAttached = room?.status === 'attached'
@@ -66,8 +66,8 @@ const ChatWindow = ({ conversationId }: { conversationId: string }) => {
             text: m.content,
             timestamp: new Date(m.createdAt || m.timestamp),
             metadata: {
-              ...(m.extras || {}),
-              sender: m.sender
+              sender: m.sender,
+              ...m.extras
             }
           })
         )
@@ -79,12 +79,12 @@ const ChatWindow = ({ conversationId }: { conversationId: string }) => {
   }, [conversationId])
 
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
-    }
+    const container = messagesContainerRef.current
+    if (!container) return
+    container.scrollTop = container.scrollHeight
   }, [messages])
 
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSendMessage = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!messageInput.trim() || !isRoomAttached) return
 
@@ -126,85 +126,83 @@ const ChatWindow = ({ conversationId }: { conversationId: string }) => {
   })
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-white">
-      <div className="min-h-0 flex-1 overflow-y-auto">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white">
+      <div
+        ref={messagesContainerRef}
+        className="min-h-0 flex-1 basis-0 overflow-y-auto overscroll-y-contain"
+      >
         {messages.length === 0 ? (
           <div className="px-3 py-2 text-gray-400">No messages yet</div>
         ) : (
-          <>
-            <ul className="space-y-2 px-3 py-2">
-              {messages.map((m) => {
-                if (!m) return null
-                const isCurrentUser = m.clientId === currentUser?._id
+          <ul className="space-y-2 px-3 py-2">
+            {messages.map((m) => {
+              if (!m) return null
+              const isCurrentUser = m.clientId === currentUser?._id
 
-                let sender = m.metadata?.sender as any
-                if (!sender) {
-                  const member = presenceData.find(
-                    (p) => p.clientId === m.clientId
-                  )
-                  if (member) {
-                    sender = member.data
-                  }
+              let sender = m.metadata?.sender as any
+              if (!sender) {
+                const member = presenceData.find(
+                  (p) => p.clientId === m.clientId
+                )
+                if (member) {
+                  sender = member.data
                 }
+              }
 
-                const senderProfile = sender as Partial<User> | undefined
+              const senderProfile = sender as Partial<User> | undefined
 
-                return (
-                  <li
-                    key={m.serial}
-                    className={`flex gap-2 px-3 py-1 ${
-                      isCurrentUser ? 'flex-row-reverse items-end' : 'items-end'
+              return (
+                <li
+                  key={m.serial}
+                  className={`flex gap-2 px-3 py-1 ${
+                    isCurrentUser ? 'flex-row-reverse items-end' : 'items-end'
+                  }`}
+                >
+                  {!isCurrentUser && senderProfile?.gender && (
+                    <Avatar
+                      src={senderProfile.profilePicture?.url || null}
+                      gender={senderProfile.gender as Gender}
+                      alt={senderProfile.firstName}
+                      className="h-7 w-7"
+                    />
+                  )}
+                  <div
+                    className={`flex max-w-[75%] flex-col ${
+                      isCurrentUser
+                        ? 'items-end self-end'
+                        : 'items-start self-start'
                     }`}
                   >
-                    {!isCurrentUser &&
-                      senderProfile &&
-                      senderProfile.gender && (
-                        <Avatar
-                          src={senderProfile.profilePicture?.url || null}
-                          gender={senderProfile.gender as Gender}
-                          alt={senderProfile.firstName}
-                          className="h-7 w-7"
-                        />
-                      )}
                     <div
-                      className={`flex max-w-[75%] flex-col ${
+                      className={`px-4 py-2 text-sm break-words shadow-sm ${
                         isCurrentUser
-                          ? 'items-end self-end'
-                          : 'items-start self-start'
+                          ? 'self-end rounded-2xl rounded-br-none bg-blue-500 text-white'
+                          : 'self-start rounded-2xl rounded-bl-none bg-gray-100 text-gray-900'
                       }`}
                     >
-                      <div
-                        className={`px-4 py-2 text-sm break-words shadow-sm ${
-                          isCurrentUser
-                            ? 'self-end rounded-2xl rounded-br-none bg-blue-500 text-white'
-                            : 'self-start rounded-2xl rounded-bl-none bg-gray-100 text-gray-900'
-                        }`}
-                      >
-                        {!isCurrentUser && (
-                          <div className="mb-0.5 text-xs font-semibold text-gray-700">
-                            {senderProfile?.firstName} {senderProfile?.lastName}
-                          </div>
-                        )}
-                        {m.text}
-                      </div>
-                      <span className="mt-1 text-xs text-gray-400">
-                        {new Date(m.timestamp).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </span>
+                      {!isCurrentUser && (
+                        <div className="mb-0.5 text-xs font-semibold text-gray-700">
+                          {senderProfile?.firstName} {senderProfile?.lastName}
+                        </div>
+                      )}
+                      {m.text}
                     </div>
-                  </li>
-                )
-              })}
-              {typingUsers.length > 0 && (
-                <li className="px-3 py-2 text-xs text-gray-400">
-                  {typingUsers.join(', ')} is typing...
+                    <span className="mt-1 text-xs text-gray-400">
+                      {new Date(m.timestamp).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
                 </li>
-              )}
-            </ul>
-            <div ref={messagesEndRef} />
-          </>
+              )
+            })}
+            {typingUsers.length > 0 && (
+              <li className="px-3 py-2 text-xs text-gray-400">
+                {typingUsers.join(', ')} is typing...
+              </li>
+            )}
+          </ul>
         )}
       </div>
       <div className="shrink-0 border-t bg-white p-2">
