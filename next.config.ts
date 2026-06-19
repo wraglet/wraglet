@@ -1,7 +1,12 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['ably', 'mongoose'],
+  serverExternalPackages: [
+    'ably',
+    'mongoose',
+    'disposable-email-domains',
+    'resend'
+  ],
   images: {
     remotePatterns: [
       {
