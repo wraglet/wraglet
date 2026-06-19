@@ -27,6 +27,7 @@ declare module 'next-auth' {
           url: string
         }
       | string
+    passwordChangedAt?: number
   }
 }
 
@@ -42,5 +43,7 @@ declare module 'next-auth/jwt' {
           url: string
         }
       | string
+    passwordChangedAt?: number
+    invalid?: boolean
   }
 }

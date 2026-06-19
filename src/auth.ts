@@ -1,18 +1,17 @@
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import { canUserSignIn } from '@/lib/auth/accountAccess'
+import { findUserByCredential } from '@/lib/auth/resolveCredentialUser'
 import client from '@/lib/db'
-import User, { type IUserDocument } from '@/models/User'
+import User from '@/models/User'
 import bcrypt from 'bcryptjs'
-import { Types } from 'mongoose'
-
-// Define a type for the user with _id field for lean() queries
-type UserWithId = IUserDocument & {
-  _id: Types.ObjectId
-}
 
 const getCredentialValue = (value: unknown): string => {
   return typeof value === 'string' ? value : ''
 }
+
+const getPasswordChangedAtMs = (value: Date | undefined | null): number =>
+  value instanceof Date ? value.getTime() : 0
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -34,44 +33,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           await client()
 
-          // Check if the input is an email (contains @ but not at the start, and has a domain)
-          const isEmail =
-            emailOrUsername.includes('@') &&
-            !emailOrUsername.startsWith('@') &&
-            emailOrUsername.includes('.')
+          const user = await findUserByCredential(emailOrUsername)
 
-          // Create query to search by either email or username
-          let searchQuery
-          if (isEmail) {
-            searchQuery = { email: emailOrUsername }
-          } else {
-            // For usernames, if it doesn't start with @, add it
-            // If it already starts with @, keep it as is
-            const username = emailOrUsername.startsWith('@')
-              ? emailOrUsername
-              : `@${emailOrUsername}`
-            searchQuery = { username: username }
+          if (!user?.hashedPassword || !canUserSignIn(user)) {
+            return null
           }
 
-          const user = (await User.findOne(
-            searchQuery
-          ).lean()) as UserWithId | null
+          const isPasswordCorrect = await bcrypt.compare(
+            password,
+            user.hashedPassword
+          )
 
-          if (user?.hashedPassword) {
-            const isPasswordCorrect = await bcrypt.compare(
-              password,
-              user.hashedPassword
+          if (isPasswordCorrect) {
+            const dbUser = await User.findById(user._id).select(
+              'passwordChangedAt'
             )
-
-            if (isPasswordCorrect) {
-              return {
-                _id: user._id.toString(),
-                email: user.email,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                gender: user.gender,
-                profilePicture: user.profilePicture
-              }
+            return {
+              _id: user._id.toString(),
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              gender: user.gender,
+              profilePicture: user.profilePicture,
+              passwordChangedAt: getPasswordChangedAtMs(
+                dbUser?.passwordChangedAt
+              )
             }
           }
         } catch (error) {
@@ -83,7 +69,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     authorized: async ({ auth }) => {
-      return !!auth
+      return Boolean(auth?.user?._id)
     },
     jwt: async ({ token, user }) => {
       if (user) {
@@ -93,22 +79,53 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.lastName = user.lastName
         token.gender = user.gender
         token.profilePicture = user.profilePicture
+        token.passwordChangedAt =
+          typeof user.passwordChangedAt === 'number'
+            ? user.passwordChangedAt
+            : 0
+        token.invalid = false
+        return token
       }
+
+      if (!token._id || token.invalid) {
+        return token
+      }
+
+      try {
+        await client()
+        const dbUser = await User.findById(token._id).select(
+          'passwordChangedAt'
+        )
+        const dbMs = getPasswordChangedAtMs(dbUser?.passwordChangedAt)
+        const tokenMs =
+          typeof token.passwordChangedAt === 'number'
+            ? token.passwordChangedAt
+            : 0
+
+        if (dbMs > tokenMs) {
+          token.invalid = true
+        }
+      } catch (error) {
+        console.error('[auth] JWT passwordChangedAt check failed:', error)
+      }
+
       return token
     },
     session: async ({ session, token }) => {
-      if (token) {
-        session.user._id = token._id
-        session.user.email = token.email
-        session.user.firstName = token.firstName
-        session.user.lastName = token.lastName
-        session.user.gender = token.gender
-        session.user.profilePicture = token.profilePicture
+      if (token.invalid || !token._id) {
+        return { ...session, expires: new Date(0).toISOString() }
       }
+
+      session.user._id = token._id
+      session.user.email = token.email
+      session.user.firstName = token.firstName
+      session.user.lastName = token.lastName
+      session.user.gender = token.gender
+      session.user.profilePicture = token.profilePicture
       return session
     }
   },
-  debug: process.env.NODE_ENV === 'development',
+  debug: process.env.AUTH_DEBUG === 'true',
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -133,8 +150,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         sameSite: 'lax',
         path: '/',
         secure: process.env.NODE_ENV === 'production'
-        // Optionally set domain for production if needed:
-        // domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : undefined,
       }
     }
   }
