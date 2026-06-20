@@ -1,0 +1,11 @@
+[
+  {
+    "route": "/api/auth/forgot-password",
+    "method": "POST",
+    "status": 200,
+    "description": "Generic response (does not leak account existence)",
+    "responseBody": {
+      "message": "If an account exists for that email, you'll receive password reset instructions shortly."
+    }
+  }
+]

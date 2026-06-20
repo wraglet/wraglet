@@ -70,7 +70,7 @@ const GroupChatHeader = ({
     const user = participants[0]
     return (
       <div
-        className={`sticky top-0 z-10 flex min-w-0 items-center border-b bg-white/80 backdrop-blur ${dmHeaderPadding}`}
+        className={`flex min-w-0 shrink-0 items-center border-b bg-white/80 backdrop-blur ${dmHeaderPadding}`}
       >
         {onBack ? <ChatHeaderBackButton onBack={onBack} /> : null}
         <AvatarWithOnlineBadge userId={user._id} className="mr-3">
@@ -95,7 +95,7 @@ const GroupChatHeader = ({
   // Group chat: collage avatar and all names
   return (
     <div
-      className={`sticky top-0 z-10 flex min-w-0 items-center gap-2 border-b bg-white/80 backdrop-blur ${groupHeaderPadding}`}
+      className={`flex min-w-0 shrink-0 items-center gap-2 border-b bg-white/80 backdrop-blur ${groupHeaderPadding}`}
     >
       {onBack ? <ChatHeaderBackButton onBack={onBack} /> : null}
       <CollageAvatar users={participants} />

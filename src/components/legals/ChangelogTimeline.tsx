@@ -11,6 +11,7 @@ import {
   Search,
   Settings,
   Share2,
+  Shield,
   Sparkles,
   Users,
   Zap
@@ -27,6 +28,25 @@ interface ChangelogEntry {
 }
 
 const changelogData: ChangelogEntry[] = [
+  {
+    date: '2026-06-20',
+    version: '0.10.0',
+    title: 'Registration trust, email verification, and password recovery',
+    description:
+      'Signup and sign-in now require proof of inbox ownership, bot-resistant Turnstile gates, and real forgot-password reset—replacing instant post-register access and the “coming soon” reset placeholder',
+    features: [
+      'Email verification: new accounts receive a Resend link; unverified users are guided to /verify-email instead of the feed',
+      'Forgot and reset password: /forgot-password and /reset-password with one-time tokens, Turnstile on request, and JWT invalidation after reset',
+      'Bot and abuse controls: Cloudflare Turnstile on signup and forgot-password, Mongo-backed rate limits, disposable-domain blocking, and Gmail dot-alias deduplication',
+      'Human-name and email quality checks at registration; generic anti-enumeration messages on forgot-password and resend-verification',
+      'Auth UI aligned across login, register, verify-email, forgot-password, and reset-password (shared layout, h-12 inputs, Turnstile width)',
+      'Session hygiene: suspended or ineligible accounts sign out cleanly; login shows verified or error toasts from email redirects',
+      'credentials-check pre-login path for valid password but unverified email; full Playwright auth-trust journey in CI',
+      'Messages UI: stabilized chat layout and new-chat modal sizing on the messages page'
+    ],
+    type: 'major',
+    icon: <Shield className="h-6 w-6" />
+  },
   {
     date: '2026-05-19',
     version: '0.9.3',

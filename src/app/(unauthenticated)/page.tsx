@@ -1,9 +1,14 @@
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import getCurrentUser from '@/actions/getCurrentUser'
 import getSession from '@/actions/getSession'
+import { signOut } from '@/auth'
+import { canUserSignIn, needsEmailVerification } from '@/lib/auth/accountAccess'
 
 import LoginForm from '@/components/auth/LoginForm'
+import LoginVerifiedBanner from '@/components/auth/LoginVerifiedBanner'
 
 export const metadata: Metadata = {
   title: 'Sign In to Wraglet',
@@ -58,7 +63,18 @@ const LoginPage = async () => {
   const session = await getSession()
 
   if (session?.user) {
-    redirect('/feed')
+    const currentUser = await getCurrentUser()
+    if (currentUser && canUserSignIn(currentUser)) {
+      redirect('/feed')
+    }
+    if (currentUser && needsEmailVerification(currentUser)) {
+      await signOut({
+        redirectTo: `/verify-email?email=${encodeURIComponent(currentUser.email)}`
+      })
+    }
+    if (session.user) {
+      await signOut({ redirectTo: '/?error=account_suspended' })
+    }
   }
 
   return (
@@ -71,6 +87,9 @@ const LoginPage = async () => {
           Sign in to continue to Wraglet
         </p>
       </div>
+      <Suspense fallback={null}>
+        <LoginVerifiedBanner />
+      </Suspense>
       <LoginForm />
       <div className="mt-1 flex w-full justify-center">
         <Link

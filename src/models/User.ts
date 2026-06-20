@@ -3,12 +3,19 @@ import { Document, model, models, Schema } from 'mongoose'
 
 import { DEFAULT_GENDER, DEFAULT_PRONOUN } from '@/data/constants'
 
+export type AccountStatus =
+  | 'pending_verification'
+  | 'active'
+  | 'suspended'
+  | 'deleted'
+
 // Base User interface without MongoDB document properties
 export interface IUser {
   firstName: string
   lastName: string
   suffix?: string
   email: string
+  canonicalEmail?: string
   username: string
   dob: Date
   gender: Gender
@@ -29,6 +36,15 @@ export interface IUser {
     type: 'post' | 'avatar'
     createdAt: Date
   }>
+  accountStatus?: AccountStatus
+  emailVerifiedAt?: Date
+  emailVerificationTokenHash?: string
+  emailVerificationExpiresAt?: Date
+  passwordResetTokenHash?: string
+  passwordResetExpiresAt?: Date
+  passwordResetRequestedAt?: Date
+  passwordChangedAt?: Date
+  registrationRiskScore?: number
   createdAt?: Date
   updatedAt?: Date
 }
@@ -45,6 +61,7 @@ const UserSchema = new Schema<IUserDocument>(
     lastName: String,
     suffix: String,
     email: { type: String, unique: true },
+    canonicalEmail: { type: String, unique: true, sparse: true },
     hashedPassword: String,
     username: String,
     dob: Date,
@@ -73,10 +90,26 @@ const UserSchema = new Schema<IUserDocument>(
         },
         createdAt: { type: Date, default: Date.now }
       }
-    ]
+    ],
+    accountStatus: {
+      type: String,
+      enum: ['pending_verification', 'active', 'suspended', 'deleted'],
+      default: 'pending_verification'
+    },
+    emailVerifiedAt: Date,
+    emailVerificationTokenHash: String,
+    emailVerificationExpiresAt: Date,
+    passwordResetTokenHash: String,
+    passwordResetExpiresAt: Date,
+    passwordResetRequestedAt: Date,
+    passwordChangedAt: Date,
+    registrationRiskScore: { type: Number, min: 0, max: 100 }
   },
   { timestamps: true }
 )
+
+UserSchema.index({ emailVerificationTokenHash: 1 }, { sparse: true })
+UserSchema.index({ passwordResetTokenHash: 1 }, { sparse: true })
 
 const User = models?.User || model<IUserDocument>('User', UserSchema)
 

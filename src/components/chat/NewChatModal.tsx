@@ -1,7 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import { useIsClient } from '@/lib/hooks/useIsClient'
 import { XMarkIcon } from '@heroicons/react/24/outline'
+import { createPortal } from 'react-dom'
 
 import Avatar from '@/components/shared/Avatar'
 
@@ -22,7 +24,22 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({
   isLoading,
   error
 }) => {
+  const isClient = useIsClient()
+  const dialogRef = useRef<HTMLDialogElement>(null)
   const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+
+    if (open) {
+      if (!dialog.open) dialog.showModal()
+      return
+    }
+
+    if (dialog.open) dialog.close()
+  }, [open])
+
   const filtered = users.filter((user) => {
     if (!user) return false
     const query = search.toLowerCase()
@@ -32,7 +49,7 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(query))
   })
-  if (!open) return null
+  if (!open || !isClient) return null
 
   let content: React.ReactNode
   if (isLoading) {
@@ -47,7 +64,7 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({
     )
   } else {
     content = (
-      <ul className="max-h-72 space-y-1 overflow-y-auto">
+      <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto">
         {filtered.length === 0 && (
           <li className="py-4 text-center text-sm text-gray-400">
             No users found
@@ -81,11 +98,25 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({
     )
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-xl border border-neutral-200 bg-white p-4 shadow-xl">
+  return createPortal(
+    <dialog
+      ref={dialogRef}
+      aria-labelledby="new-chat-modal-title"
+      className="fixed inset-0 z-[100] m-0 flex max-h-none w-full max-w-none items-end justify-center border-0 bg-transparent p-0 backdrop:bg-black/30 backdrop:backdrop-blur-sm sm:items-center sm:px-4"
+      onCancel={(event) => {
+        event.preventDefault()
+        onClose()
+      }}
+      onClick={(event) => {
+        if (event.target === dialogRef.current) onClose()
+      }}
+    >
+      <div className="flex max-h-[min(85dvh,calc(100dvh-3.5rem))] w-full max-w-md flex-col rounded-t-2xl border border-neutral-200 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] shadow-xl sm:max-h-[min(32rem,85dvh)] sm:rounded-xl">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-gray-900">
+          <h2
+            id="new-chat-modal-title"
+            className="text-base font-semibold text-gray-900"
+          >
             Start New Chat
           </h2>
           <button
@@ -104,6 +135,7 @@ export const NewChatModal: React.FC<NewChatModalProps> = ({
         />
         {content}
       </div>
-    </div>
+    </dialog>,
+    document.body
   )
 }

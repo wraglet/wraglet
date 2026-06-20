@@ -4,7 +4,8 @@ import { Suspense } from 'react'
 import { usePathname } from 'next/navigation'
 import {
   appShellPageWashClassName,
-  isAuthenticatedCenteredScrollPath
+  isAuthenticatedCenteredScrollPath,
+  messagesPageSlotClassName
 } from '@/lib/uiChrome'
 import { cn } from '@/lib/utils'
 import type { IUser } from '@/models/User'
@@ -45,7 +46,11 @@ const AuthenticatedLayoutClientWrapper = ({ currentUser, children }: Props) => {
         )}
       >
         <Header currentUser={currentUser || null} />
-        {children}
+        {isMessagesRoute ? (
+          <div className={messagesPageSlotClassName}>{children}</div>
+        ) : (
+          children
+        )}
         {!isMessagesRoute && (
           <ChatFloaterServer currentUser={currentUser || null} />
         )}

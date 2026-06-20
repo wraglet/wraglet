@@ -30,6 +30,21 @@ export const mobileFullHeightPanelClassName =
   'fixed top-14 right-0 left-0 z-0 flex min-h-0 flex-col bg-white max-lg:h-auto' as const
 
 /**
+ * Messages route slot inside the authenticated shell — flex fill below the fixed
+ * header and above the mobile tab bar (no fixed positioning on the page itself).
+ */
+export const messagesPageSlotClassName = [
+  'flex w-full min-h-0 flex-1 flex-col overflow-hidden',
+  'pt-14',
+  'max-lg:pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))]',
+  'sm:max-lg:pb-[calc(4rem+env(safe-area-inset-bottom,0px))]'
+].join(' ')
+
+/** Messages page content — fills the slot above. */
+export const messagesPageMainClassName =
+  'flex h-full min-h-0 w-full flex-col overflow-hidden bg-white' as const
+
+/**
  * Feed fills the viewport below the header; sidebars stay fixed height, center scrolls.
  */
 export const feedMainLayoutClassName =
