@@ -26,6 +26,17 @@ export default defineConfig({
     command: 'yarn dev',
     url: 'http://localhost:5000',
     reuseExistingServer: !process.env.CI,
-    timeout: 180_000
+    timeout: 180_000,
+    env: {
+      ...process.env,
+      E2E_SKIP_TURNSTILE: '1',
+      E2E_CAPTURE_AUTH_TOKENS: '1',
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY:
+        process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ??
+        '1x00000000000000000000AA',
+      TURNSTILE_SECRET_KEY:
+        process.env.TURNSTILE_SECRET_KEY ??
+        '1x0000000000000000000000000000000AA'
+    }
   }
 })

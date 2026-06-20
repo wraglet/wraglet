@@ -24,7 +24,7 @@ const getCurrentUser = async () => {
     const currentUser = await User.findOne({
       email: session.user.email
     }).select(
-      'firstName lastName email username gender profilePicture coverPhoto bio pronoun dob publicProfileVisible followingIds createdAt updatedAt'
+      'firstName lastName email username gender profilePicture coverPhoto bio pronoun dob publicProfileVisible followingIds accountStatus emailVerifiedAt createdAt updatedAt'
     )
 
     // Convert the Mongoose document to a plain object

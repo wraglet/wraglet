@@ -19,7 +19,7 @@ const countDefinitions = (file: RouteJsonFile) =>
 describe('MOCK_REST_CATALOG', () => {
   it('every route.json file is present and definitions match aggregate length', () => {
     const filePaths = Object.keys(routeJsonModules)
-    expect(filePaths.length).toBe(34)
+    expect(filePaths.length).toBe(40)
 
     const expectedTotal = Object.values(routeJsonModules).reduce(
       (sum, file) => sum + countDefinitions(file),

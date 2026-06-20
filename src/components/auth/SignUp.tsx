@@ -1,15 +1,15 @@
 'use client'
 
-import React, { FC } from 'react'
-import { signIn } from 'next-auth/react'
+import React, { FC, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Gender, Pronoun } from '@/interfaces'
+import { passwordSchema } from '@/lib/auth/passwordSchema'
 import { authFormInputClassName } from '@/lib/authFormInputClassName'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import axios from 'axios'
-import { FormProvider, useForm } from 'react-hook-form'
+import { FormProvider, useForm, useWatch } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { z } from 'zod'
 
@@ -19,6 +19,7 @@ import {
   PRONOUN_OPTIONS
 } from '@/data/constants'
 import { getValidationMessages } from '@/components/auth/password-validations'
+import TurnstileWidget from '@/components/auth/TurnstileWidget'
 import BirthdayPicker from '@/components/shared/BirthdayPicker'
 import Button from '@/components/shared/Button'
 import Checkbox from '@/components/shared/Checkbox'
@@ -35,27 +36,24 @@ const signUpSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .regex(/\d/, 'Password must contain at least one number')
-    .regex(
-      /[@$!%*?&#]/,
-      'Password must contain at least one special character'
-    ),
+  password: passwordSchema,
   dob: z.date({ required_error: 'Date of birth is required' }),
   gender: z.enum(GENDER_OPTIONS as [string, ...string[]]),
   pronoun: z.enum(PRONOUN_OPTIONS as [string, ...string[]]),
   publicProfileVisible: z.boolean(),
-  agreeToTerms: z.boolean().refine((val) => val, 'You must agree to the terms')
+  agreeToTerms: z.boolean().refine((val) => val, 'You must agree to the terms'),
+  website: z.string().max(0).optional()
 })
 
 type SignUpFormData = z.infer<typeof signUpSchema>
 
 const SignUp: FC = () => {
   const router = useRouter()
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+  const turnstileRequired = Boolean(siteKey)
+  const turnstileComplete = !turnstileRequired || Boolean(turnstileToken)
+
   const formMethods = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -67,7 +65,8 @@ const SignUp: FC = () => {
       gender: GENDER_OPTIONS[0],
       pronoun: PRONOUN_OPTIONS[0],
       publicProfileVisible: true,
-      agreeToTerms: false
+      agreeToTerms: false,
+      website: ''
     }
   })
 
@@ -75,83 +74,73 @@ const SignUp: FC = () => {
     handleSubmit,
     control,
     formState: { errors, isValid },
-    watch,
-    setValue
+    setValue,
+    register
   } = formMethods
 
-  // Watch gender changes to update pronoun automatically
-  const selectedGender = watch('gender') as Gender
+  const selectedGender = useWatch({ control, name: 'gender' }) as Gender
+  const selectedPronoun = useWatch({ control, name: 'pronoun' })
 
-  // Update pronoun when gender changes (but only if user hasn't manually selected a pronoun)
   React.useEffect(() => {
-    const currentPronoun = watch('pronoun')
     const defaultPronounForGender = GENDER_TO_DEFAULT_PRONOUN[selectedGender]
 
-    // Only auto-update if the current pronoun is the default for the previous gender
-    // This prevents overriding user's manual selection
     const defaultPronouns = Object.values(
       GENDER_TO_DEFAULT_PRONOUN
     ) as Pronoun[]
     const isCurrentPronounDefault = defaultPronouns.includes(
-      currentPronoun as Pronoun
+      selectedPronoun as Pronoun
     )
 
-    if (isCurrentPronounDefault && currentPronoun !== defaultPronounForGender) {
+    if (
+      isCurrentPronounDefault &&
+      selectedPronoun !== defaultPronounForGender
+    ) {
       setValue('pronoun', defaultPronounForGender)
     }
-  }, [selectedGender, setValue, watch])
+  }, [selectedGender, selectedPronoun, setValue])
 
   const mutation = useMutation({
     mutationFn: async (data: SignUpFormData) => {
-      const { email, password, agreeToTerms, ...rest } = data
+      const { email, password, agreeToTerms, website, ...rest } = data
       if (!agreeToTerms) {
         throw new Error('You must agree to the terms')
       }
       const formData = {
         ...rest,
         email: email.toLowerCase(),
-        password
+        password,
+        turnstileToken,
+        website: website ?? ''
       }
 
-      try {
-        const response = await axios.post('/api/register', formData)
-
-        if (response.status !== 200) {
-          throw new Error('Network response was not ok')
-        }
-
-        const signInResult = await signIn('credentials', {
-          email: formData.email,
-          password,
-          redirect: false
-        })
-
-        if (signInResult?.error) {
-          throw new Error(
-            'Account created but automatic sign-in failed. Please log in manually.'
-          )
-        }
-
-        return response.data
-      } catch (error) {
-        console.error('Error during registration request:', error)
-        throw error
-      }
+      const response = await axios.post('/api/register', formData)
+      return response.data as { message: string; email: string }
     },
-    onSuccess: () => {
-      toast.success('Account created successfully!')
-      router.replace('/feed')
-      router.refresh()
+    onSuccess: (data, variables) => {
+      toast.success(
+        data.message ?? 'Check your email to activate your account.'
+      )
+      const email = encodeURIComponent(
+        data.email ?? variables.email.trim().toLowerCase()
+      )
+      router.replace(`/verify-email?email=${email}`)
     },
-    onError: (error) => {
-      console.error('Error while signing up:', error)
-      toast.error('Something went wrong while signing up!')
+    onError: (error: unknown) => {
+      const message =
+        axios.isAxiosError(error) && error.response?.data?.error
+          ? String(error.response.data.error)
+          : 'Something went wrong while signing up.'
+      toast.error(message)
     }
   })
 
-  const newPassword = watch('password')
+  const newPassword = useWatch({ control, name: 'password' }) ?? ''
 
   const onSubmit = (data: SignUpFormData) => {
+    if (turnstileRequired && !turnstileToken) {
+      toast.error('Complete the security check first.')
+      return
+    }
     mutation.mutate(data)
   }
 
@@ -161,7 +150,14 @@ const SignUp: FC = () => {
         onSubmit={handleSubmit(onSubmit)}
         className="flex w-full flex-col gap-4"
       >
-        {/* First and Last Name Fields */}
+        <input
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden
+          className="pointer-events-none absolute h-0 w-0 opacity-0"
+          {...register('website')}
+        />
         <div className="flex flex-col gap-2 md:flex-row">
           <FormField
             control={control}
@@ -272,7 +268,6 @@ const SignUp: FC = () => {
             </FormItem>
           )}
         />
-        {/* Gender and Pronoun Fields */}
         <div className="flex flex-col gap-2 md:flex-row">
           <FormField
             control={control}
@@ -285,7 +280,6 @@ const SignUp: FC = () => {
                     options={GENDER_OPTIONS}
                     setSelected={field.onChange}
                     selected={field.value}
-                    className="h-12 rounded-xl border border-neutral-200 bg-white/80 px-4 py-3.5 text-lg focus:border-[#42BBFF] focus:ring-2 focus:ring-[#0EA5E9] focus:outline-none"
                   />
                 </FormControl>
                 {errors.gender && (
@@ -305,7 +299,6 @@ const SignUp: FC = () => {
                     options={PRONOUN_OPTIONS}
                     setSelected={field.onChange}
                     selected={field.value}
-                    className="h-12 rounded-xl border border-neutral-200 bg-white/80 px-4 py-3.5 text-lg focus:border-[#42BBFF] focus:ring-2 focus:ring-[#0EA5E9] focus:outline-none"
                   />
                 </FormControl>
                 {errors.pronoun && (
@@ -387,11 +380,16 @@ const SignUp: FC = () => {
             )}
           />
         </div>
+        <TurnstileWidget
+          onSuccess={setTurnstileToken}
+          onExpire={() => setTurnstileToken(null)}
+          onError={() => setTurnstileToken(null)}
+        />
         <div className="mt-4 flex w-full items-center justify-center border-t border-solid border-[#E3F1FA]/70 pt-4">
           <Button
             className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-[#42BBFF] to-[#0EA5E9] py-2.5 text-base font-semibold text-white shadow-lg transition-all hover:from-[#0EA5E9] hover:to-[#42BBFF] focus:ring-2 focus:ring-[#0EA5E9] disabled:cursor-not-allowed disabled:opacity-60"
             type="submit"
-            disabled={!isValid}
+            disabled={!isValid || mutation.isPending || !turnstileComplete}
           >
             <span className="flex items-center gap-2">
               {mutation.isPending ? 'Signing up...' : 'Sign Up'}

@@ -2,10 +2,12 @@
 
 import { FC } from 'react'
 import { signIn } from 'next-auth/react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { authFormInputClassName } from '@/lib/authFormInputClassName'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
+import axios from 'axios'
 import { FormProvider, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { z } from 'zod'
@@ -43,6 +45,23 @@ const LoginForm: FC<LoginFormProps> = ({ buttonIcon }) => {
   const mutation = useMutation({
     mutationFn: async (data: LoginFormData) => {
       const emailOrUsername = data.emailOrUsername.trim().toLowerCase()
+      const check = await axios.post<{
+        ok: boolean
+        needsVerification?: boolean
+        email?: string
+      }>('/api/auth/credentials-check', {
+        emailOrUsername,
+        password: data.password
+      })
+
+      if (check.data.needsVerification && check.data.email) {
+        return { needsVerification: true, email: check.data.email }
+      }
+
+      if (!check.data.ok) {
+        throw new Error('Invalid credentials')
+      }
+
       const response = await signIn('credentials', {
         email: emailOrUsername,
         password: data.password,
@@ -53,9 +72,14 @@ const LoginForm: FC<LoginFormProps> = ({ buttonIcon }) => {
         throw new Error('Invalid credentials')
       }
 
-      return response
+      return { needsVerification: false }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      if (result.needsVerification && result.email) {
+        toast.success('Check your email to verify your account.')
+        push(`/verify-email?email=${encodeURIComponent(result.email)}`)
+        return
+      }
       toast.success('Logged in!')
       push('/feed')
     },
@@ -93,17 +117,13 @@ const LoginForm: FC<LoginFormProps> = ({ buttonIcon }) => {
           className={authFormInputClassName}
         />
         <div className="mt-1 mb-2 flex w-full items-center justify-between">
-          <Button
-            type="button"
-            variant="link"
-            size="sm"
-            className="h-auto p-0 text-xs text-[#0EA5E9] transition-colors hover:underline focus:underline"
-            tabIndex={0}
+          <Link
+            href="/forgot-password"
+            className="text-xs text-[#0EA5E9] transition-colors hover:underline focus:underline"
             aria-label="Forgot Password?"
-            onClick={() => toast('Password reset coming soon!')}
           >
             Forgot Password?
-          </Button>
+          </Link>
         </div>
         <Button
           type="submit"

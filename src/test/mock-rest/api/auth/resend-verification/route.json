@@ -1,0 +1,11 @@
+[
+  {
+    "route": "/api/auth/resend-verification",
+    "method": "POST",
+    "status": 200,
+    "description": "Generic resend response",
+    "responseBody": {
+      "message": "If an account exists for that email and still needs verification, you'll receive a new link shortly."
+    }
+  }
+]

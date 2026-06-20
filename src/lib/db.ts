@@ -28,7 +28,6 @@ const client = async () => {
   }
 
   if (mongooseCache.conn && mongoose.connection.readyState === 1) {
-    initModels()
     return mongoose.connection
   }
 
@@ -48,8 +47,7 @@ const client = async () => {
 
     mongooseCache.conn = await mongooseCache.promise
 
-    const models = initModels()
-    console.log('Models initialized:', models)
+    initModels()
 
     return mongoose.connection
   } catch (error) {

@@ -1,4 +1,5 @@
 import { FC, InputHTMLAttributes } from 'react'
+import { authFormListBoxClassName } from '@/lib/authFormInputClassName'
 import { cn } from '@/lib/utils'
 import {
   Listbox,
@@ -29,7 +30,8 @@ const ListBox: FC<ListBoxProps> = ({
   options,
   selected,
   setSelected,
-  label
+  label,
+  className
 }) => {
   return (
     <div className="flex w-full flex-col">
@@ -38,7 +40,13 @@ const ListBox: FC<ListBoxProps> = ({
       )}
       <Listbox value={selected} onChange={(val) => setSelected(val)}>
         <div className="relative">
-          <ListboxButton className="relative w-full cursor-default rounded-lg bg-white py-2 pr-10 pl-3 text-left shadow-md focus:outline-hidden focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
+          <ListboxButton
+            className={cn(
+              authFormListBoxClassName,
+              'flex items-center',
+              className
+            )}
+          >
             <span className="block truncate">
               {typeof selected === 'object' ? selected.name : selected}
             </span>

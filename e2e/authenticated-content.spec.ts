@@ -80,8 +80,11 @@ test.describe('authenticated content (seeded data)', () => {
   test('settings notifications page renders', async ({ page }) => {
     await page.goto('/settings/notifications')
     await expect(page).toHaveURL('/settings/notifications')
+    await expect(page.getByText('Email notifications')).toBeVisible({
+      timeout: 15_000
+    })
     await expect(
-      page.getByRole('heading', { name: 'Notifications' }).first()
+      page.getByRole('button', { name: 'Save Changes' })
     ).toBeVisible()
   })
 

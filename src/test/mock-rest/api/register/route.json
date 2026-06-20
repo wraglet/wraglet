@@ -3,32 +3,19 @@
     "route": "/api/register",
     "method": "POST",
     "status": 200,
-    "description": "New user",
+    "description": "Pending verification — check email",
     "responseBody": {
-      "_id": "507f1f77bcf86cd799439088",
-      "email": "new.user@example.com",
-      "username": "@newuser",
-      "firstName": "New",
-      "lastName": "User",
-      "gender": "Female",
-      "pronoun": "She/Her",
-      "publicProfileVisible": true
+      "message": "Check your email to activate your account.",
+      "email": "new.user@example.com"
     }
   },
   {
     "route": "/api/register",
     "method": "POST",
     "status": 400,
-    "description": "Missing fields (handler returns plain text)",
-    "responseBody": "Missing info"
-  },
-  {
-    "route": "/api/register",
-    "method": "POST",
-    "status": 409,
-    "description": "Duplicate email (Mongo 11000)",
+    "description": "Validation or missing fields",
     "responseBody": {
-      "error": "An account with this email already exists"
+      "error": "Missing info"
     }
   }
 ]

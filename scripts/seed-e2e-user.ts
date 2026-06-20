@@ -147,6 +147,10 @@ async function main() {
     const existingByEmail = await User.findOne({ email })
     if (existingByEmail) {
       existingByEmail.hashedPassword = hashedPassword
+      existingByEmail.accountStatus = 'active'
+      existingByEmail.emailVerifiedAt =
+        existingByEmail.emailVerifiedAt ?? new Date()
+      existingByEmail.canonicalEmail = existingByEmail.canonicalEmail ?? email
       await existingByEmail.save()
       console.log(`[seed:e2e] Updated password for existing user: ${email}`)
     } else {
@@ -161,12 +165,15 @@ async function main() {
         firstName: 'E2E',
         lastName: 'Test',
         email,
+        canonicalEmail: email,
         username,
         hashedPassword,
         dob: new Date('1990-01-15T00:00:00.000Z'),
         gender: 'Others',
         pronoun: 'They/Them',
-        publicProfileVisible: true
+        publicProfileVisible: true,
+        accountStatus: 'active',
+        emailVerifiedAt: new Date()
       })
       console.log(`[seed:e2e] Created user: ${email} (${username})`)
     }

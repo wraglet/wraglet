@@ -104,7 +104,7 @@ const MessagesWithAbly = () => {
   return (
     <div
       className={cn(
-        'flex h-full min-h-0 w-full flex-1 overflow-hidden bg-white',
+        'flex h-full min-h-0 w-full overflow-hidden bg-white',
         'max-lg:rounded-none max-lg:border-0',
         'lg:rounded-lg lg:border'
       )}
@@ -141,14 +141,6 @@ const MessagesWithAbly = () => {
             + New Chat
           </button>
         </div>
-        <NewChatModal
-          open={showNewChat}
-          onClose={() => setShowNewChat(false)}
-          users={users}
-          isLoading={usersLoading}
-          error={usersError}
-          onSelectUser={handleSelectUser}
-        />
         <div className="min-h-0 flex-1 overflow-y-auto">
           <Contacts
             conversations={conversations}
@@ -161,7 +153,7 @@ const MessagesWithAbly = () => {
 
       <main
         className={cn(
-          'flex min-h-0 flex-1 flex-col bg-white',
+          'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white',
           showMobileConversationList && 'max-lg:hidden'
         )}
       >
@@ -173,7 +165,7 @@ const MessagesWithAbly = () => {
               onBack={handleBackToConversations}
             />
             {selectedId && (
-              <div className="min-h-0 flex-1">
+              <div className="flex min-h-0 flex-1 basis-0 flex-col overflow-hidden">
                 <ChatRoomProvider name={selectedId}>
                   <ChatWindow key={selectedId} conversationId={selectedId} />
                 </ChatRoomProvider>
@@ -181,7 +173,7 @@ const MessagesWithAbly = () => {
             )}
           </>
         ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-4 px-4 text-gray-400">
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 text-gray-400">
             <MessagesEmptyPane
               isLoading={isConversationsLoading}
               hasConversations={hasConversations}
@@ -190,6 +182,15 @@ const MessagesWithAbly = () => {
           </div>
         )}
       </main>
+
+      <NewChatModal
+        open={showNewChat}
+        onClose={() => setShowNewChat(false)}
+        users={users}
+        isLoading={usersLoading}
+        error={usersError}
+        onSelectUser={handleSelectUser}
+      />
     </div>
   )
 }
