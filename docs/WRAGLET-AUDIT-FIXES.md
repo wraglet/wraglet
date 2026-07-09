@@ -1,7 +1,8 @@
 # Wraglet Audit — Targeted Files & Patterns to Fix
 
-> Audit date: July 2026  
-> Stack audited: `react@19.2.4`, `next@16.2.2`, App Router  
+> **Last reviewed:** July 9, 2026  
+> **Latest stable:** `react@19.2.7`, `next@16.2.10`  
+> **Wraglet installed:** `react@19.2.4`, `next@16.2.2`  
 > **Status:** Documentation only — no code changes applied yet.
 
 Companion reference: [REACT-19-NEXT-16-UPDATES.md](./REACT-19-NEXT-16-UPDATES.md)
@@ -12,14 +13,22 @@ Companion reference: [REACT-19-NEXT-16-UPDATES.md](./REACT-19-NEXT-16-UPDATES.md
 
 Wraglet is **already on React 19.2 and Next.js 16.2** and follows many modern patterns (App Router, Server Actions, Vitest, async `params`/`searchParams` on several pages, Ably via `ably/react`, flat ESLint config).
 
-The highest-impact improvements are **architectural**, not version bumps:
+**Since the initial audit**, review against latest stable (`19.2.7` / `16.2.10`) shows:
 
-1. **8 route `page.tsx` files are full Client Components** — they should be thin Server Component shells with client islands.
-2. **`QueryClient` is recreated every render** in the root provider — a stability/performance bug.
-3. **`forwardRef` remains in 6 shared UI primitives** — deprecated in React 19.
-4. **No `"use cache"` / updated cache invalidation APIs** — acceptable given `force-dynamic`, but `revalidatePath`-only invalidation misses Next.js 16 cache primitives.
-5. **Unused dependency `@ably-labs/react-hooks`** — superseded by `ably/react` (already used everywhere).
-6. **Manual optimistic/pending state** in feed/profile/chat — prime candidates for `useOptimistic`, `useActionState`, and Server Actions.
+- **No new APIs** in patch releases — same modernization targets apply.
+- **Security advisories** in Next 16.2.5–16.2.6 (RSC DoS, cache poisoning, Image Optimization DoS, etc.) make a **version bump the new top priority**.
+- **Server Action + FormData** is now safe on React ≥ 19.2.7 / Next ≥ 16.2.7 — unblocks the `useActionState` migration path (Wraglet does not use `<form action>` + FormData yet).
+- **React 19.2 features still unused in codebase:** `<Activity>`, `useEffectEvent`, `useOptimistic`, `useActionState`, `cacheSignal`, View Transitions.
+
+The highest-impact improvements remain **architectural**, plus staying current on patches:
+
+1. **🔴 Upgrade to React 19.2.7 + Next 16.2.10** — security + Server Action stability (do not stop at 19.2.6 / 16.2.6).
+2. **8 route `page.tsx` files are full Client Components** — they should be thin Server Component shells with client islands.
+3. **`QueryClient` is recreated every render** in the root provider — a stability/performance bug.
+4. **`forwardRef` remains in 6 shared UI primitives** — deprecated in React 19.
+5. **No `"use cache"` / updated cache invalidation APIs** — acceptable given `force-dynamic`, but `revalidatePath`-only invalidation misses Next.js 16 cache primitives.
+6. **Unused dependency `@ably-labs/react-hooks`** — superseded by `ably/react` (already used everywhere).
+7. **Manual optimistic/pending state** in feed/profile/chat — prime candidates for `useOptimistic`, `useActionState`, and Server Actions (after version bump).
 
 ### Already Compliant ✅
 
@@ -36,6 +45,68 @@ The highest-impact improvements are **architectural**, not version bumps:
 | Suspense on feed, blog, search, layout chrome | Present |
 | ESLint via flat config (not `next lint`) | `eslint.config.mjs` |
 | `useIsClient` uses `useSyncExternalStore` | Modern SSR-safe pattern (not deprecated) |
+| React 19.2 APIs (`Activity`, `useEffectEvent`, etc.) | **None used yet** — see §New from latest stable below |
+
+---
+
+## New From Latest Stable (19.2.7 / 16.2.10) — Wraglet Impact
+
+### What changed in patches (no new feature APIs)
+
+Patch releases between Wraglet’s pinned versions and latest stable are **security + stability**, not new hooks. The original audit recommendations still stand.
+
+### New audit items from latest stable
+
+| Item | Priority | Detail |
+|------|----------|--------|
+| Bump `react` / `react-dom` to **19.2.7** | 🔴 P0 | Avoid 19.2.6 FormData regression; includes RSC hardening through 19.2.7 |
+| Bump `next` / `eslint-config-next` to **16.2.10** | 🔴 P0 | 13 security advisories fixed in 16.2.5–16.2.6; FormData backport in 16.2.7 |
+| Adopt `useActionState` + `<form action>` | 🟡 P2 *(unblocked)* | Safe only on ≥ 19.2.7 / ≥ 16.2.7; Wraglet currently uses RHF + axios + API routes |
+| Use `cacheSignal` in cached server functions | 🟢 P3 | When `"use cache"` is enabled — detect cache lifetime end |
+| Encode non-ASCII `cacheTag` values | 🟢 P3 | Fixed in Next 16.2.7 — relevant if tags include i18n strings |
+| React Performance Tracks (DevTools) | 🟢 P3 | Profile before enabling React Compiler |
+
+### React 19.2 features — codebase gap analysis
+
+| API | Used in Wraglet? | Best Wraglet target |
+|-----|------------------|---------------------|
+| `useOptimistic` | ❌ | `Post.tsx`, `BlogReactionControls.tsx`, `FeedWithAbly.tsx` |
+| `useActionState` | ❌ | `notifications/page.tsx` (mark read), auth resend/forgot forms |
+| `useFormStatus` | ❌ | Submit buttons in forms migrated to Actions |
+| `useEffectEvent` | ❌ | `AblyProvider.tsx`, `ChatWindow.tsx`, `Header.tsx` |
+| `<Activity>` | ❌ | Blog modal on profile page, `ChatFloater.tsx`, `MobileDiscoverDrawer.tsx` |
+| `use()` | ❌ | Conditional context reads (low priority vs `await` in SC) |
+| `cacheSignal` | ❌ | Future `"use cache"` server functions |
+| View Transitions | ❌ | Feed tab switches, settings navigation (optional polish) |
+
+### Server Actions today vs recommended path
+
+**Today:** `src/actions/*` are `'use server'` **data fetchers** called from client via `useEffect` or TanStack Query — not progressive-enhancement forms.
+
+**After bump to 19.2.7+:** Migrate low-complexity mutations to native form Actions:
+
+```tsx
+// Example: mark notification read (future)
+'use server'
+export const markNotificationRead = async (formData: FormData) => {
+  const id = formData.get('notificationId') as string
+  await db.notifications.markRead(id)
+  updateTag(`notifications-${userId}`)
+}
+```
+
+```tsx
+// Client
+const [error, action, pending] = useActionState(markNotificationRead, null)
+return (
+  <form action={action}>
+    <input type="hidden" name="notificationId" value={id} />
+    <button disabled={pending}>Mark read</button>
+  </form>
+)
+```
+
+**Do not migrate on 19.2.6 / 16.2.6** — FormData entries were silently dropped.
 
 ---
 
@@ -50,7 +121,30 @@ The highest-impact improvements are **architectural**, not version bumps:
 
 ---
 
-## 🔴 P0 — Bugs & Correctness
+## 🔴 P0 — Bugs, Security & Correctness
+
+### 0. Upgrade to latest stable (React 19.2.7 + Next 16.2.10)
+
+**Files:** `package.json`, `yarn.lock`
+
+**Why now:**
+
+- Next **16.2.5–16.2.6** address **13 security advisories** including RSC DoS ([GHSA-8h8q-6873-q5fj](https://github.com/vercel/next.js/security/advisories/GHSA-8h8q-6873-q5fj)), cache poisoning in RSC responses, Image Optimization DoS — all relevant to Wraglet (`next/image`, Server Components, API routes).
+- React **19.2.6 → 19.2.7** fixes Server Action **FormData entries silently missing** — critical before any `useActionState` form work.
+- Wraglet on **16.2.2** misses fixes through **16.2.7** (hydration from HTTP cache, non-ASCII cache tags, server-action rewrite loops).
+
+**Fix:**
+
+```bash
+yarn add react@19.2.7 react-dom@19.2.7 next@16.2.10 eslint-config-next@16.2.10
+yarn validate
+```
+
+**Do not pin 19.2.6 / 16.2.6** as a stopping point.
+
+**Priority:** 🔴 P0 — **do before feature migrations**
+
+---
 
 ### 1. `QueryClient` recreated on every render
 
@@ -205,6 +299,8 @@ Manual `setPost` / `setPosts` optimistic patterns before API calls. Prime for `u
 ---
 
 ### 8. Form mutations — `useActionState` / Server Actions candidates
+
+> **Prerequisite:** React ≥ 19.2.7 and Next ≥ 16.2.10 (FormData fix). See 🔴 P0 §0.
 
 Currently: react-hook-form + TanStack `useMutation` + axios. Works well for complex forms; simpler flows could migrate:
 
@@ -445,15 +541,19 @@ No change needed — extend this pattern when adding heavy state updates.
 
 When you're ready to implement, suggested sequence:
 
+0. **🔴 P0** — Bump to `react@19.2.7`, `next@16.2.10`; run `yarn validate`
 1. **🔴 P0** — Fix `QueryClient` in `src/providers/index.tsx` (small, high impact)
 2. **🟠 P1** — Remove `@ably-labs/react-hooks`; run React 19 `forwardRef` codemod on shared UI
 3. **🟡 P2** — Convert `[username]/page.tsx` to Server Component (biggest architecture win)
 4. **🟡 P2** — Migrate `search/page.tsx` fetch to TanStack Query or server prefetch
 5. **🟡 P2** — Add `useOptimistic` to `Post.tsx` reactions/votes
-6. **🟡 P2** — Split remaining client pages into server shells + client islands
-7. **🟢 P3** — Enable React Compiler; profile and trim manual memoization
-8. **🟢 P3** — Enable Cache Components for public/semi-static data; adopt `updateTag`/`revalidateTag(tag, 'max')`
-9. **🟢 P3** — Add `generateMetadata` to post/blog/profile routes
+6. **🟡 P2** — Migrate low-complexity forms to `useActionState` (notifications mark-read, auth resend/forgot)
+7. **🟡 P2** — Split remaining client pages into server shells + client islands
+8. **🟡 P2** — Adopt `<Activity>` for blog modal / chat floater / mobile drawer
+9. **🟡 P2** — Adopt `useEffectEvent` in AblyProvider + ChatWindow
+10. **🟢 P3** — Enable React Compiler; profile and trim manual memoization
+11. **🟢 P3** — Enable Cache Components for public/semi-static data; adopt `updateTag`/`revalidateTag(tag, 'max')` + `cacheSignal` where needed
+12. **🟢 P3** — Add `generateMetadata` to post/blog/profile routes
 
 ---
 
@@ -475,6 +575,9 @@ When you're ready to implement, suggested sequence:
 | `useReducer` for `{...state}` | **Simplify** | `useState` |
 | `React.FC` | **Remove** | Explicit props types |
 | Sync `params` / `cookies()` | **N/A** | Already async where used ✅ |
+| Stay on React 19.2.4 / Next 16.2.2 | **Upgrade** | Roll forward to 19.2.7 / 16.2.10 (security + FormData) |
+| `useActionState` + FormData forms | **Adopt after bump** | Requires ≥ 19.2.7 / ≥ 16.2.7 |
+| `<Activity>` / `useEffectEvent` | **Adopt** | Modals, floaters, Ably effects (19.2.0+ features, still unused) |
 
 ---
 
