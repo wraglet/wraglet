@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import getPostById from '@/actions/getPostById'
 import {
@@ -18,6 +19,36 @@ import {
   postNotFoundBodyClassName,
   postNotFoundCardClassName
 } from '@/app/(authenticated)/post/postDetailPageClassNames'
+
+export const generateMetadata = async ({
+  params
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> => {
+  const { id } = await params
+  const post = await getPostById(id)
+
+  if (!post) {
+    return { title: 'Post not found' }
+  }
+
+  const author = post.author
+  const authorName =
+    typeof author === 'object' && author !== null
+      ? [author.firstName, author.lastName].filter(Boolean).join(' ') ||
+        author.username
+      : 'Wraglet user'
+
+  const preview =
+    typeof post.content?.text === 'string'
+      ? post.content.text.slice(0, 120)
+      : 'View this post on Wraglet'
+
+  return {
+    title: `Post by ${authorName}`,
+    description: preview
+  }
+}
 
 const PostPage = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params

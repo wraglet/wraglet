@@ -1,6 +1,13 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  startTransition,
+  useEffect,
+  useMemo,
+  useOptimistic,
+  useRef,
+  useState
+} from 'react'
 import type { SubmitEvent } from 'react'
 import dynamic from 'next/dynamic'
 import { usePostAuthorCard } from '@/lib/hooks/usePostAuthorCard'
@@ -40,6 +47,11 @@ const Post = ({ post: initialPost }: PostProps) => {
 
   const { user } = useUserStore()
   const [post, setPost] = useState<IPost>(initialPost)
+  const [optimisticPost, addOptimistic] = useOptimistic(
+    post,
+    (state, patch: Partial<IPost> | IPost) =>
+      mergePostClientUpdate(state, patch as IPost)
+  )
   const [showCommentInput, setShowCommentInput] = useState(false)
   const [comment, setComment] = useState('')
   const [showShareModal, setShowShareModal] = useState(false)
@@ -50,6 +62,8 @@ const Post = ({ post: initialPost }: PostProps) => {
   )
 
   const initialPostIdRef = useRef(String(initialPost._id))
+  const postRef = useRef(post)
+  postRef.current = post
   const content = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -67,7 +81,7 @@ const Post = ({ post: initialPost }: PostProps) => {
     setPost((prev) => mergePostFromFeedProp(prev, initialPost))
   }, [initialPost])
 
-  const channel = useChannel(`post-${post._id}`, (message) => {
+  const channel = useChannel(`post-${optimisticPost._id}`, (message) => {
     if (message.clientId === user?._id) {
       return
     }
@@ -91,42 +105,81 @@ const Post = ({ post: initialPost }: PostProps) => {
   const handleReaction = async (type: string) => {
     if (!user) return
 
+    const existingReaction = optimisticPost.reactions.find(
+      (reaction) => reaction.userId?._id === user._id && reaction.type === type
+    )
+
+    if (existingReaction) {
+      await removeReaction()
+      return
+    }
+
+    const previousPost = postRef.current
+
+    startTransition(() => {
+      const currentPost = postRef.current
+      const patch = {
+        reactions: [
+          ...currentPost.reactions.filter(
+            (reaction) => reaction.userId?._id !== user._id
+          ),
+          {
+            type,
+            userId: user,
+            _id: `optimistic-${Date.now()}`
+          } as (typeof currentPost.reactions)[number]
+        ]
+      }
+      addOptimistic(patch)
+      setPost((prev) => mergePostClientUpdate(prev, patch as IPost))
+    })
+
     try {
-      const existingReaction = post.reactions.find(
-        (reaction) =>
-          reaction.userId?._id === user._id && reaction.type === type
+      const response = await axios.patch(
+        `/api/posts/${optimisticPost._id}/react`,
+        { type }
       )
 
-      if (existingReaction) {
-        await removeReaction()
-      } else {
-        const response = await axios.patch(`/api/posts/${post._id}/react`, {
-          type
+      if (response.status !== 200) {
+        throw new Error('Failed to update reaction')
+      }
+
+      const updatedPost = response.data as IPost
+      setPost((prev) => mergePostClientUpdate(prev, updatedPost))
+
+      if (channel?.publish) {
+        await channel.publish({
+          name: 'reaction',
+          data: updatedPost
         })
-
-        if (response.status !== 200) {
-          throw new Error('Failed to update reaction')
-        }
-
-        const updatedPost = response.data as IPost
-        setPost((prev) => mergePostClientUpdate(prev, updatedPost))
-
-        if (channel?.publish) {
-          await channel.publish({
-            name: 'reaction',
-            data: updatedPost
-          })
-        }
       }
     } catch (error) {
       console.error('Error updating reaction:', error)
+      setPost(previousPost)
       toast.error('Failed to update reaction')
     }
   }
 
   const removeReaction = async () => {
+    if (!user) return
+
+    const previousPost = postRef.current
+
+    startTransition(() => {
+      const currentPost = postRef.current
+      const patch = {
+        reactions: currentPost.reactions.filter(
+          (reaction) => reaction.userId?._id !== user._id
+        )
+      }
+      addOptimistic(patch)
+      setPost((prev) => mergePostClientUpdate(prev, patch as IPost))
+    })
+
     try {
-      const response = await axios.delete(`/api/posts/${post._id}/react`)
+      const response = await axios.delete(
+        `/api/posts/${optimisticPost._id}/react`
+      )
 
       if (response.status !== 200) {
         throw new Error('Failed to remove reaction')
@@ -143,28 +196,34 @@ const Post = ({ post: initialPost }: PostProps) => {
       }
     } catch (error) {
       console.error('Error removing reaction:', error)
+      setPost(previousPost)
       toast.error('Failed to remove reaction')
     }
   }
 
   const { reactionCounts, reactionGroups } = useMemo(
-    () => buildPostReactionGroups(post.reactions, user?._id),
-    [post.reactions, user?._id]
+    () => buildPostReactionGroups(optimisticPost.reactions, user?._id),
+    [optimisticPost.reactions, user?._id]
   )
 
   const userReaction = useMemo(() => {
     if (!user) return undefined
-    return post.reactions?.find((reaction) => reaction.userId?._id === user._id)
-  }, [user, post.reactions])
+    return optimisticPost.reactions?.find(
+      (reaction) => reaction.userId?._id === user._id
+    )
+  }, [user, optimisticPost.reactions])
 
   const handleCommentSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!comment.trim()) return
 
     try {
-      const response = await axios.post(`/api/posts/${post._id}/comment`, {
-        content: comment
-      })
+      const response = await axios.post(
+        `/api/posts/${optimisticPost._id}/comment`,
+        {
+          content: comment
+        }
+      )
 
       const newComment = response.data
 
@@ -190,14 +249,16 @@ const Post = ({ post: initialPost }: PostProps) => {
     )
   }
 
-  const userVote = post.votes?.find(
+  const userVote = optimisticPost.votes?.find(
     (vote) => vote.userId === user?._id
   )?.voteType
 
   const upvotes =
-    post.votes?.filter((vote) => vote.voteType === 'upvote').length || 0
+    optimisticPost.votes?.filter((vote) => vote.voteType === 'upvote').length ||
+    0
   const downvotes =
-    post.votes?.filter((vote) => vote.voteType === 'downvote').length || 0
+    optimisticPost.votes?.filter((vote) => vote.voteType === 'downvote')
+      .length || 0
 
   const {
     authorId,
@@ -208,11 +269,37 @@ const Post = ({ post: initialPost }: PostProps) => {
     follow,
     loading,
     currentUserProfileHref
-  } = usePostAuthorCard(post, user)
+  } = usePostAuthorCard(optimisticPost, user)
 
   const handleVote = async (voteType: 'upvote' | 'downvote') => {
+    if (!user) return
+
+    const previousPost = postRef.current
+
+    startTransition(() => {
+      const currentPost = postRef.current
+      const currentVote = currentPost.votes?.find(
+        (vote) => vote.userId === user._id
+      )
+      const optimisticVotes = (currentPost.votes ?? []).filter(
+        (vote) => vote.userId !== user._id
+      )
+
+      if (currentVote?.voteType !== voteType) {
+        optimisticVotes.push({
+          userId: user._id,
+          voteType,
+          createdAt: new Date()
+        })
+      }
+
+      const patch = { votes: optimisticVotes }
+      addOptimistic(patch)
+      setPost((prev) => mergePostClientUpdate(prev, patch as IPost))
+    })
+
     try {
-      const response = await fetch(`/api/posts/${post._id}/vote`, {
+      const response = await fetch(`/api/posts/${optimisticPost._id}/vote`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
@@ -234,6 +321,7 @@ const Post = ({ post: initialPost }: PostProps) => {
       }
     } catch (error) {
       console.error('Error voting:', error)
+      setPost(previousPost)
       toast.error('Failed to vote')
     }
   }
@@ -248,7 +336,7 @@ const Post = ({ post: initialPost }: PostProps) => {
   }
 
   const handleCopyLink = async () => {
-    const postUrl = `${globalThis.location.origin}/post/${post._id}`
+    const postUrl = `${globalThis.location.origin}/post/${optimisticPost._id}`
     await copyToClipboard(postUrl)
   }
 
@@ -261,7 +349,7 @@ const Post = ({ post: initialPost }: PostProps) => {
       <div className="flex w-full flex-col border border-solid border-neutral-200 bg-white drop-shadow-md sm:rounded-lg">
         <div className="flex items-start gap-2 px-3 py-2.5 sm:px-4 sm:py-3">
           <PostAuthorHeader
-            post={post}
+            post={optimisticPost}
             authorProfileHref={authorProfileHref}
             authorDisplayName={authorDisplayName}
             isAuthor={isAuthor}
@@ -271,7 +359,7 @@ const Post = ({ post: initialPost }: PostProps) => {
             loading={loading}
           />
           <PostOverflowMenu
-            postId={String(post._id)}
+            postId={String(optimisticPost._id)}
             isAuthor={isAuthor}
             onCopyLink={handleCopyLink}
           />
@@ -283,12 +371,12 @@ const Post = ({ post: initialPost }: PostProps) => {
           commentCount={postComments.length}
           upvotes={upvotes}
           downvotes={downvotes}
-          shareCount={post.shareCount}
-          postId={String(post._id)}
+          shareCount={optimisticPost.shareCount}
+          postId={String(optimisticPost._id)}
         />
 
         <PostFooterActionsRow
-          postId={String(post._id)}
+          postId={String(optimisticPost._id)}
           userReaction={userReaction}
           onReact={handleReaction}
           onRemoveReaction={removeReaction}
@@ -315,7 +403,7 @@ const Post = ({ post: initialPost }: PostProps) => {
         <ShareModalWithAbly
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
-          post={post}
+          post={optimisticPost}
         />
       )}
     </div>

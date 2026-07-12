@@ -1,15 +1,5 @@
-'use client'
+import MessagesPageClient from '@/components/chat/MessagesPageClient'
 
-import { messagesPageMainClassName } from '@/lib/uiChrome'
-
-import MessagesAbly from '@/components/chat/MessagesAbly'
-
-const MessagesPage = () => {
-  return (
-    <main className={messagesPageMainClassName}>
-      <MessagesAbly />
-    </main>
-  )
-}
+const MessagesPage = () => <MessagesPageClient />
 
 export default MessagesPage

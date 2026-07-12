@@ -5,6 +5,7 @@ import {
   startTransition,
   useContext,
   useEffect,
+  useEffectEvent,
   useState
 } from 'react'
 import { useSession } from 'next-auth/react'
@@ -32,34 +33,42 @@ export const AblyProvider = ({ children }: { children: React.ReactNode }) => {
   const [ablyClient, setAblyClient] = useState<Ably.Realtime | null>(null)
   const [chatClient, setChatClient] = useState<ChatClient | null>(null)
 
-  useEffect(() => {
-    if (!session?.user?._id) {
+  const teardownClients = useEffectEvent(
+    (client: Ably.Realtime | null, chat: ChatClient | null) => {
       startTransition(() => {
-        setAblyClient(null)
-        setChatClient(null)
+        setAblyClient(client)
+        setChatClient(chat)
       })
+    }
+  )
+
+  const closeClient = useEffectEvent((client: Ably.Realtime) => {
+    if (client.connection.state === 'connected') {
+      client.close()
+    }
+  })
+
+  useEffect(() => {
+    const userId = session?.user?._id
+
+    if (!userId) {
+      teardownClients(null, null)
       return
     }
 
     const client = new Ably.Realtime({
       authUrl: '/api/token',
-      clientId: session.user._id
+      clientId: userId
     })
     const chat = new ChatClient(client)
-    startTransition(() => {
-      setAblyClient(client)
-      setChatClient(chat)
-    })
+    teardownClients(client, chat)
 
     return () => {
-      if (client.connection.state === 'connected') {
-        client.close()
-      }
+      closeClient(client)
     }
-  }, [session])
+  }, [session?.user?._id])
 
   if (!ablyClient || !chatClient) {
-    // You might want to show a global loader here
     return null
   }
 
