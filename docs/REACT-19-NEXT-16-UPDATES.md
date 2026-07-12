@@ -23,39 +23,39 @@ Official sources:
 
 ### React 19.2.5 → 19.2.7
 
-| Version | Date | What changed |
-|---------|------|--------------|
-| **19.2.7** | Jun 1, 2026 | **Fix:** missing `FormData` entries in Server Actions (regression from 19.2.6). Critical if migrating forms to `useActionState` + native `<form action>`. |
-| **19.2.6** | May 6, 2026 | RSC type hardening + performance; bundled CVE-2026-23870 DoS fix for Server Components. **Introduced the FormData regression** fixed in 19.2.7. |
-| **19.2.5** | Mar 18, 2026 | Additional RSC cycle protections. |
-| **19.2.4** *(Wraglet)* | Jan 26, 2026 | DoS mitigations for Server Actions + Server Components hardening. |
+| Version                | Date         | What changed                                                                                                                                              |
+| ---------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **19.2.7**             | Jun 1, 2026  | **Fix:** missing `FormData` entries in Server Actions (regression from 19.2.6). Critical if migrating forms to `useActionState` + native `<form action>`. |
+| **19.2.6**             | May 6, 2026  | RSC type hardening + performance; bundled CVE-2026-23870 DoS fix for Server Components. **Introduced the FormData regression** fixed in 19.2.7.           |
+| **19.2.5**             | Mar 18, 2026 | Additional RSC cycle protections.                                                                                                                         |
+| **19.2.4** _(Wraglet)_ | Jan 26, 2026 | DoS mitigations for Server Actions + Server Components hardening.                                                                                         |
 
 **Wraglet impact:** Server Actions exist (`src/actions/*`) but are invoked as **async functions from the client**, not via `<form action>` + `FormData`. The FormData bug does not affect current code, but **any `useActionState` migration must target React ≥ 19.2.7** (and Next ≥ 16.2.7).
 
 ### Next.js 16.2.3 → 16.2.10
 
-| Version | Date | What changed |
-|---------|------|--------------|
-| **16.2.10** | Jul 1, 2026 | Republishes `@next/swc-wasm-web` (missing since 16.2.4). No framework code changes. |
-| **16.2.9 / 16.2.8** | Jun 10, 2026 | Empty releases to fix `next@latest` npm dist-tag (Trusted Publishing limitation). |
-| **16.2.7** | Jun 1, 2026 | Backport bundle: **Don’t drop `FormData` entries** (pairs with React 19.2.7), non-ASCII `cacheTag` encoding fix, server-action forwarding loop fix with middleware rewrites, dev hydration fix when page served from HTTP cache, catch-all `router.query` corruption with `basePath` + rewrites, `playwright-core` request-failed promise fix. |
-| **16.2.6** | May 7, 2026 | **13 security advisories** (RSC DoS, proxy/middleware bypass, cache poisoning, Image Optimization DoS, CSP nonce XSS, WebSocket SSRF, etc.). |
-| **16.2.5** | May 6, 2026 | Overlapping security batch + route param double-encoding fix, `cacheHandlers` deployment-id keys. |
-| **16.2.4** | Apr 15, 2026 | Turbopack watcher/symlink fixes, Google Fonts on Windows ARM64, compiler define support. |
-| **16.2.3** | Apr 8, 2026 | CVE-2026-23869 fix, manifest.ts HMR fix, styled-jsx race condition fix. |
-| **16.2.2** *(Wraglet)* | — | Baseline at audit time. |
+| Version                | Date         | What changed                                                                                                                                                                                                                                                                                                                                   |
+| ---------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **16.2.10**            | Jul 1, 2026  | Republishes `@next/swc-wasm-web` (missing since 16.2.4). No framework code changes.                                                                                                                                                                                                                                                            |
+| **16.2.9 / 16.2.8**    | Jun 10, 2026 | Empty releases to fix `next@latest` npm dist-tag (Trusted Publishing limitation).                                                                                                                                                                                                                                                              |
+| **16.2.7**             | Jun 1, 2026  | Backport bundle: **Don’t drop `FormData` entries** (pairs with React 19.2.7), non-ASCII `cacheTag` encoding fix, server-action forwarding loop fix with middleware rewrites, dev hydration fix when page served from HTTP cache, catch-all `router.query` corruption with `basePath` + rewrites, `playwright-core` request-failed promise fix. |
+| **16.2.6**             | May 7, 2026  | **13 security advisories** (RSC DoS, proxy/middleware bypass, cache poisoning, Image Optimization DoS, CSP nonce XSS, WebSocket SSRF, etc.).                                                                                                                                                                                                   |
+| **16.2.5**             | May 6, 2026  | Overlapping security batch + route param double-encoding fix, `cacheHandlers` deployment-id keys.                                                                                                                                                                                                                                              |
+| **16.2.4**             | Apr 15, 2026 | Turbopack watcher/symlink fixes, Google Fonts on Windows ARM64, compiler define support.                                                                                                                                                                                                                                                       |
+| **16.2.3**             | Apr 8, 2026  | CVE-2026-23869 fix, manifest.ts HMR fix, styled-jsx race condition fix.                                                                                                                                                                                                                                                                        |
+| **16.2.2** _(Wraglet)_ | —            | Baseline at audit time.                                                                                                                                                                                                                                                                                                                        |
 
 **Wraglet impact:**
 
-| Fix in latest stable | Relevant to Wraglet? |
-|----------------------|----------------------|
-| RSC / Server Action DoS (CVE-2026-23870 et al.) | **Yes** — upgrade recommended |
-| FormData in Server Actions | **Yes when migrating** forms to Actions (not yet) |
-| Non-ASCII `cacheTag` encoding | **Yes when enabling** `"use cache"` with i18n tags |
-| Image Optimization DoS | **Yes** — uses `next/image` in 16 files |
-| Cache poisoning in RSC responses | **Yes** — any Server Component app |
-| Proxy/middleware bypass | **Low now** — no `middleware.ts` / `proxy.ts` yet |
-| `@next/swc-wasm-web` missing | **Low** — only affects WASM SWC consumers |
+| Fix in latest stable                            | Relevant to Wraglet?                               |
+| ----------------------------------------------- | -------------------------------------------------- |
+| RSC / Server Action DoS (CVE-2026-23870 et al.) | **Yes** — upgrade recommended                      |
+| FormData in Server Actions                      | **Yes when migrating** forms to Actions (not yet)  |
+| Non-ASCII `cacheTag` encoding                   | **Yes when enabling** `"use cache"` with i18n tags |
+| Image Optimization DoS                          | **Yes** — uses `next/image` in 16 files            |
+| Cache poisoning in RSC responses                | **Yes** — any Server Component app                 |
+| Proxy/middleware bypass                         | **Low now** — no `middleware.ts` / `proxy.ts` yet  |
+| `@next/swc-wasm-web` missing                    | **Low** — only affects WASM SWC consumers          |
 
 ### Recommended version bump (do first)
 
@@ -109,13 +109,13 @@ export const ProfileForm = () => {
 
 ### 1.2 New Hooks
 
-| Hook | Purpose | Replaces / complements |
-|------|---------|------------------------|
-| `useActionState` | Action state + pending flag for forms | Manual `useState(isPending)` + `useFormState` (renamed) |
-| `useFormStatus` | Read parent `<form>` pending state from child | Prop drilling `isPending` to submit buttons |
-| `useOptimistic` | Show expected UI during async transitions | Manual optimistic state + rollback logic |
-| `use()` | Read Promises or Context **during render** (can be conditional) | Some `useEffect` + `useState` fetch patterns; conditional context reads |
-| `useEffectEvent` *(React 19.2)* | Stable callback for Effect bodies without stale closures | `useCallback` inside `useEffect` dependency arrays |
+| Hook                            | Purpose                                                         | Replaces / complements                                                  |
+| ------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `useActionState`                | Action state + pending flag for forms                           | Manual `useState(isPending)` + `useFormState` (renamed)                 |
+| `useFormStatus`                 | Read parent `<form>` pending state from child                   | Prop drilling `isPending` to submit buttons                             |
+| `useOptimistic`                 | Show expected UI during async transitions                       | Manual optimistic state + rollback logic                                |
+| `use()`                         | Read Promises or Context **during render** (can be conditional) | Some `useEffect` + `useState` fetch patterns; conditional context reads |
+| `useEffectEvent` _(React 19.2)_ | Stable callback for Effect bodies without stale closures        | `useCallback` inside `useEffect` dependency arrays                      |
 
 ### 1.3 `use()` — Conditional Context & Promise Reading
 
@@ -145,7 +145,10 @@ const [optimisticPost, addOptimistic] = useOptimistic(post, (state, update) =>
 
 const handleReaction = async (type: string) => {
   addOptimistic({ reactions: [...post.reactions, { type, userId: user }] })
-  await fetch(`/api/posts/${post._id}/react`, { method: 'PATCH', body: JSON.stringify({ type }) })
+  await fetch(`/api/posts/${post._id}/react`, {
+    method: 'PATCH',
+    body: JSON.stringify({ type })
+  })
 }
 ```
 
@@ -170,24 +173,24 @@ export const Input = ({ ref, ...props }: InputProps) => (
 
 ### 1.6 React 19.2 Additions (via Next.js 16)
 
-| Feature | Use case | Wraglet usage |
-|---------|----------|---------------|
-| `<Activity mode="visible\|hidden">` | Preserve state while hiding UI (modals, tabs, chat floaters) instead of unmounting | **Not used** — blog modal, chat floater, mobile drawer are candidates |
-| View Transitions API | Animated route/content transitions when wrapped in `startTransition` | **Not used** — optional for feed/tab navigation |
-| `useEffectEvent` | Extract non-reactive Effect logic (Ably listeners, scroll handlers) without re-subscribing on every dep change | **Not used** — AblyProvider, ChatWindow, Header are candidates |
-| `cacheSignal` *(RSC only)* | Detect when a `"use cache"` lifetime ends inside cached server functions | **Not used** — relevant when Cache Components are enabled |
-| React Performance Tracks | Timeline overlays in browser DevTools for render/commit phases | **Dev-only** — enable after upgrade for profiling |
-| Partial Pre-Render resume APIs | `resume`, `resumeAndPrerender` for streaming RSC (framework-level) | Handled by Next.js — no direct Wraglet code |
+| Feature                             | Use case                                                                                                       | Wraglet usage                                                         |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `<Activity mode="visible\|hidden">` | Preserve state while hiding UI (modals, tabs, chat floaters) instead of unmounting                             | **Not used** — blog modal, chat floater, mobile drawer are candidates |
+| View Transitions API                | Animated route/content transitions when wrapped in `startTransition`                                           | **Not used** — optional for feed/tab navigation                       |
+| `useEffectEvent`                    | Extract non-reactive Effect logic (Ably listeners, scroll handlers) without re-subscribing on every dep change | **Not used** — AblyProvider, ChatWindow, Header are candidates        |
+| `cacheSignal` _(RSC only)_          | Detect when a `"use cache"` lifetime ends inside cached server functions                                       | **Not used** — relevant when Cache Components are enabled             |
+| React Performance Tracks            | Timeline overlays in browser DevTools for render/commit phases                                                 | **Dev-only** — enable after upgrade for profiling                     |
+| Partial Pre-Render resume APIs      | `resume`, `resumeAndPrerender` for streaming RSC (framework-level)                                             | Handled by Next.js — no direct Wraglet code                           |
 
 ### 1.7 Removed / Deprecated React APIs
 
-| Removed in React 19 | Replacement |
-|---------------------|-------------|
-| `ReactDOM.render`, `ReactDOM.hydrate` | `createRoot`, `hydrateRoot` |
-| String refs, `contextTypes`, `getChildContext` | `createContext`, `useContext` |
-| `propTypes` on function components | TypeScript |
-| `react-test-renderer` (web) | `@testing-library/react` + Vitest |
-| `element.ref` access on React elements | `element.props.ref` |
+| Removed in React 19                            | Replacement                       |
+| ---------------------------------------------- | --------------------------------- |
+| `ReactDOM.render`, `ReactDOM.hydrate`          | `createRoot`, `hydrateRoot`       |
+| String refs, `contextTypes`, `getChildContext` | `createContext`, `useContext`     |
+| `propTypes` on function components             | TypeScript                        |
+| `react-test-renderer` (web)                    | `@testing-library/react` + Vitest |
+| `element.ref` access on React elements         | `element.props.ref`               |
 
 ### 1.8 React Compiler (Stable, Opt-In)
 
@@ -198,7 +201,7 @@ The React Compiler (formerly "Forget") auto-memoizes components at build time, r
 ```ts
 // next.config.ts
 const nextConfig = {
-  reactCompiler: true,
+  reactCompiler: true
 }
 ```
 
@@ -226,8 +229,8 @@ Turbopack is now the default for `next dev` and `next build`:
 ```ts
 const nextConfig = {
   experimental: {
-    turbopackFileSystemCacheForDev: true,
-  },
+    turbopackFileSystemCacheForDev: true
+  }
 }
 ```
 
@@ -238,7 +241,7 @@ Next.js 16 replaces implicit App Router caching with **opt-in** Cache Components
 ```ts
 // next.config.ts
 const nextConfig = {
-  cacheComponents: true,
+  cacheComponents: true
 }
 ```
 
@@ -254,14 +257,14 @@ export async function getTrendingTopics() {
 }
 ```
 
-| API | When to use |
-|-----|-------------|
-| `"use cache"` | Explicit server-side caching of pages, components, or functions |
-| `cacheLife('max' \| 'hours' \| 'days' \| …)` | TTL / stale-while-revalidate profiles |
-| `cacheTag('key')` | Tag cached entries for targeted invalidation |
-| `revalidateTag(tag, profile)` | SWR invalidation — **now requires 2nd `cacheLife` argument** |
-| `updateTag(tag)` | Server Actions only — read-your-writes (immediate fresh data) |
-| `refresh()` | Server Actions only — refresh uncached dynamic data without touching cache |
+| API                                          | When to use                                                                |
+| -------------------------------------------- | -------------------------------------------------------------------------- |
+| `"use cache"`                                | Explicit server-side caching of pages, components, or functions            |
+| `cacheLife('max' \| 'hours' \| 'days' \| …)` | TTL / stale-while-revalidate profiles                                      |
+| `cacheTag('key')`                            | Tag cached entries for targeted invalidation                               |
+| `revalidateTag(tag, profile)`                | SWR invalidation — **now requires 2nd `cacheLife` argument**               |
+| `updateTag(tag)`                             | Server Actions only — read-your-writes (immediate fresh data)              |
+| `refresh()`                                  | Server Actions only — refresh uncached dynamic data without touching cache |
 
 **Breaking behavior:** `fetch()` in Server Components is **no longer cached by default**. Anything that relied on implicit caching in Next.js 15 will run uncached in 16 unless you add `"use cache"` or explicit cache options.
 
@@ -269,13 +272,13 @@ export async function getTrendingTopics() {
 
 All dynamic request APIs are **async only**. Sync access throws at runtime.
 
-| API | Next.js 16 pattern |
-|-----|-------------------|
-| Route `params` | `{ params }: { params: Promise<{ id: string }> }` → `const { id } = await params` |
+| API                  | Next.js 16 pattern                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| Route `params`       | `{ params }: { params: Promise<{ id: string }> }` → `const { id } = await params`    |
 | Route `searchParams` | `{ searchParams }: { searchParams: Promise<{ q?: string }> }` → `await searchParams` |
-| `cookies()` | `const cookieStore = await cookies()` |
-| `headers()` | `const headerList = await headers()` |
-| `draftMode()` | `const { isEnabled } = await draftMode()` |
+| `cookies()`          | `const cookieStore = await cookies()`                                                |
+| `headers()`          | `const headerList = await headers()`                                                 |
+| `draftMode()`        | `const { isEnabled } = await draftMode()`                                            |
 
 **Codemod:** `npx @next/codemod@canary upgrade latest`
 
@@ -287,17 +290,17 @@ Wraglet currently has **neither** file — no action unless auth redirects / rew
 
 ### 2.5 Other Notable Breaking / Behavior Changes
 
-| Change | Impact |
-|--------|--------|
-| Node.js ≥ 20.9 required | Node 18 unsupported |
-| `next lint` removed | Use `eslint` directly (Wraglet already does) |
-| AMP fully removed | N/A for Wraglet |
-| `unstable_cache` removed | Use `"use cache"` |
-| `revalidateTag(tag)` single-arg deprecated | Add `cacheLife` profile: `revalidateTag('posts', 'max')` |
-| `images.minimumCacheTTL` default 60s → 4h | Review image CDN cache headers |
-| `images.qualities` default narrowed to `[75]` | Audit custom `quality` props on `<Image>` |
-| Parallel routes require explicit `default.js` | Only if using parallel routes |
-| PPR / `experimental.ppr` removed | Replaced by Cache Components model |
+| Change                                        | Impact                                                   |
+| --------------------------------------------- | -------------------------------------------------------- |
+| Node.js ≥ 20.9 required                       | Node 18 unsupported                                      |
+| `next lint` removed                           | Use `eslint` directly (Wraglet already does)             |
+| AMP fully removed                             | N/A for Wraglet                                          |
+| `unstable_cache` removed                      | Use `"use cache"`                                        |
+| `revalidateTag(tag)` single-arg deprecated    | Add `cacheLife` profile: `revalidateTag('posts', 'max')` |
+| `images.minimumCacheTTL` default 60s → 4h     | Review image CDN cache headers                           |
+| `images.qualities` default narrowed to `[75]` | Audit custom `quality` props on `<Image>`                |
+| Parallel routes require explicit `default.js` | Only if using parallel routes                            |
+| PPR / `experimental.ppr` removed              | Replaced by Cache Components model                       |
 
 ### 2.6 React Compiler in Next.js 16
 
@@ -335,13 +338,13 @@ Page (Server Component, async)
 
 ### 3.2 Data Fetching Strategy for Wraglet
 
-| Layer | Tool | Best for |
-|-------|------|----------|
-| Server Components / Server Actions | `await` + Mongoose | Initial page data, SEO, auth-gated reads |
-| Client interactive lists | TanStack Query | Infinite scroll, polling, cache invalidation (feed, notifications) |
-| Real-time | Ably `useChannel` | Live reactions, messages, presence |
-| Forms (simple) | `useActionState` + Server Actions | Settings toggles, mark-as-read |
-| Forms (complex) | react-hook-form + Zod + mutation | Auth, blog editor, multi-step |
+| Layer                              | Tool                              | Best for                                                           |
+| ---------------------------------- | --------------------------------- | ------------------------------------------------------------------ |
+| Server Components / Server Actions | `await` + Mongoose                | Initial page data, SEO, auth-gated reads                           |
+| Client interactive lists           | TanStack Query                    | Infinite scroll, polling, cache invalidation (feed, notifications) |
+| Real-time                          | Ably `useChannel`                 | Live reactions, messages, presence                                 |
+| Forms (simple)                     | `useActionState` + Server Actions | Settings toggles, mark-as-read                                     |
+| Forms (complex)                    | react-hook-form + Zod + mutation  | Auth, blog editor, multi-step                                      |
 
 ### 3.3 Caching Strategy for Wraglet
 
@@ -381,35 +384,35 @@ npx @next/codemod@canary next-lint-to-eslint-cli .
 
 ## 4. Quick Decision Matrix
 
-| Situation | Use |
-|-----------|-----|
-| Form submit with server validation | Server Action + `useActionState` |
-| Complex multi-field form | react-hook-form + Zod (keep current pattern) |
-| Optimistic reaction/vote/comment | `useOptimistic` + API call + Ably confirm |
-| Initial page data | Server Component `await` |
-| Paginated/infinite client list | TanStack Query (keep current pattern) |
-| Real-time updates | Ably `ChannelProvider` + `useChannel` |
-| Hide UI but keep state (modal, tab) | `<Activity mode="hidden">` |
-| Effect with stale closure risk | `useEffectEvent` |
+| Situation                            | Use                                            |
+| ------------------------------------ | ---------------------------------------------- |
+| Form submit with server validation   | Server Action + `useActionState`               |
+| Complex multi-field form             | react-hook-form + Zod (keep current pattern)   |
+| Optimistic reaction/vote/comment     | `useOptimistic` + API call + Ably confirm      |
+| Initial page data                    | Server Component `await`                       |
+| Paginated/infinite client list       | TanStack Query (keep current pattern)          |
+| Real-time updates                    | Ably `ChannelProvider` + `useChannel`          |
+| Hide UI but keep state (modal, tab)  | `<Activity mode="hidden">`                     |
+| Effect with stale closure risk       | `useEffectEvent`                               |
 | Expensive derived value, no compiler | `useMemo` (remove once React Compiler enabled) |
-| Public semi-static data | `"use cache"` + `cacheTag` |
-| User expects instant own writes | `updateTag` in Server Action |
+| Public semi-static data              | `"use cache"` + `cacheTag`                     |
+| User expects instant own writes      | `updateTag` in Server Action                   |
 
 ---
 
 ## 5. Version Requirements Summary
 
-| Requirement | Minimum | Wraglet recommended |
-|-------------|---------|---------------------|
-| Node.js | 20.9+ | ✅ (verify CI/runtime) |
-| TypeScript | 5.1+ | ✅ 5.6 |
-| React | 19.x | **19.2.7** (not 19.2.6 — FormData regression) |
-| Next.js | 16.x | **16.2.10** (security batch in 16.2.5–16.2.6) |
-| Browsers | Chrome/Edge/Firefox 111+, Safari 16.4+ | ✅ |
+| Requirement | Minimum                                | Wraglet recommended                           |
+| ----------- | -------------------------------------- | --------------------------------------------- |
+| Node.js     | 20.9+                                  | ✅ (verify CI/runtime)                        |
+| TypeScript  | 5.1+                                   | ✅ 5.6                                        |
+| React       | 19.x                                   | **19.2.7** (not 19.2.6 — FormData regression) |
+| Next.js     | 16.x                                   | **16.2.10** (security batch in 16.2.5–16.2.6) |
+| Browsers    | Chrome/Edge/Firefox 111+, Safari 16.4+ | ✅                                            |
 
 ---
 
-## 6. What Latest Stable Does *Not* Change
+## 6. What Latest Stable Does _Not_ Change
 
 The 19.2.5–19.2.7 and 16.2.3–16.2.10 patches do **not** introduce replacements for:
 
@@ -422,4 +425,4 @@ The audit findings in [WRAGLET-AUDIT-FIXES.md](./WRAGLET-AUDIT-FIXES.md) remain 
 
 ---
 
-*This document is the feature reference. See [WRAGLET-AUDIT-FIXES.md](./WRAGLET-AUDIT-FIXES.md) for file-specific findings and recommended changes.*
+_This document is the feature reference. See [WRAGLET-AUDIT-FIXES.md](./WRAGLET-AUDIT-FIXES.md) for file-specific findings and recommended changes._

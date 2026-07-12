@@ -32,20 +32,20 @@ The highest-impact improvements remain **architectural**, plus staying current o
 
 ### Already Compliant ✅
 
-| Area | Evidence |
-|------|----------|
-| Async route `params` / `searchParams` (several pages) | `post/[id]/page.tsx`, `blog/[slug]/page.tsx`, `verify-email`, `reset-password` |
-| No sync `cookies()` / `headers()` in app code | Grep clean in `src/` |
-| No Pages Router (`pages/`, `getServerSideProps`) | App Router only |
-| No `unstable_cache`, `next/legacy/image`, `middleware.ts` | Not present |
-| No `@ably-labs/react-hooks` imports | Package listed but unused; code uses `ably/react` |
-| No `useFormState` (renamed hook) | Not used |
-| No `react-test-renderer` | Vitest + RTL |
-| Ably pattern mostly correct | `ChannelProvider` wrappers on feed, blog, profile, chat headers |
-| Suspense on feed, blog, search, layout chrome | Present |
-| ESLint via flat config (not `next lint`) | `eslint.config.mjs` |
-| `useIsClient` uses `useSyncExternalStore` | Modern SSR-safe pattern (not deprecated) |
-| React 19.2 APIs (`Activity`, `useEffectEvent`, etc.) | **None used yet** — see §New from latest stable below |
+| Area                                                      | Evidence                                                                       |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Async route `params` / `searchParams` (several pages)     | `post/[id]/page.tsx`, `blog/[slug]/page.tsx`, `verify-email`, `reset-password` |
+| No sync `cookies()` / `headers()` in app code             | Grep clean in `src/`                                                           |
+| No Pages Router (`pages/`, `getServerSideProps`)          | App Router only                                                                |
+| No `unstable_cache`, `next/legacy/image`, `middleware.ts` | Not present                                                                    |
+| No `@ably-labs/react-hooks` imports                       | Package listed but unused; code uses `ably/react`                              |
+| No `useFormState` (renamed hook)                          | Not used                                                                       |
+| No `react-test-renderer`                                  | Vitest + RTL                                                                   |
+| Ably pattern mostly correct                               | `ChannelProvider` wrappers on feed, blog, profile, chat headers                |
+| Suspense on feed, blog, search, layout chrome             | Present                                                                        |
+| ESLint via flat config (not `next lint`)                  | `eslint.config.mjs`                                                            |
+| `useIsClient` uses `useSyncExternalStore`                 | Modern SSR-safe pattern (not deprecated)                                       |
+| React 19.2 APIs (`Activity`, `useEffectEvent`, etc.)      | **None used yet** — see §New from latest stable below                          |
 
 ---
 
@@ -57,27 +57,27 @@ Patch releases between Wraglet’s pinned versions and latest stable are **secur
 
 ### New audit items from latest stable
 
-| Item | Priority | Detail |
-|------|----------|--------|
-| Bump `react` / `react-dom` to **19.2.7** | 🔴 P0 | Avoid 19.2.6 FormData regression; includes RSC hardening through 19.2.7 |
-| Bump `next` / `eslint-config-next` to **16.2.10** | 🔴 P0 | 13 security advisories fixed in 16.2.5–16.2.6; FormData backport in 16.2.7 |
-| Adopt `useActionState` + `<form action>` | 🟡 P2 *(unblocked)* | Safe only on ≥ 19.2.7 / ≥ 16.2.7; Wraglet currently uses RHF + axios + API routes |
-| Use `cacheSignal` in cached server functions | 🟢 P3 | When `"use cache"` is enabled — detect cache lifetime end |
-| Encode non-ASCII `cacheTag` values | 🟢 P3 | Fixed in Next 16.2.7 — relevant if tags include i18n strings |
-| React Performance Tracks (DevTools) | 🟢 P3 | Profile before enabling React Compiler |
+| Item                                              | Priority            | Detail                                                                            |
+| ------------------------------------------------- | ------------------- | --------------------------------------------------------------------------------- |
+| Bump `react` / `react-dom` to **19.2.7**          | 🔴 P0               | Avoid 19.2.6 FormData regression; includes RSC hardening through 19.2.7           |
+| Bump `next` / `eslint-config-next` to **16.2.10** | 🔴 P0               | 13 security advisories fixed in 16.2.5–16.2.6; FormData backport in 16.2.7        |
+| Adopt `useActionState` + `<form action>`          | 🟡 P2 _(unblocked)_ | Safe only on ≥ 19.2.7 / ≥ 16.2.7; Wraglet currently uses RHF + axios + API routes |
+| Use `cacheSignal` in cached server functions      | 🟢 P3               | When `"use cache"` is enabled — detect cache lifetime end                         |
+| Encode non-ASCII `cacheTag` values                | 🟢 P3               | Fixed in Next 16.2.7 — relevant if tags include i18n strings                      |
+| React Performance Tracks (DevTools)               | 🟢 P3               | Profile before enabling React Compiler                                            |
 
 ### React 19.2 features — codebase gap analysis
 
-| API | Used in Wraglet? | Best Wraglet target |
-|-----|------------------|---------------------|
-| `useOptimistic` | ❌ | `Post.tsx`, `BlogReactionControls.tsx`, `FeedWithAbly.tsx` |
-| `useActionState` | ❌ | `notifications/page.tsx` (mark read), auth resend/forgot forms |
-| `useFormStatus` | ❌ | Submit buttons in forms migrated to Actions |
-| `useEffectEvent` | ❌ | `AblyProvider.tsx`, `ChatWindow.tsx`, `Header.tsx` |
-| `<Activity>` | ❌ | Blog modal on profile page, `ChatFloater.tsx`, `MobileDiscoverDrawer.tsx` |
-| `use()` | ❌ | Conditional context reads (low priority vs `await` in SC) |
-| `cacheSignal` | ❌ | Future `"use cache"` server functions |
-| View Transitions | ❌ | Feed tab switches, settings navigation (optional polish) |
+| API              | Used in Wraglet? | Best Wraglet target                                                       |
+| ---------------- | ---------------- | ------------------------------------------------------------------------- |
+| `useOptimistic`  | ❌               | `Post.tsx`, `BlogReactionControls.tsx`, `FeedWithAbly.tsx`                |
+| `useActionState` | ❌               | `notifications/page.tsx` (mark read), auth resend/forgot forms            |
+| `useFormStatus`  | ❌               | Submit buttons in forms migrated to Actions                               |
+| `useEffectEvent` | ❌               | `AblyProvider.tsx`, `ChatWindow.tsx`, `Header.tsx`                        |
+| `<Activity>`     | ❌               | Blog modal on profile page, `ChatFloater.tsx`, `MobileDiscoverDrawer.tsx` |
+| `use()`          | ❌               | Conditional context reads (low priority vs `await` in SC)                 |
+| `cacheSignal`    | ❌               | Future `"use cache"` server functions                                     |
+| View Transitions | ❌               | Feed tab switches, settings navigation (optional polish)                  |
 
 ### Server Actions today vs recommended path
 
@@ -112,12 +112,12 @@ return (
 
 ## Priority Legend
 
-| Priority | Meaning |
-|----------|---------|
-| 🔴 P0 | Bug or correctness issue — fix first |
-| 🟠 P1 | Deprecated API or Next.js 16 mismatch — fix soon |
-| 🟡 P2 | Architecture / performance improvement |
-| 🟢 P3 | Optional modernization when touching related code |
+| Priority | Meaning                                           |
+| -------- | ------------------------------------------------- |
+| 🔴 P0    | Bug or correctness issue — fix first              |
+| 🟠 P1    | Deprecated API or Next.js 16 mismatch — fix soon  |
+| 🟡 P2    | Architecture / performance improvement            |
+| 🟢 P3    | Optional modernization when touching related code |
 
 ---
 
@@ -171,14 +171,14 @@ const Providers = ({ children }: ProvidersProps) => {
 
 React 19 accepts `ref` as a regular prop. `forwardRef` is deprecated.
 
-| File | Components using `forwardRef` |
-|------|-------------------------------|
-| `src/components/shared/Input.tsx` | `Input` |
-| `src/components/shared/Button.tsx` | `Button` |
-| `src/components/shared/Checkbox.tsx` | `Checkbox` |
-| `src/components/shared/Label.tsx` | `Label` |
-| `src/components/shared/Slider.tsx` | `Slider` |
-| `src/components/shared/Form.tsx` | `FormItem`, `FormLabel`, `FormControl`, `FormDescription`, `FormMessage` |
+| File                                 | Components using `forwardRef`                                            |
+| ------------------------------------ | ------------------------------------------------------------------------ |
+| `src/components/shared/Input.tsx`    | `Input`                                                                  |
+| `src/components/shared/Button.tsx`   | `Button`                                                                 |
+| `src/components/shared/Checkbox.tsx` | `Checkbox`                                                               |
+| `src/components/shared/Label.tsx`    | `Label`                                                                  |
+| `src/components/shared/Slider.tsx`   | `Slider`                                                                 |
+| `src/components/shared/Form.tsx`     | `FormItem`, `FormLabel`, `FormControl`, `FormDescription`, `FormMessage` |
 
 **Fix:** Migrate to ref-as-prop pattern. Run codemod: `npx codemod@latest react/19/replace-forward-ref`
 
@@ -238,16 +238,16 @@ revalidateTag('blog-posts', 'max')
 
 These entire route files are `'use client'`, forcing full client bundles and client-side data loading where the server could fetch first:
 
-| File | Current pattern | Recommended pattern |
-|------|-----------------|---------------------|
-| `src/app/(authenticated)/[username]/page.tsx` | Client page + `useEffect` → `getPostsByUsername` Server Action | Async Server Component: `await params`, `await getPostsByUsername`, pass props to client wrapper |
-| `src/app/(authenticated)/notifications/page.tsx` | Client + `useInfiniteQuery` | Server shell + `NotificationsClient` island (Query stays client-side for infinite scroll) |
-| `src/app/(authenticated)/search/page.tsx` | Client + `useEffect` + `fetch` | Server shell reads `await searchParams`, prefetches or passes `q` to client; consider TanStack Query |
-| `src/app/(authenticated)/messages/page.tsx` | Thin client wrapper only | Server page renders `<MessagesAbly />` via dynamic import from server shell |
-| `src/app/(authenticated)/settings/account/page.tsx` | Client settings form | Server auth check in layout (done) + client form island |
-| `src/app/(authenticated)/settings/profile/page.tsx` | Client + mutations | Same — optional Server Action for profile PATCH |
-| `src/app/(authenticated)/settings/privacy/page.tsx` | Client | Same |
-| `src/app/(authenticated)/settings/notifications/page.tsx` | Client | Same |
+| File                                                      | Current pattern                                                | Recommended pattern                                                                                  |
+| --------------------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `src/app/(authenticated)/[username]/page.tsx`             | Client page + `useEffect` → `getPostsByUsername` Server Action | Async Server Component: `await params`, `await getPostsByUsername`, pass props to client wrapper     |
+| `src/app/(authenticated)/notifications/page.tsx`          | Client + `useInfiniteQuery`                                    | Server shell + `NotificationsClient` island (Query stays client-side for infinite scroll)            |
+| `src/app/(authenticated)/search/page.tsx`                 | Client + `useEffect` + `fetch`                                 | Server shell reads `await searchParams`, prefetches or passes `q` to client; consider TanStack Query |
+| `src/app/(authenticated)/messages/page.tsx`               | Thin client wrapper only                                       | Server page renders `<MessagesAbly />` via dynamic import from server shell                          |
+| `src/app/(authenticated)/settings/account/page.tsx`       | Client settings form                                           | Server auth check in layout (done) + client form island                                              |
+| `src/app/(authenticated)/settings/profile/page.tsx`       | Client + mutations                                             | Same — optional Server Action for profile PATCH                                                      |
+| `src/app/(authenticated)/settings/privacy/page.tsx`       | Client                                                         | Same                                                                                                 |
+| `src/app/(authenticated)/settings/notifications/page.tsx` | Client                                                         | Same                                                                                                 |
 
 **Highest impact file:** `[username]/page.tsx` — fetches posts in `useEffect` despite having Server Actions available:
 
@@ -271,11 +271,11 @@ useEffect(() => {
 
 ### 6. Client-side fetch in `useEffect` (replace with Query or Server fetch)
 
-| File | Pattern | Replacement |
-|------|---------|-------------|
-| `src/app/(authenticated)/search/page.tsx` | `useEffect` + `fetch('/api/search')` | TanStack `useQuery` (consistent with rest of app) or server prefetch + hydrate |
-| `src/app/(authenticated)/[username]/page.tsx` | `useEffect` + Server Action | Server Component `await` |
-| `src/components/auth/LoginVerifiedBanner.tsx` | `useEffect` reads `searchParams`, calls `router.replace` | Acceptable for URL cleanup; could use server redirect instead |
+| File                                          | Pattern                                                  | Replacement                                                                    |
+| --------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `src/app/(authenticated)/search/page.tsx`     | `useEffect` + `fetch('/api/search')`                     | TanStack `useQuery` (consistent with rest of app) or server prefetch + hydrate |
+| `src/app/(authenticated)/[username]/page.tsx` | `useEffect` + Server Action                              | Server Component `await`                                                       |
+| `src/components/auth/LoginVerifiedBanner.tsx` | `useEffect` reads `searchParams`, calls `router.replace` | Acceptable for URL cleanup; could use server redirect instead                  |
 
 **Priority:** 🟡 P2
 
@@ -285,14 +285,14 @@ useEffect(() => {
 
 Manual `setPost` / `setPosts` optimistic patterns before API calls. Prime for `useOptimistic`:
 
-| File | Interaction |
-|------|-------------|
-| `src/components/feed/Post.tsx` | Reactions, votes, comments |
-| `src/components/feed/PostInteractions.tsx` | Duplicate of Post interaction logic |
-| `src/components/feed/FeedWithAbly.tsx` | Feed-level post/share prepend |
-| `src/components/profile/ProfileBody.tsx` | Profile feed realtime + create post |
-| `src/components/blog/BlogReactionControls.tsx` | Blog reactions |
-| `src/components/blog/BlogInteractions.tsx` | Comments + reactions |
+| File                                           | Interaction                         |
+| ---------------------------------------------- | ----------------------------------- |
+| `src/components/feed/Post.tsx`                 | Reactions, votes, comments          |
+| `src/components/feed/PostInteractions.tsx`     | Duplicate of Post interaction logic |
+| `src/components/feed/FeedWithAbly.tsx`         | Feed-level post/share prepend       |
+| `src/components/profile/ProfileBody.tsx`       | Profile feed realtime + create post |
+| `src/components/blog/BlogReactionControls.tsx` | Blog reactions                      |
+| `src/components/blog/BlogInteractions.tsx`     | Comments + reactions                |
 
 **Priority:** 🟡 P2 — improves UX consistency with React 19 Actions model
 
@@ -304,16 +304,16 @@ Manual `setPost` / `setPosts` optimistic patterns before API calls. Prime for `u
 
 Currently: react-hook-form + TanStack `useMutation` + axios. Works well for complex forms; simpler flows could migrate:
 
-| File | Complexity | Recommendation |
-|------|------------|----------------|
-| `src/components/auth/LoginForm.tsx` | High (credentials-check + signIn) | Keep client mutation |
-| `src/components/auth/SignUp.tsx` | High (Turnstile, multi-step) | Keep client |
-| `src/components/auth/ForgotPasswordForm.tsx` | Low | Candidate for Server Action |
-| `src/components/auth/ResetPasswordForm.tsx` | Medium | Candidate for Server Action |
-| `src/components/auth/VerifyEmailPending.tsx` | Low (resend) | Candidate for Server Action |
-| `src/app/(authenticated)/settings/account/page.tsx` | Medium | Partial Server Action for password change |
-| `src/app/(authenticated)/settings/profile/page.tsx` | Medium | Partial Server Action |
-| `src/app/(authenticated)/notifications/page.tsx` | Low (mark read) | `useActionState` + PATCH Server Action |
+| File                                                | Complexity                        | Recommendation                            |
+| --------------------------------------------------- | --------------------------------- | ----------------------------------------- |
+| `src/components/auth/LoginForm.tsx`                 | High (credentials-check + signIn) | Keep client mutation                      |
+| `src/components/auth/SignUp.tsx`                    | High (Turnstile, multi-step)      | Keep client                               |
+| `src/components/auth/ForgotPasswordForm.tsx`        | Low                               | Candidate for Server Action               |
+| `src/components/auth/ResetPasswordForm.tsx`         | Medium                            | Candidate for Server Action               |
+| `src/components/auth/VerifyEmailPending.tsx`        | Low (resend)                      | Candidate for Server Action               |
+| `src/app/(authenticated)/settings/account/page.tsx` | Medium                            | Partial Server Action for password change |
+| `src/app/(authenticated)/settings/profile/page.tsx` | Medium                            | Partial Server Action                     |
+| `src/app/(authenticated)/notifications/page.tsx`    | Low (mark read)                   | `useActionState` + PATCH Server Action    |
 
 **Priority:** 🟡 P2 — migrate low-complexity forms first
 
@@ -323,20 +323,20 @@ Currently: react-hook-form + TanStack `useMutation` + axios. Works well for comp
 
 Files with `useMemo` / `useCallback` (13 files):
 
-| File | Count | Notes |
-|------|-------|-------|
-| `src/components/shared/SearchBar.tsx` | 6 | Review after compiler |
-| `src/components/feed/UploadPostImage.tsx` | 5 | Image crop logic — may keep |
-| `src/components/feed/RightNav.tsx` | 2 | Trending/activities queries |
-| `src/components/feed/FeedClientWrapper.tsx` | 2 | Feed tab state |
-| `src/components/feed/Post.tsx` | 3 | Reaction groups |
-| `src/components/shared/Form.tsx` | 2 | Context value memo |
-| `src/components/shared/BirthdayPicker.tsx` | 3 | Date parts |
-| `src/components/blog/BlogImageUpload.tsx` | 3 | Preview URL |
-| `src/components/chat/FeedNewChatModalWrapper.tsx` | 2 | Filtered users |
-| `src/components/profile/ImageUploadCropModal.tsx` | 3 | Crop state |
-| `src/components/profile/PhotoCollection.tsx` | 2 | Grid layout |
-| `src/app/(authenticated)/notifications/page.tsx` | 2 | Flatten pages |
+| File                                              | Count | Notes                       |
+| ------------------------------------------------- | ----- | --------------------------- |
+| `src/components/shared/SearchBar.tsx`             | 6     | Review after compiler       |
+| `src/components/feed/UploadPostImage.tsx`         | 5     | Image crop logic — may keep |
+| `src/components/feed/RightNav.tsx`                | 2     | Trending/activities queries |
+| `src/components/feed/FeedClientWrapper.tsx`       | 2     | Feed tab state              |
+| `src/components/feed/Post.tsx`                    | 3     | Reaction groups             |
+| `src/components/shared/Form.tsx`                  | 2     | Context value memo          |
+| `src/components/shared/BirthdayPicker.tsx`        | 3     | Date parts                  |
+| `src/components/blog/BlogImageUpload.tsx`         | 3     | Preview URL                 |
+| `src/components/chat/FeedNewChatModalWrapper.tsx` | 2     | Filtered users              |
+| `src/components/profile/ImageUploadCropModal.tsx` | 3     | Crop state                  |
+| `src/components/profile/PhotoCollection.tsx`      | 2     | Grid layout                 |
+| `src/app/(authenticated)/notifications/page.tsx`  | 2     | Flatten pages               |
 
 **Fix:** Enable `reactCompiler: true` in `next.config.ts`, profile, then remove redundant memoization.
 
@@ -348,13 +348,13 @@ Files with `useMemo` / `useCallback` (13 files):
 
 Non-idiomatic reducers that spread `{ ...state, ...action }`:
 
-| File | State |
-|------|-------|
-| `src/components/profile/ProfileBody.tsx` | `{ text, image }` |
-| `src/components/feed/FeedClientWrapper.tsx` | `{ text, image, isLoading }` |
-| `src/components/feed/CreatePost.tsx` | `{ openUploadModal }` |
-| `src/components/profile/ProfilePictureHover.tsx` | modal open state |
-| `src/components/profile/CoverPhotoHover.tsx` | modal open state |
+| File                                             | State                        |
+| ------------------------------------------------ | ---------------------------- |
+| `src/components/profile/ProfileBody.tsx`         | `{ text, image }`            |
+| `src/components/feed/FeedClientWrapper.tsx`      | `{ text, image, isLoading }` |
+| `src/components/feed/CreatePost.tsx`             | `{ openUploadModal }`        |
+| `src/components/profile/ProfilePictureHover.tsx` | modal open state             |
+| `src/components/profile/CoverPhotoHover.tsx`     | modal open state             |
 
 **Fix:** Replace with `useState` or colocate into Zustand where shared. Not deprecated — just unnecessary complexity.
 
@@ -366,11 +366,11 @@ Non-idiomatic reducers that spread `{ ...state, ...action }`:
 
 No `generateMetadata` exports found. Public/shareable routes would benefit:
 
-| Route | Suggested metadata |
-|-------|-------------------|
-| `src/app/(authenticated)/post/[id]/page.tsx` | Post title, author, OG image |
+| Route                                          | Suggested metadata               |
+| ---------------------------------------------- | -------------------------------- |
+| `src/app/(authenticated)/post/[id]/page.tsx`   | Post title, author, OG image     |
 | `src/app/(authenticated)/blog/[slug]/page.tsx` | Blog title, excerpt, cover image |
-| `src/app/(authenticated)/[username]/page.tsx` | Profile name, avatar |
+| `src/app/(authenticated)/[username]/page.tsx`  | Profile name, avatar             |
 
 **Priority:** 🟡 P2 (SEO / social sharing)
 
@@ -378,9 +378,9 @@ No `generateMetadata` exports found. Public/shareable routes would benefit:
 
 ### 12. Global `force-dynamic` — revisit with Cache Components
 
-| File | Setting |
-|------|---------|
-| `src/app/layout.tsx` | `export const dynamic = 'force-dynamic'` |
+| File                                 | Setting                                  |
+| ------------------------------------ | ---------------------------------------- |
+| `src/app/layout.tsx`                 | `export const dynamic = 'force-dynamic'` |
 | `src/app/(authenticated)/layout.tsx` | `export const dynamic = 'force-dynamic'` |
 
 **Assessment:** Correct for authenticated, personalized app shell. Public routes (`(unauthenticated)/`) could opt into `"use cache"` individually without removing layout dynamic for auth routes.
@@ -393,11 +393,11 @@ No `generateMetadata` exports found. Public/shareable routes would benefit:
 
 Candidates where state is preserved while UI is hidden:
 
-| Component | Current | Improvement |
-|-----------|---------|-------------|
-| `src/app/(authenticated)/[username]/page.tsx` | Headless UI `Transition` for blog modal | `<Activity mode={showBlogModal ? 'visible' : 'hidden'}>` |
-| `src/components/chat/ChatFloater.tsx` | Conditional render of floater panels | Activity for minimized conversations |
-| `src/components/feed/MobileDiscoverDrawer.tsx` | Mount/unmount drawer | Activity when toggling |
+| Component                                      | Current                                 | Improvement                                              |
+| ---------------------------------------------- | --------------------------------------- | -------------------------------------------------------- |
+| `src/app/(authenticated)/[username]/page.tsx`  | Headless UI `Transition` for blog modal | `<Activity mode={showBlogModal ? 'visible' : 'hidden'}>` |
+| `src/components/chat/ChatFloater.tsx`          | Conditional render of floater panels    | Activity for minimized conversations                     |
+| `src/components/feed/MobileDiscoverDrawer.tsx` | Mount/unmount drawer                    | Activity when toggling                                   |
 
 **Priority:** 🟡 P2
 
@@ -407,12 +407,12 @@ Candidates where state is preserved while UI is hidden:
 
 Effects that re-subscribe when deps change unnecessarily:
 
-| File | Effect |
-|------|--------|
-| `src/providers/AblyProvider.tsx` | Session → Ably client lifecycle (already uses `startTransition`) |
-| `src/components/chat/ChatWindow.tsx` | Scroll / message effects |
-| `src/components/layout/Header.tsx` | Header effects |
-| `src/components/auth/LoginVerifiedBanner.tsx` | URL param cleanup |
+| File                                          | Effect                                                           |
+| --------------------------------------------- | ---------------------------------------------------------------- |
+| `src/providers/AblyProvider.tsx`              | Session → Ably client lifecycle (already uses `startTransition`) |
+| `src/components/chat/ChatWindow.tsx`          | Scroll / message effects                                         |
+| `src/components/layout/Header.tsx`            | Header effects                                                   |
+| `src/components/auth/LoginVerifiedBanner.tsx` | URL param cleanup                                                |
 
 **Fix:** Extract listener callbacks with `useEffectEvent` to shrink dependency arrays.
 
@@ -424,20 +424,20 @@ Effects that re-subscribe when deps change unnecessarily:
 
 ### 15. `React.FC` / `FC` type annotation (legacy style)
 
-| File |
-|------|
-| `src/components/auth/LoginForm.tsx` |
-| `src/components/auth/ResetPasswordForm.tsx` |
-| `src/components/auth/VerifyEmailPending.tsx` |
-| `src/components/feed/FeedWithAbly.tsx` |
-| `src/components/feed/FeedNoAbly.tsx` |
-| `src/components/feed/Comment.tsx` |
-| `src/components/feed/UploadPostImage.tsx` |
-| `src/components/chat/NewChatModal.tsx` |
-| `src/components/shared/ListBox.tsx` |
+| File                                              |
+| ------------------------------------------------- |
+| `src/components/auth/LoginForm.tsx`               |
+| `src/components/auth/ResetPasswordForm.tsx`       |
+| `src/components/auth/VerifyEmailPending.tsx`      |
+| `src/components/feed/FeedWithAbly.tsx`            |
+| `src/components/feed/FeedNoAbly.tsx`              |
+| `src/components/feed/Comment.tsx`                 |
+| `src/components/feed/UploadPostImage.tsx`         |
+| `src/components/chat/NewChatModal.tsx`            |
+| `src/components/shared/ListBox.tsx`               |
 | `src/components/profile/ImageUploadCropModal.tsx` |
 | `src/components/profile/UploadProfilePicture.tsx` |
-| `src/components/profile/UploadCoverPhoto.tsx` |
+| `src/components/profile/UploadCoverPhoto.tsx`     |
 
 **Fix:** Use plain function props typing (project convention already prefers arrow functions).
 
@@ -470,11 +470,11 @@ No change needed — extend this pattern when adding heavy state updates.
 
 ### 18. Enable optional Next.js 16 DX features
 
-| Feature | Config | Benefit |
-|---------|--------|---------|
-| React Compiler | `reactCompiler: true` | Auto memoization |
-| Cache Components | `cacheComponents: true` | Explicit public data caching |
-| Turbopack FS cache | `experimental.turbopackFileSystemCacheForDev: true` | Faster dev restarts |
+| Feature            | Config                                              | Benefit                      |
+| ------------------ | --------------------------------------------------- | ---------------------------- |
+| React Compiler     | `reactCompiler: true`                               | Auto memoization             |
+| Cache Components   | `cacheComponents: true`                             | Explicit public data caching |
+| Turbopack FS cache | `experimental.turbopackFileSystemCacheForDev: true` | Faster dev restarts          |
 
 **Priority:** 🟢 P3 — enable incrementally with measurement
 
@@ -484,56 +484,56 @@ No change needed — extend this pattern when adding heavy state updates.
 
 ### Providers & Root
 
-| File | Issue | Priority |
-|------|-------|----------|
-| `src/providers/index.tsx` | QueryClient per render | 🔴 P0 |
-| `src/providers/AblyProvider.tsx` | `useEffectEvent` opportunity | 🟡 P2 |
-| `src/app/layout.tsx` | Review `force-dynamic` vs cache | 🟡 P2 |
-| `next.config.ts` | No React Compiler / Cache Components | 🟢 P3 |
+| File                             | Issue                                | Priority |
+| -------------------------------- | ------------------------------------ | -------- |
+| `src/providers/index.tsx`        | QueryClient per render               | 🔴 P0    |
+| `src/providers/AblyProvider.tsx` | `useEffectEvent` opportunity         | 🟡 P2    |
+| `src/app/layout.tsx`             | Review `force-dynamic` vs cache      | 🟡 P2    |
+| `next.config.ts`                 | No React Compiler / Cache Components | 🟢 P3    |
 
 ### Route Pages (Client → Server split)
 
-| File | Issue | Priority |
-|------|-------|----------|
-| `src/app/(authenticated)/[username]/page.tsx` | Full client + useEffect fetch | 🟡 P2 |
-| `src/app/(authenticated)/notifications/page.tsx` | Full client page | 🟡 P2 |
-| `src/app/(authenticated)/search/page.tsx` | Full client + useEffect fetch | 🟡 P2 |
-| `src/app/(authenticated)/messages/page.tsx` | Unnecessary client page | 🟡 P2 |
-| `src/app/(authenticated)/settings/*/page.tsx` (4 files) | Full client pages | 🟡 P2 |
+| File                                                    | Issue                         | Priority |
+| ------------------------------------------------------- | ----------------------------- | -------- |
+| `src/app/(authenticated)/[username]/page.tsx`           | Full client + useEffect fetch | 🟡 P2    |
+| `src/app/(authenticated)/notifications/page.tsx`        | Full client page              | 🟡 P2    |
+| `src/app/(authenticated)/search/page.tsx`               | Full client + useEffect fetch | 🟡 P2    |
+| `src/app/(authenticated)/messages/page.tsx`             | Unnecessary client page       | 🟡 P2    |
+| `src/app/(authenticated)/settings/*/page.tsx` (4 files) | Full client pages             | 🟡 P2    |
 
 ### Shared UI (`forwardRef`)
 
-| File | Priority |
-|------|----------|
-| `src/components/shared/Input.tsx` | 🟠 P1 |
-| `src/components/shared/Button.tsx` | 🟠 P1 |
-| `src/components/shared/Checkbox.tsx` | 🟠 P1 |
-| `src/components/shared/Label.tsx` | 🟠 P1 |
-| `src/components/shared/Slider.tsx` | 🟠 P1 |
-| `src/components/shared/Form.tsx` | 🟠 P1 |
+| File                                 | Priority |
+| ------------------------------------ | -------- |
+| `src/components/shared/Input.tsx`    | 🟠 P1    |
+| `src/components/shared/Button.tsx`   | 🟠 P1    |
+| `src/components/shared/Checkbox.tsx` | 🟠 P1    |
+| `src/components/shared/Label.tsx`    | 🟠 P1    |
+| `src/components/shared/Slider.tsx`   | 🟠 P1    |
+| `src/components/shared/Form.tsx`     | 🟠 P1    |
 
 ### Feed / Real-time (useOptimistic)
 
-| File | Priority |
-|------|----------|
-| `src/components/feed/Post.tsx` | 🟡 P2 |
+| File                                       | Priority             |
+| ------------------------------------------ | -------------------- |
+| `src/components/feed/Post.tsx`             | 🟡 P2                |
 | `src/components/feed/PostInteractions.tsx` | 🟡 P2 / 🟢 P3 dedupe |
-| `src/components/feed/FeedWithAbly.tsx` | 🟡 P2 |
-| `src/components/profile/ProfileBody.tsx` | 🟡 P2 |
+| `src/components/feed/FeedWithAbly.tsx`     | 🟡 P2                |
+| `src/components/profile/ProfileBody.tsx`   | 🟡 P2                |
 
 ### Auth Forms (useActionState candidates)
 
-| File | Priority |
-|------|----------|
-| `src/components/auth/ForgotPasswordForm.tsx` | 🟡 P2 |
-| `src/components/auth/ResetPasswordForm.tsx` | 🟡 P2 |
-| `src/components/auth/VerifyEmailPending.tsx` | 🟡 P2 |
+| File                                         | Priority |
+| -------------------------------------------- | -------- |
+| `src/components/auth/ForgotPasswordForm.tsx` | 🟡 P2    |
+| `src/components/auth/ResetPasswordForm.tsx`  | 🟡 P2    |
+| `src/components/auth/VerifyEmailPending.tsx` | 🟡 P2    |
 
 ### Dependencies
 
-| File | Issue | Priority |
-|------|-------|----------|
-| `package.json` | Remove `@ably-labs/react-hooks` | 🟠 P1 |
+| File           | Issue                           | Priority |
+| -------------- | ------------------------------- | -------- |
+| `package.json` | Remove `@ably-labs/react-hooks` | 🟠 P1    |
 
 ---
 
@@ -559,25 +559,25 @@ When you're ready to implement, suggested sequence:
 
 ## Hooks & Patterns — Replace / Keep Matrix
 
-| Current pattern | Verdict | Replacement |
-|-----------------|---------|---------------|
-| `forwardRef` | **Replace** | `ref` as prop (React 19) |
-| `useFormState` | N/A (not used) | `useActionState` if needed |
-| `@ably-labs/react-hooks` | **Remove dep** | Already on `ably/react` ✅ |
-| `useIsClient` + `useSyncExternalStore` | **Keep** | Modern SSR-safe hydration check |
-| TanStack Query | **Keep** | Still best for client infinite/paginated data |
-| react-hook-form + Zod | **Keep** | Complex forms |
-| axios in mutations | **Keep for now** | Optional migrate to `fetch` / Server Actions |
-| `useEffect` + fetch | **Replace** | Server Component `await` or `useQuery` |
-| `useMemo` / `useCallback` | **Review** | React Compiler or remove if cheap |
-| `dynamic(..., { ssr: false })` for Ably | **Keep** | Required per Ably pattern |
-| `revalidatePath` only | **Extend** | Add `updateTag` when caching enabled |
-| `useReducer` for `{...state}` | **Simplify** | `useState` |
-| `React.FC` | **Remove** | Explicit props types |
-| Sync `params` / `cookies()` | **N/A** | Already async where used ✅ |
-| Stay on React 19.2.4 / Next 16.2.2 | **Upgrade** | Roll forward to 19.2.7 / 16.2.10 (security + FormData) |
-| `useActionState` + FormData forms | **Adopt after bump** | Requires ≥ 19.2.7 / ≥ 16.2.7 |
-| `<Activity>` / `useEffectEvent` | **Adopt** | Modals, floaters, Ably effects (19.2.0+ features, still unused) |
+| Current pattern                         | Verdict              | Replacement                                                     |
+| --------------------------------------- | -------------------- | --------------------------------------------------------------- |
+| `forwardRef`                            | **Replace**          | `ref` as prop (React 19)                                        |
+| `useFormState`                          | N/A (not used)       | `useActionState` if needed                                      |
+| `@ably-labs/react-hooks`                | **Remove dep**       | Already on `ably/react` ✅                                      |
+| `useIsClient` + `useSyncExternalStore`  | **Keep**             | Modern SSR-safe hydration check                                 |
+| TanStack Query                          | **Keep**             | Still best for client infinite/paginated data                   |
+| react-hook-form + Zod                   | **Keep**             | Complex forms                                                   |
+| axios in mutations                      | **Keep for now**     | Optional migrate to `fetch` / Server Actions                    |
+| `useEffect` + fetch                     | **Replace**          | Server Component `await` or `useQuery`                          |
+| `useMemo` / `useCallback`               | **Review**           | React Compiler or remove if cheap                               |
+| `dynamic(..., { ssr: false })` for Ably | **Keep**             | Required per Ably pattern                                       |
+| `revalidatePath` only                   | **Extend**           | Add `updateTag` when caching enabled                            |
+| `useReducer` for `{...state}`           | **Simplify**         | `useState`                                                      |
+| `React.FC`                              | **Remove**           | Explicit props types                                            |
+| Sync `params` / `cookies()`             | **N/A**              | Already async where used ✅                                     |
+| Stay on React 19.2.4 / Next 16.2.2      | **Upgrade**          | Roll forward to 19.2.7 / 16.2.10 (security + FormData)          |
+| `useActionState` + FormData forms       | **Adopt after bump** | Requires ≥ 19.2.7 / ≥ 16.2.7                                    |
+| `<Activity>` / `useEffectEvent`         | **Adopt**            | Modals, floaters, Ably effects (19.2.0+ features, still unused) |
 
 ---
 
@@ -593,4 +593,4 @@ When you're ready to implement, suggested sequence:
 
 ---
 
-*Review this audit before implementation. Each fix should be a focused PR with tests where behavior changes.*
+_Review this audit before implementation. Each fix should be a focused PR with tests where behavior changes._
