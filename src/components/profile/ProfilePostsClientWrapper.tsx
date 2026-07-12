@@ -1,7 +1,8 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { IPost } from '@/models/Post'
+
+import type { ProfileFeedItem } from '@/types/profileFeed'
 
 const ProfilePostsAbly = dynamic(
   () => import('@/components/profile/ProfilePostsAbly'),
@@ -10,7 +11,7 @@ const ProfilePostsAbly = dynamic(
 
 interface ProfilePostsClientWrapperProps {
   username: string
-  initialPosts: IPost[]
+  initialPosts: ProfileFeedItem[]
 }
 
 const ProfilePostsClientWrapper = ({

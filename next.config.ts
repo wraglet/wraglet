@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
     'disposable-email-domains',
     'resend'
   ],
+  experimental: {
+    turbopackFileSystemCacheForDev: true
+  },
   images: {
     remotePatterns: [
       {

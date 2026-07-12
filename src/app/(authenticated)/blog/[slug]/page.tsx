@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import getCurrentUser from '@/actions/getCurrentUser'
 import client from '@/lib/db'
@@ -68,6 +69,22 @@ const getBlog = async (slug: string): Promise<IBlog | null> => {
   } catch (error) {
     console.error('Error fetching blog:', error)
     return null
+  }
+}
+
+export const generateMetadata = async ({
+  params
+}: BlogPageProps): Promise<Metadata> => {
+  const { slug } = await params
+  const blog = await getBlog(slug)
+
+  if (!blog) {
+    return { title: 'Blog not found' }
+  }
+
+  return {
+    title: blog.title,
+    description: blog.summary || undefined
   }
 }
 

@@ -61,7 +61,9 @@ const ProfileBody = ({ username, initialPosts }: ProfileBodyProps) => {
   const { data: userPosts } = useQuery({
     queryKey: ['posts', username],
     queryFn: () => getPostsByUsername(username),
-    initialData: initialPosts
+    initialData: initialPosts,
+    staleTime: 5 * 60 * 1000,
+    refetchOnMount: false
   })
 
   const channel = useChannel('post-channel', (message) => {

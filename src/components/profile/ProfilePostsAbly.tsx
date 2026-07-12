@@ -1,8 +1,8 @@
 'use client'
 
-import { IPost } from '@/models/Post'
 import { ChannelProvider } from 'ably/react'
 
+import type { ProfileFeedItem } from '@/types/profileFeed'
 import ProfileBody from '@/components/profile/ProfileBody'
 
 const ProfilePostsAbly = ({
@@ -10,7 +10,7 @@ const ProfilePostsAbly = ({
   initialPosts
 }: {
   username: string
-  initialPosts: IPost[]
+  initialPosts: ProfileFeedItem[]
 }) => {
   // Use the existing global AblyProvider from layout, just wrap with ChannelProvider
   return (
