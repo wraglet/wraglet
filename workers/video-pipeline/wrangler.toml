@@ -1,0 +1,77 @@
+name = "wraglet-video-pipeline"
+main = "src/index.ts"
+compatibility_date = "2026-09-08"
+account_id = "37af3cf334ea2dbfc5c1175ca6d4e721"
+
+[observability]
+enabled = true
+
+[vars]
+ENVIRONMENT = "production"
+ALLOWED_CALLBACK_HOSTS = "www.wraglet.com,wraglet.com"
+VIDEO_MAX_DURATION_SEC = "600"
+MODERATION_NSFW_REJECT_THRESHOLD = "0.85"
+MODERATION_NSFW_REVIEW_THRESHOLD = "0.50"
+NEXT_PUBLIC_R2_USERS_URL = "https://uploads.wraglet.com"
+NSFW_MODEL = "@cf/cloudflare/clef"
+
+[ai]
+binding = "AI"
+
+[media]
+binding = "MEDIA"
+
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "wraglet-users"
+
+[[queues.producers]]
+binding = "VIDEO_QUEUE"
+queue = "wraglet-video-pipeline"
+
+[[queues.consumers]]
+queue = "wraglet-video-pipeline"
+max_batch_size = 1
+max_batch_timeout = 2
+max_retries = 3
+max_concurrency = 2
+
+# Secrets (set with `yarn wrangler secret put <NAME>`):
+#   VIDEO_WORKER_SECRET
+
+# Staging: `yarn wrangler deploy --env staging`
+[env.staging]
+name = "wraglet-video-pipeline-staging"
+
+[env.staging.observability]
+enabled = true
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+ALLOWED_CALLBACK_HOSTS = "staging.wraglet.com"
+VIDEO_MAX_DURATION_SEC = "600"
+MODERATION_NSFW_REJECT_THRESHOLD = "0.85"
+MODERATION_NSFW_REVIEW_THRESHOLD = "0.50"
+NEXT_PUBLIC_R2_USERS_URL = "https://uploads-staging.wraglet.com"
+NSFW_MODEL = "@cf/cloudflare/clef"
+
+[env.staging.ai]
+binding = "AI"
+
+[env.staging.media]
+binding = "MEDIA"
+
+[[env.staging.r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "wraglet-users-staging"
+
+[[env.staging.queues.producers]]
+binding = "VIDEO_QUEUE"
+queue = "wraglet-video-pipeline-staging"
+
+[[env.staging.queues.consumers]]
+queue = "wraglet-video-pipeline-staging"
+max_batch_size = 1
+max_batch_timeout = 2
+max_retries = 3
+max_concurrency = 2
