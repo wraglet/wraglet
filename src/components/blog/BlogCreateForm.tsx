@@ -3,6 +3,7 @@
 import { useState, type ReactNode, type SubmitEvent } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
+import { readResponseError } from '@/lib/api/readResponseError'
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -115,10 +116,12 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ image: base64Data, type })
           })
-          const data = await response.json().catch(() => ({}))
           if (!response.ok) {
-            throw new Error(data.error ?? 'Failed to upload image')
+            throw new Error(
+              await readResponseError(response, 'Failed to upload image')
+            )
           }
+          const data = await response.json()
           resolve(data.url)
         } catch (err) {
           reject(err)

@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { readResponseError } from '@/lib/api/readResponseError'
 import {
   ACCEPTED_VIDEO_ACCEPT_ATTR,
   isAcceptedVideoContentType
@@ -62,8 +63,9 @@ const UploadPostVideo = ({
     })
 
     if (!sessionRes.ok) {
-      const err = await sessionRes.json().catch(() => ({}))
-      throw new Error(err.error ?? 'Failed to start video upload')
+      throw new Error(
+        await readResponseError(sessionRes, 'Failed to start video upload')
+      )
     }
 
     const session = await sessionRes.json()
@@ -87,8 +89,12 @@ const UploadPostVideo = ({
       })
 
       if (!uploadRes.ok) {
-        const err = await uploadRes.json().catch(() => ({}))
-        throw new Error(err.error ?? `Failed to upload part ${partNumber}`)
+        throw new Error(
+          await readResponseError(
+            uploadRes,
+            `Failed to upload part ${partNumber}`
+          )
+        )
       }
 
       const { etag } = await uploadRes.json()
@@ -96,7 +102,7 @@ const UploadPostVideo = ({
         throw new Error(`Missing ETag for part ${partNumber}`)
       }
 
-      parts.push({ ETag: etag.replaceAll('"', ''), PartNumber: partNumber })
+      parts.push({ ETag: etag, PartNumber: partNumber })
     }
 
     const completeRes = await fetch('/api/posts/video/complete', {
@@ -112,8 +118,9 @@ const UploadPostVideo = ({
     })
 
     if (!completeRes.ok) {
-      const err = await completeRes.json().catch(() => ({}))
-      throw new Error(err.error ?? 'Failed to finalize video upload')
+      throw new Error(
+        await readResponseError(completeRes, 'Failed to finalize video upload')
+      )
     }
   }
 
