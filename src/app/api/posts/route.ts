@@ -153,7 +153,8 @@ export const POST = async (request: Request) => {
       })
       .lean()
 
-    // Publish to Ably for real-time updates when feed-visible
+    // Only feed-visible posts are broadcast. Pending media stays hidden until the
+    // moderation webhook calls publishPostToFeed, which publishes and notifies then.
     if (isFeedVisibleStatus(moderationStatus)) {
       try {
         const ably = getAblyInstance()
@@ -438,6 +439,9 @@ export const GET = async (request: Request) => {
       })
       .populate({
         path: 'originalPost',
+        // Shares have no moderation status of their own. Drop the joined post when
+        // it is pending or rejected so the share cannot surface hidden content.
+        match: moderationFilter,
         populate: {
           path: 'author',
           select: 'firstName lastName username profilePicture gender'
@@ -468,11 +472,13 @@ export const GET = async (request: Request) => {
         data: post,
         createdAt: post.createdAt
       })),
-      ...shares.map((share) => ({
-        type: 'share',
-        data: share,
-        createdAt: share.createdAt
-      }))
+      ...shares
+        .filter((share) => share.originalPost != null)
+        .map((share) => ({
+          type: 'share',
+          data: share,
+          createdAt: share.createdAt
+        }))
     ]
       .sort(
         (a, b) =>
