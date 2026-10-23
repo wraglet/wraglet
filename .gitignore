@@ -4,6 +4,13 @@
 /node_modules
 /.pnp
 .pnp.js
+
+# Cloudflare Workers (standalone Yarn projects under workers/*)
+workers/*/node_modules/
+workers/*/.yarn/
+workers/*/.wrangler/
+workers/*/dist/
+workers/*/.dev.vars*
 # Yarn Berry: keep patches/releases/plugins; never commit install state or cache
 .yarn/*
 !.yarn/patches

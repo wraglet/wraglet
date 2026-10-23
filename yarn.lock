@@ -6072,6 +6072,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bad-words@npm:^4.1.5":
+  version: 4.1.5
+  resolution: "bad-words@npm:4.1.5"
+  dependencies:
+    badwords-list: "npm:^2.0.1-4"
+  checksum: 10c0/3f763ee4d6954242a2bd8a6f2316ba5af485e3c7bb700236b3b7046a45e0ec469e99ee67f297c5fab2282f7058b22c14ad13d015007d1b2a4962d2da663801b7
+  languageName: node
+  linkType: hard
+
+"badwords-list@npm:^2.0.1-4":
+  version: 2.0.1-4
+  resolution: "badwords-list@npm:2.0.1-4"
+  checksum: 10c0/2386192de7df8b61ec32ba3290b6cd994726e58f63ee4948d7d23f7f7d15ded54187fd54b4efbb77c9e72b0770bb9c88141da72130a2b719cb48db9230521994
+  languageName: node
+  linkType: hard
+
 "bail@npm:^2.0.0":
   version: 2.0.2
   resolution: "bail@npm:2.0.2"
@@ -13999,6 +14015,7 @@ __metadata:
     "@vitest/coverage-v8": "npm:^4.1.2"
     ably: "npm:^2.9.0"
     axios: "npm:^1.7.7"
+    bad-words: "npm:^4.1.5"
     bcryptjs: "npm:^2.4.3"
     class-variance-authority: "npm:^0.7.0"
     clsx: "npm:^2.1.1"

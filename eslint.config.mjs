@@ -94,5 +94,13 @@ export default defineConfig([
       'no-restricted-imports': 'off'
     }
   },
+  // Cloudflare Workers are standalone bundles (no `@/` alias); relative imports to
+  // `workers/shared` are intentional.
+  {
+    files: ['workers/**/*.ts'],
+    rules: {
+      'no-restricted-imports': 'off'
+    }
+  },
   ...storybook.configs['flat/recommended']
 ])
