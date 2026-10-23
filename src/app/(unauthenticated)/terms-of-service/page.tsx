@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Terms of Service | Wraglet',
@@ -39,8 +40,15 @@ const TermsOfServicePage = () => (
           1. Acceptance of Terms
         </h2>
         <p className="text-gray-700">
-          By using Wraglet, you agree to these Terms and our Privacy Policy. If
-          you do not agree, please do not use our services.
+          By using Wraglet, you agree to these Terms, our Privacy Policy, and
+          our{' '}
+          <Link
+            href="/community-guidelines"
+            className="font-medium text-[#0EA5E9] hover:underline"
+          >
+            Community Guidelines
+          </Link>
+          . If you do not agree, please do not use our services.
         </p>
       </section>
 

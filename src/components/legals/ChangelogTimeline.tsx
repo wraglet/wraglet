@@ -12,6 +12,7 @@ import {
   Settings,
   Share2,
   Shield,
+  ShieldCheck,
   Sparkles,
   Users,
   Zap
@@ -28,6 +29,24 @@ interface ChangelogEntry {
 }
 
 const changelogData: ChangelogEntry[] = [
+  {
+    date: '2026-10-24',
+    version: '0.11.0',
+    title: 'Content moderation, reporting, and video posts',
+    description:
+      'Every image and video now passes through quarantine and an AI safety check before it reaches the feed, text and links are screened on submit, and the community can report what slips through—alongside the first version of video posts',
+    features: [
+      'Image moderation: uploads land in a quarantine bucket and are classified by Cloudflare Workers AI (Clef) for explicit, suggestive, gore, and minor-safety signals before being published, flagged for review, or removed',
+      'Video posts: upload MP4/MOV up to 10 minutes via resumable multipart upload; a queue-backed Worker verifies the real duration, samples frames for classification, generates a poster, and transcodes to 720p',
+      'Text and link screening on posts, comments, blogs, messages, and profiles; feed hides pending or rejected content while authors see their own moderation status',
+      'Report a post from the overflow menu with a reason; reports are stored for admin review alongside user upload restrictions',
+      'Community Guidelines page and updated Help and Terms of Service describing what is allowed and how moderation decisions are made',
+      'Fail-closed safety: webhooks recompute decisions from scores, verify quarantine keys and signatures, and are idempotent; blog images are only published after passing the check',
+      'Per-user video quotas (daily count and bytes) and strict upload validation (part sizes, content types, session binding)'
+    ],
+    type: 'major',
+    icon: <ShieldCheck className="h-6 w-6" />
+  },
   {
     date: '2026-06-20',
     version: '0.10.0',
