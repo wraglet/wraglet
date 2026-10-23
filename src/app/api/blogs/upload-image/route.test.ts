@@ -19,7 +19,9 @@ vi.mock('@/lib/r2S3Client', () => ({
 }))
 
 vi.mock('@aws-sdk/client-s3', () => ({
-  PutObjectCommand: vi.fn()
+  PutObjectCommand: vi.fn(),
+  CopyObjectCommand: vi.fn(),
+  DeleteObjectCommand: vi.fn()
 }))
 
 const mockedUser = vi.mocked(getCurrentUser)
@@ -32,6 +34,8 @@ describe('POST /api/blogs/upload-image', () => {
     vi.clearAllMocks()
     process.env.CLOUDFLARE_R2_USERS_BUCKET_NAME = 'bucket'
     process.env.NEXT_PUBLIC_R2_USERS_URL = 'https://r2.test'
+    // No worker configured → quarantine upload is auto-approved and copied to public.
+    delete process.env.MODERATION_WORKER_URL
   })
 
   it('returns 401 when unauthenticated', async () => {

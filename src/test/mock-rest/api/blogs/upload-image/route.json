@@ -7,5 +7,14 @@
       "url": "https://cdn.example/blogs/content/mock.jpg",
       "key": "blogs/content/mock.jpg"
     }
+  },
+  {
+    "route": "/api/blogs/upload-image",
+    "method": "POST",
+    "status": 422,
+    "description": "Image failed synchronous NSFW moderation (deleted from quarantine)",
+    "responseBody": {
+      "error": "This image did not pass our content guidelines"
+    }
   }
 ]

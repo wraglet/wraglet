@@ -1,0 +1,22 @@
+[
+  {
+    "route": "/api/posts/video/complete",
+    "method": "POST",
+    "status": 200,
+    "description": "Multipart upload completed; pipeline job queued",
+    "responseBody": {
+      "success": true,
+      "postId": "507f1f77bcf86cd799439012",
+      "moderationStatus": "pending"
+    }
+  },
+  {
+    "route": "/api/posts/video/complete",
+    "method": "POST",
+    "status": 404,
+    "description": "Post missing or not owned by caller",
+    "responseBody": {
+      "error": "Post not found"
+    }
+  }
+]

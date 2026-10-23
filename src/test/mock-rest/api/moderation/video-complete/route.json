@@ -1,0 +1,21 @@
+[
+  {
+    "route": "/api/moderation/video-complete",
+    "method": "POST",
+    "status": 200,
+    "description": "Worker webhook: video approved, poster + master attached to post",
+    "responseBody": {
+      "success": true,
+      "moderationStatus": "approved"
+    }
+  },
+  {
+    "route": "/api/moderation/video-complete",
+    "method": "POST",
+    "status": 404,
+    "description": "Post for the job no longer exists",
+    "responseBody": {
+      "error": "Post not found"
+    }
+  }
+]

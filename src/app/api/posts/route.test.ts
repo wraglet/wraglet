@@ -40,6 +40,16 @@ vi.mock('@/models/Post', () => ({
   default: { find: vi.fn(), create: vi.fn(), findById: vi.fn() }
 }))
 
+vi.mock('@/lib/media/uploadToR2', () => ({
+  uploadImageToQuarantine: vi.fn().mockResolvedValue({
+    url: 'http://r2/u.png',
+    key: 'posts/k.png',
+    quarantineKey: 'quarantine/posts/u1/x.png',
+    moderationStatus: 'approved'
+  }),
+  triggerImageModeration: vi.fn().mockResolvedValue(undefined)
+}))
+
 vi.mock('@aws-sdk/client-s3', () => ({
   S3Client: vi.fn().mockImplementation(function S3Mock(this: {
     send: ReturnType<typeof vi.fn>

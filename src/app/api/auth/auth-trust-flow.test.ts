@@ -1,4 +1,7 @@
-import { findUserByEmail } from '@/lib/auth/findUserByEmail'
+import {
+  findUserByEmail,
+  type UserEmailLookup
+} from '@/lib/auth/findUserByEmail'
 import { hashAuthToken } from '@/lib/auth/tokens'
 import { sendPasswordResetEmail } from '@/lib/email/sendPasswordResetEmail'
 import User from '@/models/User'
@@ -50,7 +53,9 @@ describe('auth trust flows', () => {
       save
     }
 
-    vi.mocked(findUserByEmail).mockResolvedValue(activeUser)
+    vi.mocked(findUserByEmail).mockResolvedValue(
+      activeUser as unknown as UserEmailLookup
+    )
 
     await forgotPassword(
       buildAppRouteRequest('/api/auth/forgot-password', {
@@ -72,11 +77,23 @@ describe('auth trust flows', () => {
     )
     expect(save).toHaveBeenCalled()
 
-    const resetUser = {
+    const resetUser: {
+      _id: string
+      email: string
+      accountStatus: string
+      emailVerifiedAt: Date | undefined
+      passwordChangedAt: Date | undefined
+      passwordResetTokenHash: string | undefined
+      passwordResetExpiresAt: Date | undefined
+      passwordResetRequestedAt: Date | undefined
+      hashedPassword: string
+      save: ReturnType<typeof vi.fn>
+    } = {
       _id: 'user-1',
       email: 'user@example.com',
       accountStatus: 'active',
       emailVerifiedAt: new Date(),
+      passwordChangedAt: undefined,
       passwordResetTokenHash: activeUser.passwordResetTokenHash,
       passwordResetExpiresAt: new Date(Date.now() + 60_000),
       passwordResetRequestedAt: new Date(),
@@ -84,18 +101,28 @@ describe('auth trust flows', () => {
       save: vi.fn().mockResolvedValue(undefined)
     }
 
-    vi.mocked(User.findOneAndUpdate).mockImplementation(
-      async (_query, update) => {
-        resetUser.hashedPassword = update.$set.hashedPassword
-        resetUser.accountStatus = update.$set.accountStatus
-        resetUser.passwordChangedAt = update.$set.passwordChangedAt
-        resetUser.emailVerifiedAt = update.$set.emailVerifiedAt
-        resetUser.passwordResetTokenHash = undefined
-        resetUser.passwordResetExpiresAt = undefined
-        resetUser.passwordResetRequestedAt = undefined
-        return resetUser
+    type ResetUpdate = {
+      $set: {
+        hashedPassword: string
+        accountStatus: string
+        passwordChangedAt: Date
+        emailVerifiedAt: Date
       }
-    )
+    }
+
+    vi.mocked(User.findOneAndUpdate).mockImplementation(((
+      _query: unknown,
+      update: ResetUpdate
+    ) => {
+      resetUser.hashedPassword = update.$set.hashedPassword
+      resetUser.accountStatus = update.$set.accountStatus
+      resetUser.passwordChangedAt = update.$set.passwordChangedAt
+      resetUser.emailVerifiedAt = update.$set.emailVerifiedAt
+      resetUser.passwordResetTokenHash = undefined
+      resetUser.passwordResetExpiresAt = undefined
+      resetUser.passwordResetRequestedAt = undefined
+      return Promise.resolve(resetUser)
+    }) as unknown as typeof User.findOneAndUpdate)
 
     const resetRes = await resetPassword(
       buildAppRouteRequest('/api/auth/reset-password', {

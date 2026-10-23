@@ -1,0 +1,31 @@
+[
+  {
+    "route": "/api/moderation/image-complete",
+    "method": "POST",
+    "status": 200,
+    "description": "Worker webhook: image approved and promoted to public prefix",
+    "responseBody": {
+      "success": true,
+      "moderationStatus": "approved"
+    }
+  },
+  {
+    "route": "/api/moderation/image-complete",
+    "method": "POST",
+    "status": 401,
+    "description": "Missing or invalid MODERATION_WORKER_SECRET bearer",
+    "responseBody": {
+      "error": "Unauthorized"
+    }
+  },
+  {
+    "route": "/api/moderation/image-complete",
+    "method": "POST",
+    "status": 200,
+    "description": "Key no longer pending for the target (duplicate delivery) \u2014 acknowledged, nothing changed",
+    "responseBody": {
+      "success": true,
+      "alreadyProcessed": true
+    }
+  }
+]

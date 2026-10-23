@@ -1,6 +1,7 @@
 import { AUTH_FEEDBACK } from '@/lib/auth/authMessages'
 import { enrollUserForEmailVerification } from '@/lib/auth/enrollEmailVerification'
 import { findUserByEmail } from '@/lib/auth/findUserByEmail'
+import type { UserEmailLookup } from '@/lib/auth/findUserByEmail'
 import { _resetRateLimitStoreForTests } from '@/lib/trust/rateLimit'
 import { buildAppRouteRequest } from '@/test/handlerRequest'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -46,7 +47,7 @@ describe('POST /api/auth/resend-verification', () => {
     vi.mocked(findUserByEmail).mockResolvedValue({
       email: 'pending@example.com',
       accountStatus: 'pending_verification'
-    })
+    } as unknown as UserEmailLookup)
 
     const res = await POST(
       buildAppRouteRequest('/api/auth/resend-verification', {
@@ -77,7 +78,7 @@ describe('POST /api/auth/resend-verification', () => {
     vi.mocked(findUserByEmail).mockResolvedValue({
       email: 'pending@example.com',
       accountStatus: 'pending_verification'
-    })
+    } as unknown as UserEmailLookup)
 
     await request('pending@example.com')
 
