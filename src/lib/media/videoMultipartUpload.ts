@@ -19,6 +19,42 @@ const getBucketName = (): string => {
 export const getPartCount = (fileSize: number): number =>
   Math.ceil(fileSize / PART_SIZE)
 
+/**
+ * Largest chunk allowed for this part of a declared upload. Every part is at most
+ * `PART_SIZE`, and the last part is only the remainder, so the bytes stored cannot
+ * exceed the size the quota check already approved.
+ */
+export const maxBytesForPart = (
+  declaredBytes: number,
+  partNumber: number
+): number => {
+  if (
+    !Number.isFinite(declaredBytes) ||
+    declaredBytes <= 0 ||
+    !Number.isInteger(partNumber) ||
+    partNumber < 1
+  ) {
+    return 0
+  }
+  const offset = (partNumber - 1) * PART_SIZE
+  if (offset >= declaredBytes) {
+    return 0
+  }
+  return Math.min(PART_SIZE, declaredBytes - offset)
+}
+
+/**
+ * S3 and R2 part ETags are quoted strings (`"abc…"`). CompleteMultipartUpload
+ * compares them literally, so a missing pair of quotes is an `InvalidPart`.
+ */
+export const withQuotedETag = (etag: string): string => {
+  const trimmed = etag.trim()
+  if (trimmed.length >= 2 && trimmed.startsWith('"') && trimmed.endsWith('"')) {
+    return trimmed
+  }
+  return `"${trimmed}"`
+}
+
 export const completeMultipartUpload = async (input: {
   key: string
   uploadId: string
@@ -30,7 +66,12 @@ export const completeMultipartUpload = async (input: {
       Bucket: getBucketName(),
       Key: input.key,
       UploadId: input.uploadId,
-      MultipartUpload: { Parts: input.parts }
+      MultipartUpload: {
+        Parts: input.parts.map((part) => ({
+          ...part,
+          ETag: withQuotedETag(part.ETag)
+        }))
+      }
     })
   )
 }
@@ -81,5 +122,5 @@ export const uploadVideoPart = async (input: {
     throw new Error(`Missing ETag for part ${input.partNumber}`)
   }
 
-  return result.ETag.replaceAll('"', '')
+  return result.ETag
 }

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import client from '@/lib/db'
 import {
-  getPartCount,
+  maxBytesForPart,
   PART_SIZE,
   uploadVideoPart
 } from '@/lib/media/videoMultipartUpload'
@@ -61,7 +61,8 @@ export const POST = async (request: Request) => {
         moderationStatus?: string
         moderationMeta?: { pendingVideoKey?: string; rawBytes?: number }
       }>()
-    if (!post || post.author.toString() !== currentUser._id.toString()) {
+    const authorId = post?.author?.toString()
+    if (!post || !authorId || authorId !== currentUser._id.toString()) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 })
     }
 
@@ -75,12 +76,15 @@ export const POST = async (request: Request) => {
       )
     }
 
-    // Bound the total bytes a session can push to what was declared (and quota-checked)
-    // when the session was created.
-    const declaredBytes = post.moderationMeta?.rawBytes
-    if (declaredBytes && partNumber > getPartCount(declaredBytes)) {
+    // Each part may only fill the bytes still left in the declared (quota-checked) size.
+    // A last part capped only at PART_SIZE could store almost 4 MiB more than declared.
+    const maxPartBytes = maxBytesForPart(
+      post.moderationMeta?.rawBytes ?? 0,
+      partNumber
+    )
+    if (maxPartBytes === 0 || chunk.size > maxPartBytes) {
       return NextResponse.json(
-        { error: 'Part number exceeds declared file size' },
+        { error: 'Part exceeds declared file size' },
         { status: 400 }
       )
     }
