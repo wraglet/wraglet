@@ -27,7 +27,9 @@ export const PATCH = async (request: Request) => {
         { new: true }
       ).select('-hashedPassword')
 
-      revalidatePath(`/${currentUser.username}`)
+      if (currentUser.username) {
+        revalidatePath(`/${currentUser.username}`)
+      }
       return NextResponse.json(updatedUser)
     }
 
@@ -91,7 +93,9 @@ export const PATCH = async (request: Request) => {
         { new: true }
       )
 
-      revalidatePath(`/${currentUser.username}`)
+      if (currentUser.username) {
+        revalidatePath(`/${currentUser.username}`)
+      }
       return NextResponse.json(newPhoto)
     }
 

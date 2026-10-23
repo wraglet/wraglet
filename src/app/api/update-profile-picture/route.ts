@@ -71,7 +71,9 @@ export const PATCH = async (request: Request) => {
 
     let userObj = updatedUser.toObject ? updatedUser.toObject() : updatedUser
     userObj = convertObjectIdsToStrings(userObj)
-    revalidatePath(`/${currentUser.username}`)
+    if (currentUser.username) {
+      revalidatePath(`/${currentUser.username}`)
+    }
     return NextResponse.json(userObj)
   } catch (err) {
     console.error('Update profile picture error:', err)

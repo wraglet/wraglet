@@ -47,7 +47,8 @@ export const POST = async (request: Request) => {
     }
 
     const post = await Post.findById(body.postId)
-    if (!post || post.author.toString() !== currentUser._id.toString()) {
+    const authorId = post?.author?.toString()
+    if (!post || !authorId || authorId !== currentUser._id.toString()) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 })
     }
 
