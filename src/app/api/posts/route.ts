@@ -1,15 +1,23 @@
-import { NextResponse } from 'next/server'
+import { after, NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import { getAblyInstance } from '@/lib/ably'
 import client from '@/lib/db'
+import {
+  triggerImageModeration,
+  uploadImageToQuarantine
+} from '@/lib/media/uploadToR2'
+import { buildFeedModerationFilter } from '@/lib/moderation/feedFilter'
+import {
+  moderatePostText,
+  moderationViolationResponse
+} from '@/lib/moderation/moderateTextContent'
+import { isFeedVisibleStatus } from '@/lib/moderation/statusMap'
 import { createNewPostNotification } from '@/lib/notifications'
 import Follow from '@/models/Follow'
 import Post, { type IPost, type IPostDocument } from '@/models/Post'
 import Share from '@/models/Share'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import type { FilterQuery } from 'mongoose'
-import { v4 as uuidv4 } from 'uuid'
 
 type LeanPost = IPost & {
   _id: unknown
@@ -20,15 +28,6 @@ type LeanPost = IPost & {
 }
 
 export const POST = async (request: Request) => {
-  const s3Client = new S3Client({
-    endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    region: 'auto',
-    credentials: {
-      accessKeyId: process.env.CLOUDFLARE_ACCESS_KEY_ID ?? '',
-      secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY ?? ''
-    }
-  })
-
   try {
     await client()
 
@@ -51,38 +50,43 @@ export const POST = async (request: Request) => {
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
-    const uploadImageToR2 = async (
-      image: string
-    ): Promise<{ url: string; key: string }> => {
-      const base64Data = Buffer.from(
-        image.replace(/^data:image\/\w+;base64,/, ''),
-        'base64'
-      )
-      const type = image.split(';')[0].split('/')[1]
-      const key = `posts/${uuidv4()}.${type}`
-      const bucketName = process.env.CLOUDFLARE_R2_USERS_BUCKET_NAME
-
-      const command = new PutObjectCommand({
-        Bucket: bucketName,
-        Key: key,
-        Body: base64Data,
-        ContentType: `image/${type}`
-      })
-
-      await s3Client.send(command)
-      const url = `${process.env.NEXT_PUBLIC_R2_USERS_URL}/${key}`
-      return { url, key }
+    const textModeration = moderatePostText(text)
+    if (!textModeration.ok) {
+      return moderationViolationResponse()
     }
 
     let content: Partial<IPost['content']> = {}
+    let moderationStatus: IPost['moderationStatus'] = 'approved'
+    let moderationMeta: IPost['moderationMeta'] = undefined
 
     if (text) {
       content = { ...content, text }
     }
 
     if (image) {
-      const uploadedImage = await uploadImageToR2(image)
-      content = { ...content, images: [uploadedImage] }
+      try {
+        const uploaded = await uploadImageToQuarantine({
+          dataUrl: image,
+          surface: 'posts',
+          userId: currentUser._id.toString()
+        })
+        moderationStatus = uploaded.moderationStatus
+
+        if (uploaded.url && uploaded.key) {
+          content = {
+            ...content,
+            images: [{ url: uploaded.url, key: uploaded.key }]
+          }
+        } else {
+          moderationMeta = { pendingImageKey: uploaded.quarantineKey }
+        }
+      } catch (uploadError) {
+        console.error('Post image upload failed:', uploadError)
+        return NextResponse.json(
+          { error: 'Invalid or unsupported image' },
+          { status: 400 }
+        )
+      }
     }
 
     // Handle blog share with preview
@@ -111,8 +115,21 @@ export const POST = async (request: Request) => {
     const post = await Post.create({
       content,
       audience,
-      author: currentUser._id
+      author: currentUser._id,
+      moderationStatus,
+      ...(moderationMeta ? { moderationMeta } : {})
     })
+
+    const pendingImageKey = moderationMeta?.pendingImageKey
+    if (image && moderationStatus === 'pending' && pendingImageKey) {
+      after(() =>
+        triggerImageModeration({
+          quarantineKey: pendingImageKey,
+          postId: post._id.toString(),
+          surface: 'posts'
+        })
+      )
+    }
 
     // Populate the post for real-time publishing
     const populatedPost = await Post.findById(post._id)
@@ -136,32 +153,32 @@ export const POST = async (request: Request) => {
       })
       .lean()
 
-    // Publish to Ably for real-time updates
-    try {
-      const ably = getAblyInstance()
-      const channel = ably.channels.get('post-channel')
-      await channel.publish('post', populatedPost)
-    } catch (ablyError) {
-      console.warn('Failed to publish post to Ably:', ablyError)
-      // Don't fail the request if Ably fails
-    }
-
-    // Get user's followers to send notifications
-    try {
-      const followers = await Follow.find({ followingId: currentUser._id })
-        .select('followerId')
-        .lean()
-
-      if (followers.length > 0) {
-        const followerIds = followers.map((f) => f.followerId.toString())
-        await createNewPostNotification(
-          currentUser._id.toString(),
-          followerIds,
-          post._id.toString()
-        )
+    // Publish to Ably for real-time updates when feed-visible
+    if (isFeedVisibleStatus(moderationStatus)) {
+      try {
+        const ably = getAblyInstance()
+        const channel = ably.channels.get('post-channel')
+        await channel.publish('post', populatedPost)
+      } catch (ablyError) {
+        console.warn('Failed to publish post to Ably:', ablyError)
       }
-    } catch (error) {
-      console.error('Error creating new post notifications:', error)
+
+      try {
+        const followers = await Follow.find({ followingId: currentUser._id })
+          .select('followerId')
+          .lean()
+
+        if (followers.length > 0) {
+          const followerIds = followers.map((f) => f.followerId.toString())
+          await createNewPostNotification(
+            currentUser._id.toString(),
+            followerIds,
+            post._id.toString()
+          )
+        }
+      } catch (error) {
+        console.error('Error creating new post notifications:', error)
+      }
     }
 
     return NextResponse.json(convertObjectIdsToStrings(populatedPost))
@@ -175,7 +192,7 @@ export const GET = async (request: Request) => {
   const { searchParams } = new URL(request.url)
   const limit = parseInt(searchParams.get('limit') || '10', 10)
   const cursor = searchParams.get('cursor')
-  const feedType = searchParams.get('feedType') || 'auto' // 'auto', 'trending', 'following'
+  const feedType = searchParams.get('feedType') || 'auto' // 'auto', 'trending', 'following', 'video'
 
   try {
     await client()
@@ -183,6 +200,56 @@ export const GET = async (request: Request) => {
     const currentUser = await getCurrentUser()
     if (!currentUser?._id) {
       return NextResponse.json({ posts: [], nextCursor: null }, { status: 401 })
+    }
+
+    const moderationFilter = buildFeedModerationFilter()
+
+    if (feedType === 'video') {
+      const videoQuery: FilterQuery<IPostDocument> = {
+        ...moderationFilter,
+        audience: 'public',
+        'content.video.url': { $exists: true, $ne: '' }
+      }
+      if (cursor) {
+        videoQuery.createdAt = { $lt: new Date(cursor) }
+      }
+
+      const videoPosts = await Post.find(videoQuery)
+        .sort({ createdAt: -1 })
+        .limit(limit + 1)
+        .populate({
+          path: 'author',
+          select: 'firstName lastName username gender pronoun profilePicture'
+        })
+        .populate({
+          path: 'reactions',
+          populate: {
+            path: 'userId',
+            select: 'firstName lastName username profilePicture gender'
+          }
+        })
+        .populate({
+          path: 'comments',
+          populate: {
+            path: 'author',
+            select: 'firstName lastName username gender pronoun profilePicture'
+          }
+        })
+        .lean()
+
+      const hasMore = videoPosts.length > limit
+      const contentToReturn = hasMore ? videoPosts.slice(0, limit) : videoPosts
+      const nextCursor =
+        hasMore && contentToReturn.length > 0
+          ? new Date(
+              contentToReturn[contentToReturn.length - 1].createdAt as Date
+            ).toISOString()
+          : null
+
+      return NextResponse.json({
+        posts: convertObjectIdsToStrings(contentToReturn),
+        nextCursor
+      })
     }
 
     // Get user's following list for mutual shares
@@ -202,7 +269,8 @@ export const GET = async (request: Request) => {
       // Find posts created in the last 48h, sorted by (reactions + comments + shareCount)
       const trendingQuery: FilterQuery<IPostDocument> = {
         createdAt: { $gte: trendingWindow },
-        audience: 'public'
+        audience: 'public',
+        ...moderationFilter
       }
       if (tag) {
         trendingQuery['content.tags'] = tag
@@ -248,7 +316,10 @@ export const GET = async (request: Request) => {
         .filter((p) => p.createdAt) // Only keep posts with createdAt
         .slice(0, limit + 1)
       if (postsToReturn.length < limit + 1) {
-        const recentPublic = (await Post.find({ audience: 'public' })
+        const recentPublic = (await Post.find({
+          audience: 'public',
+          ...moderationFilter
+        })
           .sort({ createdAt: -1 })
           .limit(limit + 1 - postsToReturn.length)
           .populate({
@@ -303,7 +374,7 @@ export const GET = async (request: Request) => {
 
     // Otherwise, show personalized feed (following + mutual shares + public shares)
     // Build query for pagination
-    let query: FilterQuery<IPostDocument> = {}
+    let query: FilterQuery<IPostDocument> = { ...moderationFilter }
     let shareQuery: Record<string, unknown> = {}
     if (cursor) {
       query.createdAt = { $lt: new Date(cursor) }

@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
-import { safeApiError } from '@/lib/apiError'
 import client from '@/lib/db'
-import { createR2S3Client } from '@/lib/r2S3Client'
-import { PutObjectCommand } from '@aws-sdk/client-s3'
-import { v4 as uuidv4 } from 'uuid'
+import {
+  copyQuarantineToPublic,
+  deleteR2Object,
+  uploadImageToQuarantine
+} from '@/lib/media/uploadToR2'
+import { moderateQuarantinedImageSync } from '@/lib/moderation/moderateImageSync'
 
-import { MAX_FILE_SIZE } from '@/data/constants'
-
+/**
+ * Blog images have no document to update once moderation finishes, so they are
+ * classified synchronously and only approved images ever get a public URL.
+ */
 export const POST = async (request: Request) => {
-  const s3Client = createR2S3Client()
-
   try {
     await client()
 
@@ -22,52 +24,52 @@ export const POST = async (request: Request) => {
     const body = await request.json()
     const { image, type = 'content' } = body
 
-    if (!image) {
+    if (typeof image !== 'string' || !image) {
       return NextResponse.json({ error: 'Image is required' }, { status: 400 })
     }
 
-    if (!image.startsWith('data:image/')) {
+    const publicPrefix = type === 'cover' ? 'blogs/covers' : 'blogs/content'
+
+    const uploaded = await uploadImageToQuarantine({
+      dataUrl: image,
+      surface: 'blogs',
+      userId: currentUser._id.toString(),
+      publicPrefix
+    })
+
+    if (uploaded.moderationStatus === 'approved') {
+      if (!uploaded.url || !uploaded.key) {
+        return NextResponse.json(
+          { error: 'Failed to upload image' },
+          { status: 500 }
+        )
+      }
+      return NextResponse.json({ url: uploaded.url, key: uploaded.key })
+    }
+
+    const decision = await moderateQuarantinedImageSync({
+      quarantineKey: uploaded.quarantineKey,
+      surface: 'blogs',
+      userId: currentUser._id.toString()
+    })
+
+    if (decision !== 'approve') {
+      await deleteR2Object(uploaded.quarantineKey).catch(() => undefined)
       return NextResponse.json(
-        { error: 'Invalid image format' },
-        { status: 400 }
+        { error: 'This image did not pass our content guidelines' },
+        { status: 422 }
       )
     }
 
-    const base64Data = Buffer.from(
-      image.replace(/^data:image\/\w+;base64,/, ''),
-      'base64'
+    const publicAsset = await copyQuarantineToPublic(
+      uploaded.quarantineKey,
+      publicPrefix
     )
-
-    if (base64Data.length > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: 'Image exceeds maximum file size' },
-        { status: 400 }
-      )
-    }
-
-    const imageType = image.split(';')[0].split('/')[1]
-    const folder = type === 'cover' ? 'blogs/covers' : 'blogs/content'
-    const key = `${folder}/${uuidv4()}.${imageType}`
-    const bucketName = process.env.CLOUDFLARE_R2_USERS_BUCKET_NAME
-
-    const command = new PutObjectCommand({
-      Bucket: bucketName,
-      Key: key,
-      Body: base64Data,
-      ContentType: `image/${imageType}`
-    })
-
-    await s3Client.send(command)
-    const url = `${process.env.NEXT_PUBLIC_R2_USERS_URL}/${key}`
-
-    return NextResponse.json({
-      url,
-      key
-    })
+    return NextResponse.json(publicAsset)
   } catch (error: unknown) {
     console.error('Error uploading blog image:', error)
     return NextResponse.json(
-      { error: safeApiError(error, 'Failed to upload image') },
+      { error: 'Failed to upload image' },
       { status: 500 }
     )
   }

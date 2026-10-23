@@ -1,23 +1,16 @@
 import { revalidatePath } from 'next/cache'
-import { NextResponse } from 'next/server'
+import { after, NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import client from '@/lib/db'
+import {
+  deleteR2Object,
+  triggerImageModeration,
+  uploadImageToQuarantine
+} from '@/lib/media/uploadToR2'
 import User, { IUserDocument } from '@/models/User'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
-import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import { Upload } from '@aws-sdk/lib-storage'
-import { v4 as uuidv4 } from 'uuid'
 
 export const PATCH = async (request: Request) => {
-  const s3Client = new S3Client({
-    endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    region: 'auto',
-    credentials: {
-      accessKeyId: process.env.CLOUDFLARE_ACCESS_KEY_ID ?? '',
-      secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY ?? ''
-    }
-  })
-
   try {
     await client()
 
@@ -35,67 +28,53 @@ export const PATCH = async (request: Request) => {
       return new NextResponse('Invalid profile picture', { status: 400 })
     }
 
-    // Decode base64 image data
-    const base64Data = Buffer.from(
-      profilePicture.replace(/^data:image\/\w+;base64,/, ''),
-      'base64'
-    )
-    const type = profilePicture.split(';')[0].split('/')[1]
+    const uploaded = await uploadImageToQuarantine({
+      dataUrl: profilePicture,
+      surface: 'avatars',
+      userId: currentUser._id.toString()
+    })
 
-    // Remove the existing profile picture from R2 before uploading the new/updated image
-    if (currentUser?.profilePicture?.key) {
-      const deleteParams = {
-        Bucket: process.env.CLOUDFLARE_R2_USERS_BUCKET_NAME ?? '',
-        Key: `user/${currentUser.profilePicture.key}`
-      }
-
-      await s3Client.send(new DeleteObjectCommand(deleteParams))
+    if (uploaded.moderationStatus === 'pending') {
+      await User.findByIdAndUpdate(currentUser._id, {
+        $set: { 'pendingMedia.avatarKey': uploaded.quarantineKey }
+      })
+      after(() =>
+        triggerImageModeration({
+          quarantineKey: uploaded.quarantineKey,
+          surface: 'avatars',
+          userId: currentUser._id.toString()
+        })
+      )
+      return NextResponse.json(
+        { error: 'Profile picture is processing moderation review' },
+        { status: 202 }
+      )
     }
 
-    // Upload the new profile picture to R2
-    const key = `avatars/${uuidv4()}.${type}`
-    const uploadFile = async (
-      key: string,
-      body: Buffer,
-      contentType: string
-    ) => {
-      const upload = new Upload({
-        client: s3Client,
-        params: {
-          Bucket: process.env.CLOUDFLARE_R2_USERS_BUCKET_NAME ?? '',
-          Key: key,
-          Body: body,
-          ContentType: contentType
-        }
+    if (!uploaded.url || !uploaded.key) {
+      return new NextResponse('Failed to upload profile picture', {
+        status: 500
       })
-
-      upload.on('httpUploadProgress', (progress) => {
-        console.log(progress)
-      })
-
-      await upload.done()
     }
 
-    await uploadFile(key, base64Data, `image/${type}`)
-    const url = `${process.env.NEXT_PUBLIC_R2_USERS_URL}/${key}`
+    if (currentUser.profilePicture?.key) {
+      await deleteR2Object(currentUser.profilePicture.key).catch((error) => {
+        console.warn('Failed to delete previous profile picture:', error)
+      })
+    }
 
-    // Update user's profilePicture in MongoDB - use IUserDocument for DB operations
     const updatedUser = (await User.findByIdAndUpdate(
-      currentUser?._id,
-      { $set: { profilePicture: { url, key } } },
+      currentUser._id,
+      { $set: { profilePicture: { url: uploaded.url, key: uploaded.key } } },
       { new: true }
     )) as IUserDocument
 
     let userObj = updatedUser.toObject ? updatedUser.toObject() : updatedUser
     userObj = convertObjectIdsToStrings(userObj)
-    revalidatePath(`/${currentUser?.username}`)
+    revalidatePath(`/${currentUser.username}`)
     return NextResponse.json(userObj)
   } catch (err) {
-    console.log('Update profile picture error: ', err)
-    console.error(
-      'Error happened while doing PATCH for /api/update-avatar at route.ts: ',
-      err
-    )
-    return new NextResponse('Internal Error: ', { status: 500 })
+    console.error('Update profile picture error:', err)
+    return new NextResponse('Internal Error', { status: 500 })
   }
 }

@@ -45,6 +45,13 @@ export interface IUser {
   passwordResetRequestedAt?: Date
   passwordChangedAt?: Date
   registrationRiskScore?: number
+  strikes?: number
+  uploadRestrictedUntil?: Date
+  pendingMedia?: {
+    avatarKey?: string
+    coverKey?: string
+    galleryKey?: string
+  }
   createdAt?: Date
   updatedAt?: Date
 }
@@ -103,7 +110,14 @@ const UserSchema = new Schema<IUserDocument>(
     passwordResetExpiresAt: Date,
     passwordResetRequestedAt: Date,
     passwordChangedAt: Date,
-    registrationRiskScore: { type: Number, min: 0, max: 100 }
+    registrationRiskScore: { type: Number, min: 0, max: 100 },
+    strikes: { type: Number, default: 0, min: 0 },
+    uploadRestrictedUntil: Date,
+    pendingMedia: {
+      avatarKey: String,
+      coverKey: String,
+      galleryKey: String
+    }
   },
   { timestamps: true }
 )

@@ -9,6 +9,10 @@ import {
 } from '@/lib/blogR2Cleanup'
 import client from '@/lib/db'
 import { initModels } from '@/lib/models'
+import {
+  moderateBlogContent,
+  moderationViolationResponse
+} from '@/lib/moderation/moderateTextContent'
 import { createR2S3Client } from '@/lib/r2S3Client'
 import Blog, { BLOG_CATEGORIES } from '@/models/Blog'
 import BlogComment from '@/models/BlogComment'
@@ -181,6 +185,17 @@ export const PUT = async (
           { status: 400 }
         )
       }
+    }
+
+    const textModeration = moderateBlogContent({
+      title: title ?? existingBlog.title,
+      summary: summary ?? existingBlog.summary,
+      contentBlocks: patchContentBlocks
+        ? rawContentBlocks
+        : existingBlog.contentBlocks
+    })
+    if (!textModeration.ok) {
+      return moderationViolationResponse()
     }
 
     // Handle cover image upload if it's a new base64 string

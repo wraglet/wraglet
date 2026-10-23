@@ -1,5 +1,12 @@
 import { AuthorInterface, PostVoteInterface } from '@/interfaces'
+import type { ModerationStatus } from '@/lib/moderation/statusMap'
 import { Document, model, models, Schema, Types } from 'mongoose'
+
+export type ModerationRejectedReason =
+  | 'duration'
+  | 'explicit'
+  | 'format'
+  | 'quota'
 
 // Base interface for Post data (for UI consumption)
 export interface IPost {
@@ -10,6 +17,15 @@ export interface IPost {
       url: string
       key: string
     }[]
+    video?: {
+      url: string
+      key: string
+      posterUrl?: string
+      posterKey?: string
+      durationSec: number
+      width: number
+      height: number
+    }
     blogPreview?: {
       url: string
       slug: string
@@ -22,6 +38,18 @@ export interface IPost {
   }
   audience: string
   author: AuthorInterface
+  moderationStatus?: ModerationStatus
+  moderationMeta?: {
+    imageScores?: Record<string, number>
+    videoFrameCount?: number
+    pendingImageKey?: string
+    pendingVideoKey?: string
+    rawBytes?: number
+    reviewedAt?: Date
+    rejectedReason?: ModerationRejectedReason
+    /** Last error while handing off to / processing in the Cloudflare Workers. */
+    pipelineError?: string
+  }
   reactions: {
     userId: {
       _id: string
@@ -47,12 +75,19 @@ export interface IPost {
 export interface IPostDocument
   extends Omit<
       IPost,
-      '_id' | 'author' | 'reactions' | 'comments' | 'createdAt' | 'updatedAt'
+      | '_id'
+      | 'author'
+      | 'reactions'
+      | 'comments'
+      | 'createdAt'
+      | 'updatedAt'
+      | 'moderationMeta'
     >,
     Document {
   author: Types.ObjectId | AuthorInterface
   reactions: Types.ObjectId[]
   comments: Types.ObjectId[]
+  moderationMeta?: IPost['moderationMeta']
   createdAt?: Date
   updatedAt?: Date
 }
@@ -62,6 +97,15 @@ const PostSchema = new Schema<IPostDocument>(
     content: {
       text: String,
       images: [{ url: String, key: String }],
+      video: {
+        url: String,
+        key: String,
+        posterUrl: String,
+        posterKey: String,
+        durationSec: Number,
+        width: Number,
+        height: Number
+      },
       blogPreview: {
         url: { type: String },
         slug: { type: String },
@@ -73,6 +117,24 @@ const PostSchema = new Schema<IPostDocument>(
     },
     audience: String,
     author: { type: Schema.Types.ObjectId, ref: 'User' },
+    moderationStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected', 'needs_review'],
+      default: 'approved'
+    },
+    moderationMeta: {
+      imageScores: { type: Map, of: Number },
+      videoFrameCount: Number,
+      pendingImageKey: String,
+      pendingVideoKey: String,
+      rawBytes: Number,
+      reviewedAt: Date,
+      rejectedReason: {
+        type: String,
+        enum: ['duration', 'explicit', 'format', 'quota']
+      },
+      pipelineError: String
+    },
     reactions: [{ type: Schema.Types.ObjectId, ref: 'PostReaction' }],
     votes: [
       {

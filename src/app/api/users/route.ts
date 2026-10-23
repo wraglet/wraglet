@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import client from '@/lib/db'
+import {
+  moderateTextFields,
+  moderationViolationResponse
+} from '@/lib/moderation/moderateTextContent'
 import User from '@/models/User'
 import { z } from 'zod'
 
@@ -27,6 +31,15 @@ export const PATCH = async (req: Request) => {
 
     const body = await req.json()
     const validated = updateUserSchema.parse(body)
+
+    const textModeration = moderateTextFields([
+      validated.bio,
+      validated.firstName,
+      validated.lastName
+    ])
+    if (!textModeration.ok) {
+      return moderationViolationResponse()
+    }
 
     // Only allow updating own profile
     const updatedUser = await User.findByIdAndUpdate(

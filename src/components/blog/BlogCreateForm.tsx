@@ -115,8 +115,10 @@ const BlogCreateForm = ({ onSuccess }: BlogCreateFormProps = {}) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ image: base64Data, type })
           })
-          if (!response.ok) throw new Error('Failed to upload image')
-          const data = await response.json()
+          const data = await response.json().catch(() => ({}))
+          if (!response.ok) {
+            throw new Error(data.error ?? 'Failed to upload image')
+          }
           resolve(data.url)
         } catch (err) {
           reject(err)
