@@ -3,6 +3,7 @@ import {
   computeNsfwDecision,
   hasAnyScore,
   moderationStatusFromDecision,
+  rejectedReasonFromScores,
   resolveWebhookDecision,
   strictestDecision
 } from '@/lib/moderation/nsfwDecision'
@@ -49,6 +50,19 @@ describe('nsfwDecision', () => {
     expect(strictestDecision('approve', 'review')).toBe('review')
     expect(strictestDecision('reject', 'review')).toBe('reject')
     expect(strictestDecision('approve', 'approve')).toBe('approve')
+  })
+
+  it('names the signal that caused a reject', () => {
+    expect(rejectedReasonFromScores({ Porn: 0.95 }, thresholds)).toBe(
+      'explicit'
+    )
+    expect(rejectedReasonFromScores({ Gore: 0.9, Porn: 0.1 }, thresholds)).toBe(
+      'gore'
+    )
+    expect(
+      rejectedReasonFromScores({ Porn: 0.99, MinorSexual: 0.5 }, thresholds)
+    ).toBe('minor')
+    expect(rejectedReasonFromScores({}, thresholds)).toBe('explicit')
   })
 
   it('detects empty score payloads', () => {

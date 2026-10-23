@@ -87,6 +87,26 @@ describe('POST /api/moderation/image-complete', () => {
     expect(deleteObject).toHaveBeenCalledWith(KEY)
     expect(copyToPublic).not.toHaveBeenCalled()
     expect(post.moderationStatus).toBe('rejected')
+    expect(post.moderationMeta).toMatchObject({
+      rejectedReason: 'explicit',
+      imageScores: { Porn: 0.97 }
+    })
+  })
+
+  it('records gore and minor safety as their own reject reasons', async () => {
+    const gorePost = makePost()
+    postFindById.mockResolvedValueOnce(gorePost)
+    await send({ postId: POST_ID, key: KEY, scores: { Gore: 0.91, Porn: 0.1 } })
+    expect(gorePost.moderationMeta).toMatchObject({ rejectedReason: 'gore' })
+
+    const minorPost = makePost()
+    postFindById.mockResolvedValueOnce(minorPost)
+    await send({
+      postId: POST_ID,
+      key: KEY,
+      scores: { Porn: 0.2, MinorSexual: 0.6 }
+    })
+    expect(minorPost.moderationMeta).toMatchObject({ rejectedReason: 'minor' })
   })
 
   it('fails closed to needs_review when scores are empty', async () => {

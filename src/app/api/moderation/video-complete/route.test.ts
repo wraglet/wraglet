@@ -89,6 +89,10 @@ describe('POST /api/moderation/video-complete', () => {
     })
     expect(deleteObject).toHaveBeenCalledWith(KEY)
     expect(publish).toHaveBeenCalledWith(POST_ID)
+    expect(post.moderationMeta).toMatchObject({
+      videoScores: { Neutral: 0.99 }
+    })
+    expect(post.moderationMeta).not.toHaveProperty('imageScores')
   })
 
   it('keeps the post hidden when asset keys point outside the post prefix', async () => {
@@ -119,7 +123,24 @@ describe('POST /api/moderation/video-complete', () => {
     })
     expect(await res.json()).toMatchObject({ moderationStatus: 'rejected' })
     expect(post.content).toEqual({})
+    expect(post.moderationMeta).toMatchObject({
+      rejectedReason: 'explicit',
+      videoScores: { Porn: 0.9 }
+    })
+    expect(post.moderationMeta).not.toHaveProperty('imageScores')
     expect(deleteObject).toHaveBeenCalledWith(KEY)
+  })
+
+  it('records gore as the reject reason when that score decides it', async () => {
+    const post = makePost()
+    postFindById.mockResolvedValue(post)
+    await send({
+      postId: POST_ID,
+      quarantineKey: KEY,
+      scores: { Gore: 0.95, Neutral: 0.05 },
+      video
+    })
+    expect(post.moderationMeta).toMatchObject({ rejectedReason: 'gore' })
   })
 
   it('rejects on format/duration without touching scores', async () => {
@@ -148,6 +169,21 @@ describe('POST /api/moderation/video-complete', () => {
       pipelineError: 'Media Transformations timed out'
     })
     expect(deleteObject).not.toHaveBeenCalled()
+  })
+
+  it('records a failure reason when the worker returns no video and no error', async () => {
+    const post = makePost()
+    postFindById.mockResolvedValue(post)
+    const res = await send({
+      postId: POST_ID,
+      decision: 'approve',
+      scores: { Neutral: 0.99 }
+    })
+    expect(await res.json()).toMatchObject({ moderationStatus: 'pending' })
+    expect(post.moderationMeta).toMatchObject({
+      pendingVideoKey: KEY,
+      pipelineError: 'Video processing produced no asset'
+    })
   })
 
   it('is idempotent for already processed posts', async () => {

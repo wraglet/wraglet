@@ -3,6 +3,7 @@ import client from '@/lib/db'
 import { deleteR2Object } from '@/lib/media/uploadToR2'
 import {
   moderationStatusFromDecision,
+  rejectedReasonFromScores,
   resolveWebhookDecision
 } from '@/lib/moderation/nsfwDecision'
 import {
@@ -131,8 +132,10 @@ export const POST = async (request: Request) => {
       post.moderationStatus = 'rejected'
       post.moderationMeta = {
         ...(post.moderationMeta ?? {}),
-        imageScores: body.scores,
-        rejectedReason: 'explicit',
+        videoScores: body.scores,
+        rejectedReason: rejectedReasonFromScores(body.scores, {
+          rejectThreshold
+        }),
         reviewedAt
       }
       delete post.moderationMeta.pendingVideoKey
@@ -143,16 +146,21 @@ export const POST = async (request: Request) => {
 
     if (!video) {
       // Processing failed or produced no publishable asset: keep the post hidden (and the
-      // quarantine object around) until an admin looks at it.
+      // quarantine object around) until an admin looks at it. Record why, so it is not
+      // indistinguishable from an upload that is still in flight.
       moderationStatus = 'pending'
     }
 
     post.moderationStatus = moderationStatus
     post.moderationMeta = {
       ...(post.moderationMeta ?? {}),
-      imageScores: body.scores,
+      videoScores: body.scores,
       reviewedAt,
-      ...(body.error ? { pipelineError: body.error } : {})
+      ...(!video
+        ? {
+            pipelineError: body.error ?? 'Video processing produced no asset'
+          }
+        : {})
     }
     if (video) {
       post.content.video = video

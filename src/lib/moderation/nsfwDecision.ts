@@ -85,6 +85,27 @@ export const resolveWebhookDecision = (input: {
     : computed
 }
 
+/**
+ * Why a reject happened, from the scores that drove it. Minor safety wins over
+ * everything else; gore wins when it is at least as strong as the explicit score.
+ * Falls back to `explicit` when the payload has no distinguishing signal.
+ */
+export const rejectedReasonFromScores = (
+  scores: NsfwScores | undefined | null,
+  options?: { rejectThreshold?: number }
+): 'explicit' | 'gore' | 'minor' => {
+  if ((scores?.MinorSexual ?? 0) >= MINOR_SEXUAL_REJECT_THRESHOLD) {
+    return 'minor'
+  }
+  const rejectThreshold = options?.rejectThreshold ?? DEFAULT_REJECT_THRESHOLD
+  const gore = scores?.Gore ?? 0
+  const explicit = scores ? computeExplicitScore(scores) : 0
+  if (gore >= rejectThreshold && gore >= explicit) {
+    return 'gore'
+  }
+  return 'explicit'
+}
+
 export const moderationStatusFromDecision = (
   decision: NsfwDecision,
   strictGray: boolean

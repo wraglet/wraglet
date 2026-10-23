@@ -5,6 +5,8 @@ import { Document, model, models, Schema, Types } from 'mongoose'
 export type ModerationRejectedReason =
   | 'duration'
   | 'explicit'
+  | 'gore'
+  | 'minor'
   | 'format'
   | 'quota'
 
@@ -41,6 +43,8 @@ export interface IPost {
   moderationStatus?: ModerationStatus
   moderationMeta?: {
     imageScores?: Record<string, number>
+    /** Frame-classification scores for a video post. Kept separate from `imageScores`. */
+    videoScores?: Record<string, number>
     videoFrameCount?: number
     pendingImageKey?: string
     pendingVideoKey?: string
@@ -124,6 +128,7 @@ const PostSchema = new Schema<IPostDocument>(
     },
     moderationMeta: {
       imageScores: { type: Map, of: Number },
+      videoScores: { type: Map, of: Number },
       videoFrameCount: Number,
       pendingImageKey: String,
       pendingVideoKey: String,
@@ -131,7 +136,7 @@ const PostSchema = new Schema<IPostDocument>(
       reviewedAt: Date,
       rejectedReason: {
         type: String,
-        enum: ['duration', 'explicit', 'format', 'quota']
+        enum: ['duration', 'explicit', 'gore', 'minor', 'format', 'quota']
       },
       pipelineError: String
     },

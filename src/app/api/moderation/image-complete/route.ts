@@ -8,6 +8,7 @@ import {
 } from '@/lib/media/uploadToR2'
 import {
   moderationStatusFromDecision,
+  rejectedReasonFromScores,
   resolveWebhookDecision
 } from '@/lib/moderation/nsfwDecision'
 import {
@@ -186,7 +187,7 @@ export const POST = async (request: Request) => {
       post.moderationMeta = {
         ...(post.moderationMeta ?? {}),
         imageScores: scores,
-        rejectedReason: 'explicit',
+        rejectedReason: rejectedReasonFromScores(scores, { rejectThreshold }),
         reviewedAt
       }
       delete post.moderationMeta.pendingImageKey
