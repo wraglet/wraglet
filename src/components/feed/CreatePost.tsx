@@ -1,15 +1,16 @@
 'use client'
 
-import { useReducer } from 'react'
+import { useReducer, useState } from 'react'
 import type { ChangeEvent, SubmitEvent } from 'react'
 import Image from 'next/image'
 import { profileHrefFromUsername } from '@/lib/profileHref'
 import useBlogModalStore from '@/store/blogModal'
 import useUserStore from '@/store/user'
-import { PhotoIcon } from '@heroicons/react/24/outline'
+import { PhotoIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
 import { BsSend } from 'react-icons/bs'
 
 import UploadPostImage from '@/components/feed/UploadPostImage'
+import UploadPostVideo from '@/components/feed/UploadPostVideo'
 import Button from '@/components/shared/Button'
 import CurrentUserAvatar from '@/components/shared/CurrentUserAvatar'
 
@@ -47,6 +48,8 @@ const CreatePost = ({
     openUploadModal: false
   }
 
+  const [openVideoModal, setOpenVideoModal] = useState(false)
+
   const [{ openUploadModal }, dispatchState] = useReducer(reducer, initialState)
 
   const currentUserProfileHref = user?.username
@@ -76,6 +79,11 @@ const CreatePost = ({
         show={openUploadModal}
         close={() => dispatchState({ openUploadModal: false })}
         setPostImage={setPostImage}
+      />
+      <UploadPostVideo
+        show={openVideoModal}
+        close={() => setOpenVideoModal(false)}
+        caption={text}
       />
       <div className="rounded-xl border border-sky-200/90 bg-gradient-to-br from-sky-50 via-white to-violet-50/80 p-2.5 shadow-sm ring-1 ring-sky-100/60 sm:p-4">
         <div className="flex w-full items-start gap-2">
@@ -136,15 +144,29 @@ const CreatePost = ({
             ) : null}
 
             <div className="flex flex-row items-center justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => dispatchState({ openUploadModal: true })}
-                title="Add image"
-                aria-label="Add image to post"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-sky-200/80 bg-white/90 text-sky-600 shadow-sm transition-all duration-200 ease-out hover:scale-105 hover:border-sky-400 hover:bg-white hover:text-sky-700 hover:shadow-md focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 sm:h-10 sm:w-10"
-              >
-                <PhotoIcon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => dispatchState({ openUploadModal: true })}
+                  title="Add image"
+                  aria-label="Add image to post"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-sky-200/80 bg-white/90 text-sky-600 shadow-sm transition-all duration-200 ease-out hover:scale-105 hover:border-sky-400 hover:bg-white hover:text-sky-700 hover:shadow-md focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 sm:h-10 sm:w-10"
+                >
+                  <PhotoIcon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpenVideoModal(true)}
+                  title="Add video"
+                  aria-label="Add video to post"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-violet-200/80 bg-white/90 text-violet-600 shadow-sm transition-all duration-200 ease-out hover:scale-105 hover:border-violet-400 hover:bg-white hover:text-violet-700 hover:shadow-md focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 sm:h-10 sm:w-10"
+                >
+                  <VideoCameraIcon
+                    className="h-4 w-4 sm:h-5 sm:w-5"
+                    aria-hidden
+                  />
+                </button>
+              </div>
 
               <div className="flex items-center justify-end gap-2 sm:justify-end">
                 <Button

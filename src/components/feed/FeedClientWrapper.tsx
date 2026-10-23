@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import type { TrendingTopic } from '@/interfaces'
+import { MODERATION_VIOLATION_MESSAGE } from '@/lib/moderation/constants'
 import { IBlog } from '@/models/Blog'
 import { IPost } from '@/models/Post'
 import useBlogModalStore from '@/store/blogModal'
@@ -96,16 +97,28 @@ const FeedClientWrapper = () => {
     e.preventDefault()
     dispatchState({ isLoading: true })
     try {
-      await axios.post('/api/posts', { text, image })
+      const response = await axios.post<IPost>('/api/posts', { text, image })
+      const createdPost = response.data
 
-      // Reset form state
       dispatchState({ text: '', image: null })
 
-      // Show success message - the real-time Ably update will add the post to feed
-      toast.success('Post created successfully!')
+      if (createdPost.moderationStatus === 'pending') {
+        toast.success('Processing your image…')
+      } else if (createdPost.moderationStatus === 'rejected') {
+        toast.error("Couldn't publish — content violates community guidelines.")
+      } else {
+        toast.success('Post created successfully!')
+      }
     } catch (error) {
       console.error('Error creating post:', error)
-      toast.error('Failed to create post')
+      if (
+        axios.isAxiosError(error) &&
+        error.response?.data?.error === MODERATION_VIOLATION_MESSAGE
+      ) {
+        toast.error(MODERATION_VIOLATION_MESSAGE)
+      } else {
+        toast.error('Failed to create post')
+      }
     } finally {
       dispatchState({ isLoading: false })
     }
@@ -114,10 +127,13 @@ const FeedClientWrapper = () => {
   // Fetch posts (GET /api/posts uses cursor + nextCursor only; no page index)
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery({
-      queryKey: ['posts', limit],
+      queryKey: ['posts', limit, currentTab],
       queryFn: async ({ pageParam }) => {
         const params = new URLSearchParams({ limit: String(limit) })
         if (pageParam) params.set('cursor', pageParam)
+        if (currentTab === 'videos') {
+          params.set('feedType', 'video')
+        }
         const response = await fetch(`/api/posts?${params.toString()}`)
         return response.json() as Promise<{
           posts?: IPost[]
@@ -272,16 +288,32 @@ const FeedClientWrapper = () => {
 
       case 'videos':
         return (
-          <div className="mx-auto w-full max-w-2xl py-12 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-              <span className="text-2xl">🎥</span>
-            </div>
-            <h3 className="mb-2 text-lg font-medium text-gray-900">
-              Videos coming soon
-            </h3>
-            <p className="text-gray-500">
-              Video sharing feature is under development.
-            </p>
+          <div className="mx-auto w-full max-w-2xl space-y-4">
+            <CreatePost
+              isLoading={isLoading}
+              submitPost={submitPost}
+              text={text}
+              setText={(e) => dispatchState({ text: e.target.value })}
+              postImage={image}
+              setPostImage={(image) => dispatchState({ image: image })}
+            />
+            <FeedAbly
+              initialPosts={safePosts}
+              fetchNextPage={fetchNextPage}
+              hasNextPage={hasNextPage || false}
+              isFetchingNextPage={isFetchingNextPage}
+              status={status}
+            />
+            {safePosts.length === 0 && status === 'success' ? (
+              <div className="rounded-lg border border-neutral-200 bg-white py-8 text-center shadow-sm">
+                <h3 className="mb-2 text-base font-semibold text-gray-900">
+                  No videos yet
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Upload a video to start the feed.
+                </p>
+              </div>
+            ) : null}
           </div>
         )
 
