@@ -47,6 +47,12 @@ export interface IUser {
   registrationRiskScore?: number
   strikes?: number
   uploadRestrictedUntil?: Date
+  /** Tumbling 24h video-upload reservation. Updated atomically so concurrent sessions cannot both pass the quota. */
+  videoUploadUsage?: {
+    windowStart: Date
+    count: number
+    bytes: number
+  }
   pendingMedia?: {
     avatarKey?: string
     coverKey?: string
@@ -113,6 +119,11 @@ const UserSchema = new Schema<IUserDocument>(
     registrationRiskScore: { type: Number, min: 0, max: 100 },
     strikes: { type: Number, default: 0, min: 0 },
     uploadRestrictedUntil: Date,
+    videoUploadUsage: {
+      windowStart: Date,
+      count: { type: Number, default: 0 },
+      bytes: { type: Number, default: 0 }
+    },
     pendingMedia: {
       avatarKey: String,
       coverKey: String,

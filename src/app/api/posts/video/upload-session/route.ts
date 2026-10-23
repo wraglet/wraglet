@@ -6,6 +6,7 @@ import { createVideoMultipartUpload } from '@/lib/media/videoMultipartUpload'
 import {
   assertUserCanUploadVideo,
   getVideoLimits,
+  releaseVideoUploadQuota,
   VideoQuotaError
 } from '@/lib/media/videoQuota'
 import {
@@ -24,6 +25,7 @@ const uploadSessionSchema = z.object({
 })
 
 export const POST = async (request: Request) => {
+  let reserved: { userId: string; bytes: number } | null = null
   try {
     await client()
     const currentUser = await getCurrentUser()
@@ -46,7 +48,9 @@ export const POST = async (request: Request) => {
       )
     }
 
-    await assertUserCanUploadVideo(currentUser._id.toString(), body.fileSize)
+    const userId = currentUser._id.toString()
+    await assertUserCanUploadVideo(userId, body.fileSize)
+    reserved = { userId, bytes: body.fileSize }
 
     const key = `quarantine/videos/${currentUser._id}/${uuidv4()}.mp4`
     const multipart = await createVideoMultipartUpload({
@@ -66,6 +70,7 @@ export const POST = async (request: Request) => {
       }
     })
 
+    reserved = null
     return NextResponse.json({
       uploadId: multipart.uploadId,
       key,
@@ -74,6 +79,11 @@ export const POST = async (request: Request) => {
       postId: post._id.toString()
     })
   } catch (error) {
+    if (reserved) {
+      await releaseVideoUploadQuota(reserved.userId, reserved.bytes).catch(
+        () => undefined
+      )
+    }
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid upload session payload' },

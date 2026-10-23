@@ -119,7 +119,7 @@ Media Transformations limits: input ≤ 100 MB, output video ≤ 60 s (longer vi
 
 - R2 lifecycle rules: expire `quarantine/*` objects (e.g. 7 days) and abort incomplete multipart uploads (e.g. 1 day) so abandoned sessions don't accumulate.
 - Orphaned `pending` posts (client died before `/complete`, or Worker never called back) need a sweeper or an admin view keyed on `moderationMeta.pipelineError` / age.
-- The daily quota check is read-then-write; two concurrent sessions can both pass. Acceptable for current limits; move to an atomic counter if abused.
+- Daily video quota is an atomic reservation on the user (`videoUploadUsage`, tumbling 24h window). A session that fails before the post is created releases the reservation.
 
 ## Tuning notes
 
