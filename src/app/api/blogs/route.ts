@@ -5,6 +5,10 @@ import { safeApiError } from '@/lib/apiError'
 import client from '@/lib/db'
 import { escapeRegExp } from '@/lib/escapeRegExp'
 import { initModels } from '@/lib/models'
+import {
+  moderateBlogContent,
+  moderationViolationResponse
+} from '@/lib/moderation/moderateTextContent'
 import { createNewBlogNotification } from '@/lib/notifications'
 import { createR2S3Client } from '@/lib/r2S3Client'
 import Blog, {
@@ -43,6 +47,15 @@ export const POST = async (request: Request) => {
 
     if (!currentUser?._id || !currentUser?.email) {
       return new NextResponse('Unauthorized', { status: 401 })
+    }
+
+    const textModeration = moderateBlogContent({
+      title,
+      summary,
+      contentBlocks
+    })
+    if (!textModeration.ok) {
+      return moderationViolationResponse()
     }
 
     if (!title?.trim()) {

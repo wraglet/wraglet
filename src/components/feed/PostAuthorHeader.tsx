@@ -9,6 +9,8 @@ import { formatDistanceToNow } from 'date-fns'
 
 import { DEFAULT_GENDER } from '@/data/constants'
 import BlogPreviewCard from '@/components/feed/BlogPreviewCard'
+import PostModerationStatus from '@/components/feed/PostModerationStatus'
+import VideoPostCard from '@/components/feed/VideoPostCard'
 import Avatar from '@/components/shared/Avatar'
 import Button from '@/components/shared/Button'
 
@@ -115,10 +117,15 @@ const PostAuthorHeader = ({
             </Link>
           )}
 
+          <PostModerationStatus post={post} />
+
+          {post.content.video ? <VideoPostCard post={post} /> : null}
+
           {post.content.blogPreview ? (
             <BlogPreviewCard blogPreview={post.content.blogPreview} />
           ) : (
             post.content.images &&
+            !post.content.video &&
             post.content.images.map(
               (
                 image: {

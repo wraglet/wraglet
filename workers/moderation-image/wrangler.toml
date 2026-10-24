@@ -1,0 +1,45 @@
+name = "wraglet-moderation-image"
+main = "src/index.ts"
+compatibility_date = "2026-09-08"
+account_id = "37af3cf334ea2dbfc5c1175ca6d4e721"
+
+[observability]
+enabled = true
+
+[vars]
+ENVIRONMENT = "production"
+ALLOWED_CALLBACK_HOSTS = "www.wraglet.com,wraglet.com"
+MODERATION_NSFW_REJECT_THRESHOLD = "0.85"
+MODERATION_NSFW_REVIEW_THRESHOLD = "0.50"
+NSFW_MODEL = "@cf/cloudflare/clef"
+
+[ai]
+binding = "AI"
+
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "wraglet-users"
+
+# Secrets (set with `yarn wrangler secret put <NAME>`):
+#   MODERATION_WORKER_SECRET
+
+# Staging: `yarn wrangler deploy --env staging`
+[env.staging]
+name = "wraglet-moderation-image-staging"
+
+[env.staging.observability]
+enabled = true
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+ALLOWED_CALLBACK_HOSTS = "staging.wraglet.com"
+MODERATION_NSFW_REJECT_THRESHOLD = "0.85"
+MODERATION_NSFW_REVIEW_THRESHOLD = "0.50"
+NSFW_MODEL = "@cf/cloudflare/clef"
+
+[env.staging.ai]
+binding = "AI"
+
+[[env.staging.r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "wraglet-users-staging"

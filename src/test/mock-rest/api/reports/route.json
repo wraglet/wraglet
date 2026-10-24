@@ -1,0 +1,30 @@
+[
+  {
+    "route": "/api/reports",
+    "method": "POST",
+    "status": 200,
+    "description": "Report submitted",
+    "responseBody": {
+      "success": true,
+      "reportId": "507f1f77bcf86cd799439111"
+    }
+  },
+  {
+    "route": "/api/reports",
+    "method": "POST",
+    "status": 409,
+    "description": "Reporter already has an open report for this target",
+    "responseBody": {
+      "error": "You already reported this content."
+    }
+  },
+  {
+    "route": "/api/reports",
+    "method": "POST",
+    "status": 429,
+    "description": "Daily report limit reached",
+    "responseBody": {
+      "error": "Report limit reached. Try again later."
+    }
+  }
+]

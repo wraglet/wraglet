@@ -6,6 +6,10 @@ import {
   getTotalUnreadMessageCount
 } from '@/lib/conversationUnread'
 import client from '@/lib/db'
+import {
+  moderateTextFields,
+  moderationViolationResponse
+} from '@/lib/moderation/moderateTextContent'
 import Conversation from '@/models/Conversation'
 import Message from '@/models/Message'
 
@@ -51,6 +55,12 @@ export const POST = async (req: Request) => {
         { status: 400 }
       )
     }
+
+    const textModeration = moderateTextFields([content])
+    if (!textModeration.ok) {
+      return moderationViolationResponse()
+    }
+
     const message = await Message.create({
       conversation: conversationId,
       sender: userId,

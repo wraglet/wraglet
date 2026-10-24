@@ -2,6 +2,9 @@ import { Gender, Pronoun } from '@/interfaces'
 
 export const MAX_FILE_SIZE = 4194304
 
+/** Max characters for feed post text (server-enforced). */
+export const MAX_POST_TEXT_LENGTH = 280
+
 /** Max TipTap / block rows per blog (server validation). */
 export const MAX_BLOG_CONTENT_BLOCKS = 80
 

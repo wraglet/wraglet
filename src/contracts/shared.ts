@@ -71,9 +71,27 @@ export const discoverUserSchema = userPopulationSnippetSchema.extend({
 
 export const isoDateStringSchema = z.union([z.string(), z.date()])
 
+export const moderationStatusSchema = z.enum([
+  'pending',
+  'approved',
+  'rejected',
+  'needs_review'
+])
+
+export const postVideoSchema = z.object({
+  url: z.string(),
+  key: z.string(),
+  posterUrl: z.string().optional(),
+  posterKey: z.string().optional(),
+  durationSec: z.number(),
+  width: z.number(),
+  height: z.number()
+})
+
 export const postContentSchema = z.object({
   text: z.string().optional(),
   images: z.array(mediaAssetSchema).optional(),
+  video: postVideoSchema.optional(),
   blogPreview: z
     .object({
       url: z.string(),
@@ -98,6 +116,7 @@ export const postInFeedSchema = z.object({
   content: postContentSchema,
   audience: z.string(),
   author: postAuthorSchema,
+  moderationStatus: moderationStatusSchema.optional(),
   reactions: z.array(z.unknown()),
   comments: z.array(z.unknown()),
   votes: z.array(postVoteSchema).optional(),

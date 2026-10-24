@@ -40,6 +40,7 @@ async function seedE2eContent(userId: Types.ObjectId) {
         content: { text: 'E2E seeded post for functional tests.' },
         audience: 'public',
         author: userId,
+        moderationStatus: 'approved',
         reactions: [],
         votes: [],
         comments: [],

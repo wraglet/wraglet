@@ -4,6 +4,10 @@ import { getAblyInstance } from '@/lib/ably'
 import { safeApiError } from '@/lib/apiError'
 import client from '@/lib/db'
 import { initModels } from '@/lib/models'
+import {
+  moderateTextFields,
+  moderationViolationResponse
+} from '@/lib/moderation/moderateTextContent'
 import Blog from '@/models/Blog'
 import BlogComment, { IBlogCommentDocument } from '@/models/BlogComment'
 import { convertObjectIdsToStrings } from '@/utils/convertObjectIdsToStrings'
@@ -56,6 +60,11 @@ export const POST = async (
         },
         { status: 400 }
       )
+    }
+
+    const textModeration = moderateTextFields([content])
+    if (!textModeration.ok) {
+      return moderationViolationResponse()
     }
 
     // Find the blog

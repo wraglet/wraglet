@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Help | Wraglet',
@@ -66,7 +67,14 @@ const HelpPage = () => (
           <p className="text-gray-700">
             Click the three dots on any post or message and select
             &ldquo;Report&rdquo;. Our moderation team will review your report
-            promptly.
+            promptly. See our{' '}
+            <Link
+              href="/community-guidelines"
+              className="font-medium text-[#0EA5E9] hover:underline"
+            >
+              Community Guidelines
+            </Link>{' '}
+            for what is and is not allowed on Wraglet.
           </p>
         </div>
       </div>

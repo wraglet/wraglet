@@ -1,20 +1,12 @@
 import { revalidatePath } from 'next/cache'
-import { NextResponse } from 'next/server'
+import { after, NextResponse } from 'next/server'
 import getCurrentUser from '@/actions/getCurrentUser'
 import client from '@/lib/db'
+import {
+  triggerImageModeration,
+  uploadImageToQuarantine
+} from '@/lib/media/uploadToR2'
 import User from '@/models/User'
-import { S3Client } from '@aws-sdk/client-s3'
-import { Upload } from '@aws-sdk/lib-storage'
-import { v4 as uuidv4 } from 'uuid'
-
-const s3Client = new S3Client({
-  endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  region: 'auto',
-  credentials: {
-    accessKeyId: process.env.CLOUDFLARE_ACCESS_KEY_ID ?? '',
-    secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY ?? ''
-  }
-})
 
 export const PATCH = async (request: Request) => {
   try {
@@ -29,60 +21,70 @@ export const PATCH = async (request: Request) => {
     const { photos, action } = body
 
     if (action === 'update') {
-      // Update the user's photo collection
       const updatedUser = await User.findByIdAndUpdate(
         currentUser._id,
         { $set: { photoCollection: photos } },
         { new: true }
       ).select('-hashedPassword')
 
-      revalidatePath(`/${currentUser.username}`)
+      if (currentUser.username) {
+        revalidatePath(`/${currentUser.username}`)
+      }
       return NextResponse.json(updatedUser)
-    } else if (action === 'upload') {
+    }
+
+    if (action === 'upload') {
       const { image } = body
 
-      // Decode base64 image data
-      const base64Data = Buffer.from(
-        image.replace(/^data:image\/\w+;base64,/, ''),
-        'base64'
-      )
-      const type = image.split(';')[0].split('/')[1]
-
-      // Upload to R2
-      const key = `photos/${uuidv4()}.${type}`
-      const upload = new Upload({
-        client: s3Client,
-        params: {
-          Bucket: process.env.CLOUDFLARE_R2_USERS_BUCKET_NAME ?? '',
-          Key: key,
-          Body: base64Data,
-          ContentType: `image/${type}`
-        }
-      })
-
-      await upload.done()
-      const url = `${process.env.NEXT_PUBLIC_R2_USERS_URL}/${key}`
-
-      // Add to user's photo collection
-      const newPhoto = {
-        url,
-        key,
-        type: 'post',
-        createdAt: new Date()
+      if (typeof image !== 'string' || !image.startsWith('data:image/')) {
+        return new NextResponse('Invalid image', { status: 400 })
       }
 
-      // Get current user to check photo collection length
       const user = await User.findById(currentUser._id)
       if (!user) {
         return new NextResponse('User not found', { status: 404 })
       }
 
-      // Check if photo collection exists and its length
       const currentPhotoCount = user.photoCollection?.length || 0
       if (currentPhotoCount >= 9) {
         return new NextResponse('Photo collection limit reached', {
           status: 400
         })
+      }
+
+      const uploaded = await uploadImageToQuarantine({
+        dataUrl: image,
+        surface: 'gallery',
+        userId: currentUser._id.toString(),
+        publicPrefix: 'gallery'
+      })
+
+      if (uploaded.moderationStatus === 'pending') {
+        await User.findByIdAndUpdate(currentUser._id, {
+          $set: { 'pendingMedia.galleryKey': uploaded.quarantineKey }
+        })
+        after(() =>
+          triggerImageModeration({
+            quarantineKey: uploaded.quarantineKey,
+            surface: 'gallery',
+            userId: currentUser._id.toString()
+          })
+        )
+        return NextResponse.json(
+          { error: 'Photo is processing moderation review' },
+          { status: 202 }
+        )
+      }
+
+      if (!uploaded.url || !uploaded.key) {
+        return new NextResponse('Failed to upload photo', { status: 500 })
+      }
+
+      const newPhoto = {
+        url: uploaded.url,
+        key: uploaded.key,
+        type: 'post' as const,
+        createdAt: new Date()
       }
 
       await User.findByIdAndUpdate(
@@ -91,7 +93,9 @@ export const PATCH = async (request: Request) => {
         { new: true }
       )
 
-      revalidatePath(`/${currentUser.username}`)
+      if (currentUser.username) {
+        revalidatePath(`/${currentUser.username}`)
+      }
       return NextResponse.json(newPhoto)
     }
 

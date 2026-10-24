@@ -5,6 +5,7 @@
 import Blog from '@/models/Blog'
 import BlogComment from '@/models/BlogComment'
 import Comment from '@/models/Comment'
+import ContentReport from '@/models/ContentReport'
 import Conversation from '@/models/Conversation'
 import E2EAuthToken from '@/models/E2EAuthToken'
 import Follow from '@/models/Follow'
@@ -22,6 +23,7 @@ export {
   Blog,
   BlogComment,
   Comment,
+  ContentReport,
   Conversation,
   Follow,
   Message,

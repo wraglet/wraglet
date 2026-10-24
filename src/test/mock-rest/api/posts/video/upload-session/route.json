@@ -1,0 +1,24 @@
+[
+  {
+    "route": "/api/posts/video/upload-session",
+    "method": "POST",
+    "status": 200,
+    "description": "Multipart upload session created; pending post reserved",
+    "responseBody": {
+      "uploadId": "2~mock-upload-id",
+      "key": "quarantine/videos/507f1f77bcf86cd799439099/3f1c2a9e.mp4",
+      "partSize": 4194304,
+      "partCount": 3,
+      "postId": "507f1f77bcf86cd799439012"
+    }
+  },
+  {
+    "route": "/api/posts/video/upload-session",
+    "method": "POST",
+    "status": 400,
+    "description": "Duration over VIDEO_MAX_DURATION_SEC",
+    "responseBody": {
+      "error": "Video exceeds maximum duration"
+    }
+  }
+]

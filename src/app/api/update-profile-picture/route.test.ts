@@ -25,18 +25,15 @@ vi.mock('@/utils/convertObjectIdsToStrings', () => ({
   convertObjectIdsToStrings: vi.fn((x: unknown) => x)
 }))
 
-vi.mock('@aws-sdk/client-s3', () => ({
-  S3Client: class S3Mock {
-    send = vi.fn().mockResolvedValue({})
-  },
-  DeleteObjectCommand: vi.fn()
-}))
-
-vi.mock('@aws-sdk/lib-storage', () => ({
-  Upload: class UploadMock {
-    on = vi.fn()
-    done = vi.fn().mockResolvedValue({})
-  }
+vi.mock('@/lib/media/uploadToR2', () => ({
+  uploadImageToQuarantine: vi.fn().mockResolvedValue({
+    url: 'https://r2.test/avatars/x.png',
+    key: 'avatars/x.png',
+    quarantineKey: 'quarantine/avatars/u1/x.png',
+    moderationStatus: 'approved'
+  }),
+  triggerImageModeration: vi.fn().mockResolvedValue(undefined),
+  deleteR2Object: vi.fn().mockResolvedValue(undefined)
 }))
 
 const mockedUser = vi.mocked(getCurrentUser)

@@ -1,0 +1,21 @@
+[
+  {
+    "route": "/api/posts/video/upload-part",
+    "method": "POST",
+    "status": 200,
+    "description": "Chunk proxied to R2 multipart upload",
+    "responseBody": {
+      "etag": "\"9bb58f26192e4ba00f01e2e7b136bbd8\"",
+      "partNumber": 1
+    }
+  },
+  {
+    "route": "/api/posts/video/upload-part",
+    "method": "POST",
+    "status": 400,
+    "description": "Key does not match the post's pending upload",
+    "responseBody": {
+      "error": "Upload session mismatch"
+    }
+  }
+]

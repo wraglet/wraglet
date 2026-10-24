@@ -3,6 +3,10 @@ import getCurrentUser from '@/actions/getCurrentUser'
 import { getAblyInstance } from '@/lib/ably'
 import client from '@/lib/db'
 import { initModels } from '@/lib/models'
+import {
+  moderateTextFields,
+  moderationViolationResponse
+} from '@/lib/moderation/moderateTextContent'
 import { createCommentNotification } from '@/lib/notifications'
 import Comment, { ICommentDocument } from '@/models/Comment'
 import Post, { IPostDocument } from '@/models/Post'
@@ -22,6 +26,11 @@ export const POST = async (
     const { content } = await req.json()
     if (!content) {
       return new NextResponse('Content is required', { status: 400 })
+    }
+
+    const textModeration = moderateTextFields([content])
+    if (!textModeration.ok) {
+      return moderationViolationResponse()
     }
 
     await client()
