@@ -23,7 +23,15 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'cdn-staging.wraglet.com'
+      },
+      {
+        protocol: 'https',
         hostname: 'uploads.wraglet.com'
+      },
+      {
+        protocol: 'https',
+        hostname: 'uploads-staging.wraglet.com'
       }
     ]
   }
